@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">Indian Grill</string>
+    
+    <!-- User ID Activity -->
+    <string name="welcome_title">Welcome to Indian Grill</string>
+    <string name="welcome_subtitle">Your Kitchen Assistant</string>
+    <string name="welcome_description">Your personal chef to help you with your cravings!</string>
+    <string name="enter_user_id">Enter User ID</string>
+    <string name="start_chat">Start Chat</string>
+    <string name="user_id_hint">User ID</string>
+    
+    <!-- Chat Activity -->
+    <string name="chat_title">Indian Grill</string>
+    <string name="new_order">New Order</string>
+    <string name="send">Send</string>
+    <string name="type_message_homepage">Ask me anything... e.g., I want to order a paneer butter masala</string>
+    <string name="type_message_chat">Respond to the agent, refine the order, or type \'Looks good\'...</string>
+    <string name="loading">Loading...</string>
+    <string name="preparing">Preparing...</string>
+    <string name="retry">Retry</string>
+    <string name="agent_typing">Agent is typing...</string>
+    <string name="welcome_user">Welcome, %1$s!</string>
+    <string name="what_to_order">What would you like to order today?</string>
+    <string name="cancel">Cancel</string>
+    
+    <!-- Error Messages -->
+    <string name="error_no_internet">No internet connection</string>
+    <string name="error_generic">Something went wrong, please try again</string>
+    <string name="error_invalid_user_id">Please enter a valid user ID</string>
+    <string name="error_empty_message">Please enter a message</string>
+    <string name="error_session_expired">Session expired, please restart</string>
+    <string name="error_server_unreachable">Cannot connect to server</string>
+    
+    <!-- Accessibility -->
+    <string name="content_desc_user_id_input">Enter your user ID to start chatting</string>
+    <string name="content_desc_start_button">Start chat session with the restaurant system</string>
+    <string name="content_desc_message_input">Type your message to send to the restaurant agents</string>
+    <string name="content_desc_send_button">Send message to restaurant agents</string>
+    <string name="content_desc_chat_history">Chat conversation history</string>
+    <string name="content_desc_user_message">Your message: %1$s</string>
+    <string name="content_desc_agent_message">%1$s says: %2$s</string>
+    
+    <!-- Status Messages -->
+    <string name="status_connecting">Connecting...</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_reconnecting">Reconnecting...</string>
+    
+    <!-- Time Formats -->
+    <string name="time_format_12h">h:mm a</string>
+    <string name="time_format_24h">HH:mm</string>
+</resources>
