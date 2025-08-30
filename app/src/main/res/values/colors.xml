@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Dark theme colors matching frontend -->
+    <color name="neutral_800">#FF262626</color> <!-- bg-neutral-800 -->
+    <color name="neutral_900">#FF171717</color> <!-- bg-neutral-900 -->
+    <color name="neutral_700">#FF404040</color> <!-- border-neutral-700 -->
+    <color name="neutral_600">#FF525252</color> <!-- hover states -->
+    <color name="neutral_100">#FFF5F5F5</color> <!-- text-neutral-100 -->
+    <color name="neutral_300">#FFD4D4D8</color> <!-- text-neutral-300 -->
+    <color name="neutral_400">#FFA3A3A3</color> <!-- text-neutral-400 -->
+    
+    <!-- Primary colors -->
+    <color name="primary">#FF3B82F6</color> <!-- Blue primary -->
+    <color name="primary_variant">#FF1D4ED8</color> <!-- Darker blue -->
+    <color name="secondary">#FF8B5CF6</color> <!-- Purple secondary -->
+    
+    <!-- Background colors -->
+    <color name="background">#FF262626</color> <!-- neutral-800 -->
+    <color name="surface">#FF171717</color> <!-- neutral-900 -->
+    <color name="card_background">#80171717</color> <!-- neutral-900/50 -->
+    
+    <!-- Message colors -->
+    <color name="user_message">#FF404040</color> <!-- neutral-700 -->
+    <color name="agent_message">#FF171717</color> <!-- neutral-900 -->
+    <color name="agent_message_background">#FF1E293B</color> <!-- Slightly blue-tinted dark background for agent messages -->
+    <color name="text_primary">#FFF5F5F5</color> <!-- neutral-100 -->
+    <color name="text_secondary">#FFD4D4D8</color> <!-- neutral-300 -->
+    <color name="text_muted">#FFA3A3A3</color> <!-- neutral-400 -->
+    
+    <!-- Status colors -->
+    <color name="success">#FF10B981</color> <!-- Green -->
+    <color name="error">#FFEF4444</color> <!-- Red -->
+    <color name="warning">#FFF59E0B</color> <!-- Amber -->
+    <color name="info">#FF3B82F6</color> <!-- Blue -->
+    
+    <!-- Input colors -->
+    <color name="input_background">#FF404040</color> <!-- neutral-700 -->
+    <color name="input_border">#FF525252</color> <!-- neutral-600 -->
+    
+    <!-- Agent colors -->
+    <color name="agent_name">#FF3B82F6</color> <!-- Primary blue for agent names -->
+    
+    <!-- Accessibility colors -->
+    <color name="focus_highlight">#FF3B82F6</color>
+    <color name="disabled">#FF6B7280</color>
+</resources>

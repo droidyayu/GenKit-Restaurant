@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome to Restaurant Chat"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"
+        android:gravity="center" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter your User ID to start chatting"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center" />
+
+    <EditText
+        android:id="@+id/editTextUserId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="User ID"
+        android:textColorHint="@color/black"
+        android:inputType="textNoSuggestions"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/black"
+        android:padding="12dp"
+        android:background="@android:drawable/edit_text"
+        android:contentDescription="Enter your user ID to start chatting"
+        android:importantForAccessibility="yes" />
+
+    <TextView
+        android:id="@+id/textViewError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_red_dark"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        android:gravity="center" />
+
+    <Button
+        android:id="@+id/buttonStart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Chat"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:contentDescription="Start chat session with the restaurant system"
+        android:importantForAccessibility="yes" />
+
+    <Button
+        android:id="@+id/buttonRetry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Retry"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:visibility="gone"
+        android:backgroundTint="@android:color/holo_orange_dark" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+</LinearLayout>

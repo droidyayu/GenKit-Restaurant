@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="4dp"
+    android:gravity="end">
+
+    <!-- Spacer to push message to the right -->
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="0.1" />
+
+    <!-- User message container -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.9"
+        android:orientation="vertical"
+        android:background="@drawable/message_user_background"
+        android:padding="16dp"
+        android:layout_marginStart="32dp">
+
+        <!-- Message content -->
+        <TextView
+            android:id="@+id/textViewMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"
+            tools:text="Hello, I'd like to place an order for pizza"
+            android:importantForAccessibility="yes" />
+
+    </LinearLayout>
+
+</LinearLayout>
