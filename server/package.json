@@ -1,11 +1,12 @@
 {
-  "name": "school-agent",
+  "name": "kitchen-agent",
   "version": "1.0.1",
-  "description": "",
+  "description": "Kitchen Multi-Agent System for restaurant management",
   "main": "lib/index.js",
   "scripts": {
-    "start": "node lib/terminal.js",
-    "dev": "tsx --no-warnings --watch src/terminal.ts",
+    "start": "node lib/kitchenTerminal.js",
+    "dev": "tsx --no-warnings --watch src/kitchenTerminal.ts",
+    "test": "tsx src/test/kitchenTests.ts",
     "genkit:dev": "genkit start -- npm run dev",
     "compile": "tsc",
     "build": "npm run build:clean && npm run compile",

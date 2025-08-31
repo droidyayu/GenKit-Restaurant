@@ -1,47 +1,25 @@
-/**
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 import 'dotenv/config';
 import type { Message, ToolRequestPart } from 'genkit';
 import { createInterface } from 'node:readline';
 import { ai } from './genkit.js';
-import { routingAgent } from './routingAgent.js';
+import { chefAgent } from './chefAgent.js';
+import type { KitchenState } from './kitchenTypes.js';
 
 const rl = createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-const EXAMPLE_USER_CONTEXT = {
-  parentId: 4112,
-  parentName: 'Francis Smith',
-  students: [
-    {
-      id: 3734,
-      name: 'Evelyn Smith',
-      grade: 9,
-      activities: ['Choir', 'Drama Club'],
-    },
-    { id: 9433, name: 'Evan Smith', grade: 11, activities: ['Chess Club'] },
-  ],
+const EXAMPLE_KITCHEN_CONTEXT: KitchenState = {
+  customerId: 1001,
+  customerName: 'Sarah Johnson',
+  orderHistory: [],
 };
 
 // ANSI color codes for terminal output
 const COLORS = {
-  BELL: '\x1b[33m',
+  CHEF: '\x1b[32m',
   PROMPT: '\x1b[36m',
   RESET: '\x1b[0m',
 };
@@ -54,7 +32,7 @@ function printColored(prefix: string, text: string, color: string) {
 // Get initial greeting from AI
 async function getGreeting() {
   const { text } = await ai.generate(
-    'Come up with a short friendly greeting for yourself talking to a parent as Bell, the helpful AI assistant for parents of Sparkyville High School. Feel free to use emoji.'
+    'Come up with a short friendly greeting for yourself talking to a customer as Chef Raj, the helpful AI chef at Indian Grill restaurant. Feel free to use emoji.'
   );
   return text;
 }
@@ -66,7 +44,7 @@ async function handleChatResponse(
   startMessageCount: number
 ) {
   console.log();
-  process.stdout.write(`${COLORS.BELL}bell>${COLORS.RESET} `);
+  process.stdout.write(`${COLORS.CHEF}chef>${COLORS.RESET} `);
 
   for await (const chunk of stream) {
     process.stdout.write(chunk.text);
@@ -108,12 +86,12 @@ async function handleUserInput(chat: any): Promise<void> {
 
 async function main() {
   const chat = ai
-    .createSession({ initialState: EXAMPLE_USER_CONTEXT })
-    .chat(routingAgent);
+    .createSession({ initialState: EXAMPLE_KITCHEN_CONTEXT })
+    .chat(chefAgent);
 
   const greeting = await getGreeting();
   console.log();
-  printColored('bell', greeting, COLORS.BELL);
+  printColored('chef', greeting, COLORS.CHEF);
 
   while (true) {
     await handleUserInput(chat);

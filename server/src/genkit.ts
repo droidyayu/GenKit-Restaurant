@@ -1,38 +1,33 @@
-/**
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 import { gemini15Pro, googleAI } from '@genkit-ai/googleai';
 import { genkit } from 'genkit/beta';
-import type { AgentState } from './types';
+import type { KitchenState } from './kitchenTypes';
 
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY })],
   model: gemini15Pro,
 });
 
 ai.defineHelper(
   'userContext',
-  (state: AgentState) => `=== User Context
+  (state: KitchenState) => {
+    const kitchenState = state as KitchenState;
+    return `=== Kitchen Context
 
-- The current parent user is ${state?.parentName}
+- The current customer is ${kitchenState?.customerName}
 - The current date and time is: ${new Date().toString()}
 
-=== Registered students of the current user
+=== Current Order Status
 
-${state?.students.map((s) => ` - ${s.name}, student id: ${s.id} grade: ${s.grade}, activities: \n${s.activities.map((a) => `   - ${a}`).join('\n')}`).join('\n\n')}`
+${kitchenState?.currentOrder ? `- Order ID: ${kitchenState.currentOrder.orderId}
+- Status: ${kitchenState.currentOrder.status}
+- Estimated Time: ${kitchenState.currentOrder.estimatedTime}
+- Dishes: ${kitchenState.currentOrder.dishes.map((d: any) => `${d.quantity}x ${d.name}${d.spiceLevel ? ` (${d.spiceLevel})` : ''}`).join(', ')}` : '- No active order'}
+
+=== Order History
+
+${kitchenState?.orderHistory?.length ? kitchenState.orderHistory.map((order: any) => `- ${order.orderId}: ${order.status}, $${order.totalAmount.toFixed(2)}`).join('\n') : '- No previous orders'}`;
+  }
 );
 
 export { z } from 'genkit';
