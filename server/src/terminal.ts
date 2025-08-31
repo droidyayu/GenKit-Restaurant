@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import 'dotenv/config';
 import type { Message, ToolRequestPart } from 'genkit';
 import { createInterface } from 'node:readline';
 import { ai } from './genkit.js';
