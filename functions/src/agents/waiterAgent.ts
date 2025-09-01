@@ -1,8 +1,7 @@
-import { ai, z } from '../genkit.js';
-import { getOrderStatusTool, updateOrderStatusTool, completeOrderTool } from '../tools/orderTool.js';
-import { notificationTool } from '../tools/notificationTool.js';
+import { getOrderStatusTool, updateOrderStatusTool, completeOrderTool } from '../tools/orderTool';
+import { notificationTool } from '../tools/notificationTool';
 
-import { menuRecipeAgent } from './menuRecipeAgent.js';
+import { menuRecipeAgent } from './menuRecipeAgent';
 
 export async function waiterAgent(input: {
   userId: string;

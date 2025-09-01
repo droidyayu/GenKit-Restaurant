@@ -1,5 +1,5 @@
-import { ai, z } from '../genkit.js';
-import { inventoryTool } from '../tools/inventoryTool.js';
+import { ai } from '../genkit';
+import { inventoryTool } from '../tools/inventoryTool';
 
 export async function menuRecipeAgent(input: {
   userId?: string;

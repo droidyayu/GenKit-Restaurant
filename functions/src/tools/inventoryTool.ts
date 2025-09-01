@@ -1,4 +1,4 @@
-import { ai, z } from '../genkit.js';
+import { ai, z } from '../genkit';
 
 // Dynamic inventory data - in a real system this would come from a database
 const DYNAMIC_INVENTORY = [

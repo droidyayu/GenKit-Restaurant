@@ -1,8 +1,8 @@
-import { ai, z } from '../genkit.js';
-import { orderManagerAgent } from '../agents/orderManagerAgent.js';
-import { chefAgent } from '../agents/chefAgent.js';
-import { waiterAgent } from '../agents/waiterAgent.js';
-import { menuRecipeAgent } from '../agents/menuRecipeAgent.js';
+import { ai, z } from '../genkit';
+import { orderManagerAgent } from '../agents/orderManagerAgent';
+import { chefAgent } from '../agents/chefAgent';
+import { waiterAgent } from '../agents/waiterAgent';
+import { menuRecipeAgent } from '../agents/menuRecipeAgent';
 
 export const kitchenOrchestratorFlow = ai.defineFlow(
   {

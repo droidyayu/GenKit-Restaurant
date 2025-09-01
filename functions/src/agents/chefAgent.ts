@@ -1,5 +1,5 @@
-import { ai, z } from '../genkit.js';
-import { timerTool, inventoryTool, updateOrderStatusTool } from '../tools/index.js';
+import { ai } from '../genkit';
+import { inventoryTool, updateOrderStatusTool } from '../tools/index';
 
 export async function chefAgent(input: {
   orderId: string;

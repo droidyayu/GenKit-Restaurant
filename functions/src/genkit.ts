@@ -3,14 +3,11 @@ import {genkit, z} from "genkit";
 import {googleAI} from "@genkit-ai/googleai";
 
 // Import models from the Google AI plugin. The Google AI API provides access to
-// several generative models. Here, we import Gemini 2.0 Flash.
-import {gemini20Flash} from "@genkit-ai/googleai";
+// several generative models.
 
 // Cloud Functions for Firebase supports Genkit natively. The onCallGenkit function creates a callable
 // function from a Genkit action. It automatically implements streaming if your flow does.
-// The https library also has other utility methods such as hasClaim, which verifies that
-// a caller's token has a specific claim (optionally matching a specific value)
-import { onCallGenkit, hasClaim } from "firebase-functions/https";
+import { onCallGenkit } from "firebase-functions/https";
 
 // Genkit models generally depend on an API key. APIs should be stored in Cloud Secret Manager so that
 // access to these sensitive values can be controlled. defineSecret does this for you automatically.
@@ -33,37 +30,11 @@ const ai = genkit({
   ],
 });
 
-// Define a simple flow that prompts an LLM to generate menu suggestions.
-const menuSuggestionFlow = ai.defineFlow({
-    name: "menuSuggestionFlow",
-    inputSchema: z.string().describe("A restaurant theme").default("seafood"),
-    outputSchema: z.string(),
-    streamSchema: z.string(),
-  }, async (subject, { sendChunk }) => {
-    // Construct a request and send it to the model API.
-    const prompt =
-      `Suggest an item for the menu of a ${subject} themed restaurant`;
-    const { response, stream } = ai.generateStream({
-      model: gemini20Flash,
-      prompt: prompt,
-      config: {
-        temperature: 1,
-      },
-    });
+// Import the kitchen orchestrator flow
+import { kitchenOrchestratorFlow } from './flows/kitchenOrchestratorFlow';
 
-    for await (const chunk of stream) {
-      sendChunk(chunk.text);
-    }
-
-    // Handle the response from the model API. In this sample, we just
-    // convert it to a string, but more complicated flows might coerce the
-    // response into structured output or chain the response into another
-    // LLM call, etc.
-    return (await response).text;
-  }
-);
-
-export const menuSuggestion = onCallGenkit({
+// Export the kitchen API as a Genkit callable function
+export const kitchenApi = onCallGenkit({
   // Uncomment to enable AppCheck. This can reduce costs by ensuring only your Verified
   // app users can use your API. Read more at https://firebase.google.com/docs/app-check/cloud-functions
   // enforceAppCheck: true,
@@ -75,4 +46,7 @@ export const menuSuggestion = onCallGenkit({
 
   // Grant access to the API key to this function:
   secrets: [apiKey],
-}, menuSuggestionFlow);
+}, kitchenOrchestratorFlow);
+
+// Export the ai instance and z for use in other files
+export { ai, z };

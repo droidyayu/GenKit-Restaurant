@@ -1,6 +1,6 @@
-import { ai, z } from '../genkit.js';
-import { createOrderTool, updateOrderStatusTool } from '../tools/orderTool.js';
-import { inventoryTool } from '../tools/inventoryTool.js';
+import { ai } from '../genkit';
+import { createOrderTool, updateOrderStatusTool } from '../tools/orderTool';
+import { inventoryTool } from '../tools/inventoryTool';
 
 export async function orderManagerAgent(input: {
   userId: string;
@@ -90,7 +90,7 @@ Consider:
     }
     
     // Update order status to pending
-    const statusUpdate = await updateOrderStatusTool({
+    await updateOrderStatusTool({
       status: 'PENDING',
       message: 'Order received and queued for cooking'
     });

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { createInterface } from 'node:readline';
-import { ai } from './genkit.js';
-import { kitchenOrchestratorFlow } from './flows/kitchenOrchestratorFlow.js';
+import { ai } from './genkit';
+import { kitchenOrchestratorFlow } from './flows/kitchenOrchestratorFlow';
 
 const rl = createInterface({
   input: process.stdin,
@@ -86,7 +86,7 @@ async function main() {
             rl.close();
             process.exit(0);
           }
-          const result = await kitchenOrchestratorFlow({ userId, message: input });
+          const result = await kitchenOrchestratorFlow.run({ userId, message: input });
           printResponse(result);
           resolve();
         } catch (e) {

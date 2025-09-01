@@ -1,4 +1,4 @@
-import { ai, z } from '../genkit.js';
+import { ai, z } from '../genkit';
 
 export const notificationTool = ai.defineTool(
   {
