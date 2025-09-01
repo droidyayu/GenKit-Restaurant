@@ -107,3 +107,19 @@ test_verification.sh
 # Backup files
 *.bak
 *.backup
+
+# Genkit
+.genkit/
+.genkit-dev/
+.genkit-prod/
+.genkit-test/
+
+# Firebase
+.firebase/
+firebase.json
+firebase.init.json
+firebase.debug.log
+firebase.debug.log.*
+firebase.debug.log.*.*
+firebase.debug.log.*.*.*
+firebase.debug.log.*.*.*.*

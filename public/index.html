@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Genkit demo</title>
+  </head>
+  <body>
+    <div id="signin" hidden>
+      <button id="signinBtn">Sign in with Google</button>
+    </div>
+    <div id="callGenkit" hidden>
+      Subject: <input type="text" id="subject" />
+      <button id="kitchenApi">Place your order</button>
+      <p id="kitchenApi"></p>
+    </div>
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+      import {
+        getAuth,
+        onAuthStateChanged,
+        GoogleAuthProvider,
+        signInWithPopup,
+      } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+      import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-functions.js';
+
+      const firebaseConfig = await fetch('/__/firebase/init.json');
+      initializeApp(await firebaseConfig.json());
+
+      async function generatePoem() {
+        const poemFlow = httpsCallable(getFunctions(), 'generatePoem');
+        const subject = document.querySelector('#subject').value;
+        const response = await poemFlow({ subject });
+        document.querySelector('#generatedPoem').innerText = response.data.poem;
+      }
+
+      function signIn() {
+        signInWithPopup(getAuth(), new GoogleAuthProvider());
+      }
+
+      document.querySelector('#signinBtn').addEventListener('click', signIn);
+      document.querySelector('#generatePoem').addEventListener('click', generatePoem);
+
+      const signinEl = document.querySelector('#signin');
+      const genkitEl = document.querySelector('#callGenkit');
+
+      onAuthStateChanged(getAuth(), (user) => {
+        if (!user) {
+          signinEl.hidden = false;
+          genkitEl.hidden = true;
+        } else {
+          signinEl.hidden = true;
+          genkitEl.hidden = false;
+        }
+      });
+    </script>
+  </body>
+</html>
