@@ -1,155 +1,292 @@
-# Kitchen Multi-Agent System
+# 🍽️ Kitchen Multi-Agent System
 
-A demonstration of a conversational, multi-agent assistant for restaurant management using GenKit and Google's Gemini Pro. This system provides a comprehensive restaurant management solution with specialized agents for inventory, menu generation, order processing, and kitchen workflow orchestration.
+A sophisticated restaurant kitchen simulation built with **Genkit SDK** and **Firebase Functions**, featuring multiple AI agents that collaborate to provide a complete dining experience.
 
-In this example we have a ChefAgent which is the main, customer-facing agent.
-This agent comes equipped with additional specialized agents, that it can hand-off to as needed.
+## 🏗️ System Architecture
 
-These specialized agents are represented as prompts and embedded as tools to the original agent.
+The system is built around **5 specialized agents** that work together through **3 supporting flows** and **4 utility tools**:
 
-## Agent Tools & Capabilities
+```
+User Request → Kitchen Orchestrator Agent → Route to Appropriate Agent/Flow
+                ↓
+    ┌─────────────────────────────────────────────────────────┐
+    │                    AGENTS (Flows)                      │
+    ├─────────────────────────────────────────────────────────┤
+    │ • Kitchen Orchestrator Agent (Central Router)          │
+    │ • Menu & Recipe Agent (Dynamic Menu Generation)        │
+    │ • Order Manager Agent (Order Lifecycle)                │
+    │ • Chef Agent (Cooking Execution)                       │
+    │ • Waiter Agent (Customer Communication)                │
+    └─────────────────────────────────────────────────────────┘
+                ↓
+    ┌─────────────────────────────────────────────────────────┐
+    │                  SUPPORTING FLOWS                      │
+    ├─────────────────────────────────────────────────────────┤
+    │ • Available Dishes Flow (Recipe Filtering)             │
+    │ • Cooking Flow (Simulated Cooking)                     │
+    │ • Delivery Flow (Order Delivery)                       │
+    └─────────────────────────────────────────────────────────┘
+                ↓
+    ┌─────────────────────────────────────────────────────────┐
+    │                     TOOLS                              │
+    ├─────────────────────────────────────────────────────────┤
+    │ • Inventory Tool (Ingredient Management)               │
+    │ • Timer Tool (Accelerated Cooking)                     │
+    │ • Notification Tool (Customer Updates)                 │
+    │ • Order Tools (Order Management)                       │
+    └─────────────────────────────────────────────────────────┘
+```
 
-- **Agent Structure**:
-  - `ChefAgent`: Main entry point and customer interface, handling general queries and delegating to specialized agents
-  - `InventoryAgent`: Specialized agent for ingredient management and availability
-  - `MenuAgent`: Manages dynamic menu generation based on available ingredients
-  - `OrderAgent`: Handles order collection and meal planning
-  - `KitchenWorkflow`: Orchestrates the complete cooking process
-  - `DeliveryAgent`: Manages delivery and dessert upselling
+## 🧩 Agent Details
 
-Each specialized agent has its own set of tools that are only accessible to that specific agent:
+### 1. Kitchen Orchestrator Agent
+- **Purpose**: Central router and coordinator
+- **Input**: `{ userId, message }`
+- **Process**: Classifies intent and routes to appropriate agent
+- **Capabilities**: Intent classification, request routing, system coordination
 
-- **InventoryAgent**:
-  - `getInventory`: Retrieve ingredient availability
-  - `getIngredientDetails`: Get detailed ingredient information
-- **MenuAgent**:
-  - `getMenu`: Generate dynamic menus based on preferences
-- **OrderAgent**:
-  - `createOrder`: Create new orders with complete details
-- **KitchenWorkflow**:
-  - `kitchenTimer`: Simulate cooking phases
-  - `updateOrderStatus`: Update order progress
-  - `prepAgent`: Handle ingredient preparation
-  - `cookAgent`: Manage cooking process
-  - `plateAgent`: Handle final presentation
-- **DeliveryAgent**:
-  - `completeOrder`: Finalize orders and handle delivery
+### 2. Menu & Recipe Agent
+- **Purpose**: Culinary "brain" for menu generation
+- **Input**: `{ userId?, availableIngredients?, category?, preferences?, requestType }`
+- **Process**: Generates dynamic menus based on inventory
+- **Capabilities**: Menu generation, recipe suggestions, dessert upsell
 
-The main ChefAgent cannot directly access these specialized tools - it can only access its own tools and delegate to the specialized agents. This means the specialized agent descriptions need to clearly communicate their capabilities, since the main agent relies on these descriptions for appropriate routing.
+### 3. Order Manager Agent
+- **Purpose**: Handles order lifecycle management
+- **Input**: `{ userId, dish, quantity?, specialInstructions? }`
+- **Process**: Validates orders and coordinates with Chef Agent
+- **Capabilities**: Order validation, ingredient checking, order creation
 
-This architectural pattern:
+### 4. Chef Agent
+- **Purpose**: Executes cooking tasks
+- **Input**: `{ orderId, dishName, userId, specialInstructions? }`
+- **Process**: Manages cooking process with accelerated timing
+- **Capabilities**: Ingredient validation, cooking execution, status updates
 
-- Maintains clear separation of concerns
-- Allows specialized agents to evolve independently
-- Allows scaling up to a larger number of tools
-- Provides a complete restaurant management solution
+### 5. Waiter Agent
+- **Purpose**: Customer communication and delivery
+- **Input**: `{ userId, orderId?, action, message? }`
+- **Process**: Handles customer interactions and order delivery
+- **Capabilities**: Status checks, order delivery, dessert upsell
 
-## Features
+## 🛠️ Supporting Flows
 
-### Menu System
-- **24 Menu Items** across 6 categories:
-  - Vegetarian Dishes (5 items)
-  - Non-Vegetarian Dishes (5 items)
-  - Breads (3 items)
-  - Rice (3 items)
-  - Side Dishes (3 items)
-  - Desserts (5 items)
+### Available Dishes Flow
+- **Purpose**: Compute feasible dishes given inventory
+- **Input**: `{ category?, preferences? }`
+- **Output**: List of dishes that can be made with available ingredients
 
-### Inventory Management
-- **42 Ingredients** organized by categories:
-  - Proteins (5 items)
-  - Vegetables (8 items)
-  - Grains (5 items)
-  - Dairy (6 items)
-  - Spices (10 items)
-  - Herbs (2 items)
-  - Condiments (6 items)
+### Cooking Flow
+- **Purpose**: Simulate cooking process with accelerated time
+- **Input**: `{ orderId, dishName, userId }`
+- **Output**: Cooking completion status and timing
 
-### Order Processing
-- Complete order collection with quantity and spice levels
-- Special handling for sweet dishes (no spice level required)
-- Automatic meal planning with accompaniments
-- Real-time order status tracking
+### Delivery Flow
+- **Purpose**: Handle order delivery and customer notification
+- **Input**: `{ orderId, userId, dishName }`
+- **Output**: Delivery completion and notification status
 
-### Kitchen Workflow
-- **Preparation Phase**: Ingredient setup and preparation
-- **Cooking Phase**: Actual cooking with timing simulation
-- **Plating Phase**: Final presentation and quality checks
-- **Delivery Phase**: Order delivery and dessert upselling
+## 🔧 Tools
 
-## Prerequisites
+### Inventory Tool
+- **Purpose**: Check ingredient availability and quantities
+- **Input**: `{ ingredientName? }`
+- **Output**: Current inventory status
 
-- Node.js and genkit CLI installed
-- Google AI API key
+### Timer Tool
+- **Purpose**: Simulate accelerated cooking time (1s = 1min)
+- **Input**: `{ phase, duration, message }`
+- **Output**: Timer completion status
 
-## Getting Started
+### Notification Tool
+- **Purpose**: Send push notifications to customers
+- **Input**: `{ userId, title, body, data?, priority? }`
+- **Output**: Notification delivery status
 
-1. Install dependencies:
+### Order Tools
+- **Purpose**: Manage order lifecycle
+- **Includes**: Create, update, check status, complete orders
 
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- Genkit SDK
+- Firebase Functions (for production)
+
+### Installation
 ```bash
+cd server
 npm install
 ```
 
-2. Set up your Google AI API key:
+### Running the System
+
+#### Local Development
+```bash
+npm run dev
+```
+This starts the interactive terminal interface using the Kitchen Orchestrator Agent.
+
+#### Testing
+```bash
+npm run test:kitchen
+```
+Runs comprehensive tests of all agents and flows.
+
+#### Production (Firebase Functions)
+```bash
+cd functions
+npm run deploy
+```
+
+## 📋 Usage Examples
+
+### 1. Ask for Menu
+```
+User: "Show me the menu"
+→ Orchestrator → Menu Agent → Available Dishes Flow → Inventory Tool
+→ Returns: Dynamic menu based on current ingredients
+```
+
+### 2. Place an Order
+```
+User: "I want to order Palak Paneer"
+→ Orchestrator → Order Manager Agent → Chef Agent
+→ Creates order → Starts cooking → Updates status
+```
+
+### 3. Check Order Status
+```
+User: "Where is my order?"
+→ Orchestrator → Waiter Agent → Order Status Tool
+→ Returns: Current cooking progress and estimated completion
+```
+
+### 4. Automatic Delivery
+```
+Chef Agent → Marks order ready → Waiter Agent → Delivery Flow
+→ Notification Tool → Customer updated → Dessert upsell
+```
+
+## ⚡ Accelerated Time System
+
+The system features **accelerated cooking time** where:
+- **1 real second = 1 simulated minute**
+- Cooking phases: Prep (3 min), Cooking (8 min), Plating (2 min)
+- Total cooking time: ~13 minutes (simulated in ~13 seconds)
+
+## 🔄 Agent Connections
+
+```
+User Request
+    ↓
+Kitchen Orchestrator Agent
+    ↓
+┌─────────────────────────────────────────────────┐
+│              ROUTING LOGIC                     │
+├─────────────────────────────────────────────────┤
+│ • AskMenu → Menu & Recipe Agent                │
+│ • AskAvailableDishes → Available Dishes Flow   │
+│ • PlaceOrder → Order Manager Agent             │
+│ • CheckStatus → Waiter Agent                   │
+│ • Fallback → Helpful suggestions               │
+└─────────────────────────────────────────────────┘
+    ↓
+Specialized Agent/Flow
+    ↓
+Tools (Inventory, Timer, Notification, Orders)
+    ↓
+Response to User
+```
+
+## 🧪 Testing
+
+The system includes comprehensive testing:
 
 ```bash
-export GOOGLE_GENAI_API_KEY=your_api_key_here
+# Test individual components
+npm run test:kitchen
+
+# Test specific flows
+npm run test:flows
+
+# Test agent interactions
+npm run test:agents
 ```
 
-3. Start the development server:
+## 🔧 Configuration
 
+### Environment Variables
 ```bash
-npm run genkit:dev
+GOOGLE_GENAI_API_KEY=your_api_key
+FIREBASE_PROJECT_ID=your_project_id
 ```
 
-In your terminal, a commandline chat interface should show up:
+### Customization
+- **Recipe Database**: Modify `availableDishesFlow.ts` for new dishes
+- **Cooking Times**: Adjust timing in `cookingFlow.ts`
+- **Agent Behavior**: Customize prompts and logic in agent files
 
-```terminal
-Telemetry API running on http://localhost:4033
-Genkit Developer UI: http://localhost:4000
+## 🚀 Future Enhancements
 
-> kitchen-agent@1.0.1 dev
-> tsx --no-warnings --watch src/simpleKitchenTerminal.ts
+- **Real-time Collaboration**: Multiple chefs working simultaneously
+- **Inventory Management**: Automatic reordering and stock alerts
+- **Customer Preferences**: Personalized recommendations and dietary restrictions
+- **Kitchen Analytics**: Performance metrics and optimization suggestions
+- **Integration**: POS systems, delivery platforms, customer apps
 
-chef> Hi there! I'm Chef Raj, your friendly AI chef at Indian Grill! 🍽️ I can help you with our menu, ingredients, orders, and more. What would you like to know?
+## 📁 Project Structure
 
-prompt> [insert your chats here]
+```
+server/
+├── src/
+│   ├── agents/           # Agent services (flows with personas)
+│   │   ├── kitchenOrchestratorAgent.ts
+│   │   ├── menuRecipeAgent.ts
+│   │   ├── orderManagerAgent.ts
+│   │   ├── chefAgent.ts
+│   │   └── waiterAgent.ts
+│   ├── flows/            # Supporting flows (logic helpers)
+│   │   ├── availableDishesFlow.ts
+│   │   ├── cookingFlow.ts
+│   │   └── deliveryFlow.ts
+│   ├── tools/            # Utility tools (stateless functions)
+│   │   ├── inventoryTool.ts
+│   │   ├── timerTool.ts
+│   │   ├── notificationTool.ts
+│   │   └── orderTool.ts
+│   ├── kitchen/          # Main system exports
+│   │   └── index.ts
+│   ├── genkit.ts         # Genkit configuration
+│   ├── genkit.ts         # Genkit configuration
+│   └── terminal.ts       # Interactive terminal interface
+├── functions/            # Firebase Functions (production)
+│   └── src/
+│       └── kitchen/      # Production kitchen system
+└── README.md
 ```
 
-You can feel free to tweak the sample. The project builds in watch mode, so any changes will be picked up immediately and should restart the conversation.
+## 🤝 Contributing
 
-## Usage
+1. Fork the repository
+2. Create a feature branch
+3. Implement your changes
+4. Add tests
+5. Submit a pull request
 
-The system uses a simplified single-agent architecture:
+## 📄 License
 
-- **SimpleChefAgent**: Main customer interface that handles all interactions directly using tools
-- **Tools**: Direct access to menu, order creation, status checking, and inventory
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-Example queries:
+## 🆘 Support
 
-- "What's on the menu?"
-- "What ingredients do you have?"
-- "I want Palak Paratha with Medium spice level"
-- "Where is my order?"
+For questions or issues:
+1. Check the documentation
+2. Review existing issues
+3. Create a new issue with detailed information
 
-## Development
+---
 
-- `npm run dev` - Run in development mode with hot reloading
-- `npm run build` - Build the project
-- `npm start` - Run the built version
-
-## Project Structure
-
-- `src/`
-  - `simpleChefAgent.ts` - Main customer interface agent
-  - `simpleKitchenTerminal.ts` - Terminal interface
-  - `kitchenTools.ts` - Tool definitions (getMenu, createOrder, getOrderStatus, getInventory)
-  - `kitchenTypes.ts` - TypeScript types
-  - `kitchenData.ts` - Menu and inventory data
-  - `genkit.ts` - Genkit configuration
-  - `util.ts` - Utility functions
-  - `test/` - Test files
-    - `kitchenTests.ts` - Comprehensive test suite
-    - `chefTest.ts` - Chef agent demonstration
-    - `simpleKitchenTest.ts` - Simple verification test
+**Built with ❤️ using Genkit SDK and Firebase Functions**
   

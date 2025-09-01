@@ -1,8 +1,7 @@
 import 'dotenv/config';
-import type { Message, ToolRequestPart } from 'genkit';
 import { createInterface } from 'node:readline';
 import { ai } from './genkit.js';
-import { chefAgent } from './agents/chefAgent.js';
+import { kitchenOrchestratorAgent } from './agents/kitchenOrchestratorAgent.js';
 
 const rl = createInterface({
   input: process.stdin,
@@ -25,75 +24,82 @@ function printColored(prefix: string, text: string, color: string) {
 // Get initial greeting from AI
 async function getGreeting() {
   const { text } = await ai.generate(
-    'Come up with a short friendly greeting for yourself talking to a customer as Chef Raj, the coordinator of a multi-agent restaurant system at Indian Grill. Mention that you work with specialized agents for different tasks.'
+    'Come up with a short friendly greeting for yourself talking to a customer as the Kitchen Orchestrator at Indian Grill. Mention that you coordinate specialized agents for menu, orders, cooking, and delivery.'
   );
   return text;
 }
 
-// Process and display the chat response stream
-async function handleChatResponse(
-  stream: AsyncIterable<{ text: string }>,
-  response: Promise<any>,
-  startMessageCount: number
-) {
+function printResponse(result: any) {
   console.log();
   process.stdout.write(`${COLORS.CHEF}chef>${COLORS.RESET} `);
 
-  for await (const chunk of stream) {
-    process.stdout.write(chunk.text);
+  if (!result) {
+    console.log('Sorry, I had trouble responding. Please try again.');
+    return;
   }
 
-  // Extract and display tools used (agents called)
-  const toolsUsed = (await response).messages
-    .slice(startMessageCount)
-    .filter((m: Message) => m.role === 'model')
-    .flatMap((m: Message) =>
-      m.content
-        .filter((p) => !!p.toolRequest)
-        .map(
-          (p) =>
-            `${p.toolRequest?.name}(${JSON.stringify(p.toolRequest?.input)})`
-        )
-    )
-    .filter((t: ToolRequestPart) => !!t);
+  if (result.message) console.log(result.message);
 
-  if (toolsUsed.length > 0) {
-    console.log(`\n${COLORS.AGENT}🤖 Agents Called:${COLORS.RESET}`, toolsUsed);
+  if (result.menu) {
+    console.log('\nAvailable Dishes:');
+    for (const dish of result.menu) {
+      console.log(` - ${dish.name} (${dish.category})${dish.price ? ` - $${dish.price}` : ''}`);
+    }
+  }
+
+  if (result.availableDishes) {
+    console.log('\nAvailable Dishes:');
+    for (const dish of result.availableDishes) {
+      console.log(` - ${dish.name} (${dish.category})${dish.price ? ` - $${dish.price}` : ''}`);
+    }
+  }
+
+  if (result.status && result.status !== 'no_orders') {
+    console.log(`\nStatus: ${result.status}`);
+    if (result.estimatedTime) console.log(`ETA: ${result.estimatedTime}`);
+    if (typeof result.progress === 'number') console.log(`Progress: ${result.progress}%`);
+  }
+
+  if (Array.isArray(result.suggestions) && result.suggestions.length > 0) {
+    console.log('\nSuggestions:');
+    for (const s of result.suggestions) {
+      console.log(` - ${s}`);
+    }
   }
 }
 
-// Main chat loop
-async function handleUserInput(chat: any): Promise<void> {
-  return new Promise((resolve) => {
-    rl.question(`\n${COLORS.PROMPT}prompt>${COLORS.RESET} `, async (input) => {
-      try {
-        const startMessageCount = chat.messages.length;
-        const { stream, response } = await chat.sendStream(input);
-        await handleChatResponse(stream, response, startMessageCount);
-        resolve();
-      } catch (e) {
-        console.log('Error:', e);
-        resolve();
-      }
-    });
-  });
-}
-
+// Main loop calling orchestrator flow directly
 async function main() {
-  const chat = ai.createSession().chat(chefAgent);
+  const userId = 'cli-user';
 
   const greeting = await getGreeting();
   console.log();
   printColored('chef', greeting, COLORS.CHEF);
-  console.log(`\n${COLORS.AGENT}🎭 Multi-Agent System Active:${COLORS.RESET}`);
-  console.log('   • MenuAgent - Menu display and recommendations');
-  console.log('   • OrderAgent - Order collection and processing');
-  console.log('   • InventoryAgent - Ingredient management');
-  console.log('   • KitchenAgent - Cooking process orchestration');
-  console.log('   • DeliveryAgent - Order delivery and customer service');
+  console.log(`\n${COLORS.AGENT}🎭 Kitchen Multi-Agent System Active:${COLORS.RESET}`);
+  console.log('   • Kitchen Orchestrator - Central router and coordinator');
+  console.log('   • Menu & Recipe Agent - Dynamic menu generation');
+  console.log('   • Order Manager Agent - Order lifecycle management');
+  console.log('   • Chef Agent - Cooking execution and timing');
+  console.log('   • Waiter Agent - Customer communication and delivery');
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
-    await handleUserInput(chat);
+    await new Promise<void>((resolve) => {
+      rl.question(`\n${COLORS.PROMPT}prompt>${COLORS.RESET} `, async (input) => {
+        try {
+          if (!input || input.trim().toLowerCase() === 'exit') {
+            rl.close();
+            process.exit(0);
+          }
+          const result = await kitchenOrchestratorAgent({ userId, message: input });
+          printResponse(result);
+          resolve();
+        } catch (e) {
+          console.log('Error:', e);
+          resolve();
+        }
+      });
+    });
   }
 }
 
