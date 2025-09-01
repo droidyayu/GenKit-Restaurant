@@ -42,8 +42,8 @@ import {onCallGenkit} from "firebase-functions/https";
 import {defineSecret} from "firebase-functions/params";
 const apiKey = defineSecret("GOOGLE_GENAI_API_KEY");
 
-// Export the kitchen API as a Genkit callable function
-export const kitchenApi = onCallGenkit({
+// Export the kitchen flow as a Genkit callable function
+export const kitchenFlow = onCallGenkit({
   // Uncomment to enable AppCheck. This can reduce costs by ensuring only your Verified
   // app users can use your API. Read more at https://firebase.google.com/docs/app-check/cloud-functions
   // enforceAppCheck: true,
