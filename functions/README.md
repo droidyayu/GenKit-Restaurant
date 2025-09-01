@@ -143,8 +143,8 @@ npm run genkit:start
 
 #### Testing
 ```bash
-# Test the kitchen API
-curl -X POST "http://127.0.0.1:5001/demo-project/us-central1/kitchenApi" \
+# Test the kitchen flow
+curl -X POST "http://127.0.0.1:5001/demo-project/us-central1/kitchenFlow" \
   -H "Content-Type: application/json" \
   -d '{"data": {"message": "Show me the menu"}}'
 ```
@@ -226,7 +226,7 @@ npm run terminal
 npm run serve
 
 # Test via HTTP requests
-curl -X POST "http://127.0.0.1:5001/demo-project/us-central1/kitchenApi" \
+curl -X POST "http://127.0.0.1:5001/demo-project/us-central1/kitchenFlow" \
   -H "Content-Type: application/json" \
   -d '{"data": {"message": "Show me the menu"}}'
 ```
@@ -278,7 +278,7 @@ functions/
 │   │   ├── notificationTool.ts
 │   │   ├── orderTool.ts
 │   │   └── index.ts
-│   ├── genkit.ts         # Genkit configuration and kitchenApi export
+│   ├── genkit.ts         # Genkit configuration and kitchenFlow export
 │   ├── index.ts          # Firebase Functions entry point
 │   └── terminal.ts       # Interactive terminal interface
 ├── package.json          # Dependencies and scripts
@@ -314,8 +314,8 @@ npm run deploy
 ```typescript
 import { httpsCallable } from "firebase/functions";
 
-const kitchenApi = httpsCallable(functions, "kitchenApi");
-const result = await kitchenApi({ message: "Place order: Spaghetti" });
+const kitchenFlow = httpsCallable(functions, "kitchenFlow");
+const result = await kitchenFlow({ message: "Place order: Spaghetti" });
 console.log(result.data);
 ```
 
