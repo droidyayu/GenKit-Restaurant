@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+import "dotenv/config";
+
 // Import the Genkit core libraries and plugins.
 import {genkit, z} from "genkit";
 import {gemini15Pro, googleAI} from "@genkit-ai/googleai";
