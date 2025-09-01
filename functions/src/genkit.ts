@@ -19,4 +19,4 @@ const ai = genkit({
 });
 
 // Export the ai instance and z for use in other files
-export { ai, z };
+export {ai, z};
