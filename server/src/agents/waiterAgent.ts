@@ -1,57 +1,51 @@
 import { ai, z } from '../genkit.js';
 import { getOrderStatusTool, updateOrderStatusTool, completeOrderTool } from '../tools/orderTool.js';
 import { notificationTool } from '../tools/notificationTool.js';
-import { deliveryFlow } from '../flows/deliveryFlow.js';
+
 import { menuRecipeAgent } from './menuRecipeAgent.js';
 
-export const waiterAgent = ai.defineFlow(
-  {
-    name: 'waiterAgent',
-    description: 'Communicates with users and handles delivery and upsell',
-    inputSchema: z.object({
-      userId: z.string().describe('User ID to communicate with'),
-      orderId: z.string().optional().describe('Optional order ID for specific actions'),
-      action: z.enum(['checkStatus', 'deliverOrder', 'upsellDessert', 'generalInquiry']).describe('Action to perform'),
-      message: z.string().optional().describe('Optional message for general inquiries'),
-    }),
-  },
-  async ({ userId, orderId, action, message }) => {
-    console.log(`[WAITER AGENT] Processing ${action} for user ${userId}`);
-    
-    try {
-      switch (action) {
-        case 'checkStatus':
-          return await handleStatusCheck(userId, orderId);
-          
-        case 'deliverOrder':
-          return await handleOrderDelivery(userId, orderId!);
-          
-        case 'upsellDessert':
-          return await handleDessertUpsell(userId, orderId);
-          
-        case 'generalInquiry':
-          return await handleGeneralInquiry(userId, message);
-          
-        default:
-          return {
-            success: false,
-            error: 'Invalid action',
-            message: 'Please specify a valid action: checkStatus, deliverOrder, upsellDessert, or generalInquiry'
-          };
-      }
-      
-    } catch (error) {
-      console.error(`[WAITER AGENT] Error processing ${action}:`, error);
-      
-      return {
-        success: false,
-        error: `Failed to process ${action}`,
-        details: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Sorry, there was an error processing your request. Please try again later.'
-      };
+export async function waiterAgent(input: {
+  userId: string;
+  orderId?: string;
+  action: 'checkStatus' | 'deliverOrder' | 'upsellDessert' | 'generalInquiry';
+  message?: string;
+}) {
+  const { userId, orderId, action, message } = input;
+  console.log(`[WAITER AGENT] Processing ${action} for user ${userId}`);
+  
+  try {
+    switch (action) {
+      case 'checkStatus':
+        return await handleStatusCheck(userId, orderId);
+        
+      case 'deliverOrder':
+        return await handleOrderDelivery(userId, orderId!);
+        
+      case 'upsellDessert':
+        return await handleDessertUpsell(userId, orderId);
+        
+      case 'generalInquiry':
+        return await handleGeneralInquiry(userId, message);
+        
+      default:
+        return {
+          success: false,
+          error: 'Invalid action',
+          message: 'Please specify a valid action: checkStatus, deliverOrder, upsellDessert, or generalInquiry'
+        };
     }
+    
+  } catch (error) {
+    console.error(`[WAITER AGENT] Error processing ${action}:`, error);
+    
+    return {
+      success: false,
+      error: `Failed to process ${action}`,
+      details: error instanceof Error ? error.message : 'Unknown error',
+      message: 'Sorry, there was an error processing your request. Please try again later.'
+    };
   }
-);
+}
 
 // Handle order status check
 async function handleStatusCheck(userId: string, orderId?: string) {
@@ -141,44 +135,37 @@ async function handleOrderDelivery(userId: string, orderId: string) {
     };
   }
   
-  // Execute delivery flow
-  const deliveryResult = await deliveryFlow({
-    orderId,
-    userId,
-    dishName: status.dishes?.[0]?.name || 'your order'
+  // Simulate delivery process
+  console.log(`[WAITER AGENT] Delivering order ${orderId} to user ${userId}`);
+  
+  // Simulate delivery time (accelerated: 1 second = 1 minute)
+  await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds = 2 minutes
+  
+  // Update order status to delivered
+  await updateOrderStatusTool({
+    status: 'DELIVERED',
+    message: 'Order delivered successfully'
   });
   
-  if (deliveryResult.success) {
-    // Update order status to delivered
-    await updateOrderStatusTool({
-      status: 'DELIVERED',
-      message: 'Order delivered successfully'
-    });
-    
-    // Complete the order
-    await completeOrderTool({});
-    
-    return {
-      success: true,
-      action: 'deliverOrder',
-      userId,
-      orderId,
-      status: 'delivered',
-      message: 'Your order has been delivered successfully! Enjoy your meal.',
-      deliveryDetails: deliveryResult,
-      nextStep: 'Consider trying one of our desserts to complete your meal!'
-    };
-  } else {
-    return {
-      success: false,
-      action: 'deliverOrder',
-      userId,
-      orderId,
-      error: 'Delivery failed',
-      message: 'Sorry, there was an error delivering your order. Please try again.',
-      details: deliveryResult.error
-    };
-  }
+  // Complete the order
+  await completeOrderTool({});
+  
+  console.log(`[WAITER AGENT] Order ${orderId} delivered successfully`);
+  
+  return {
+    success: true,
+    action: 'deliverOrder',
+    userId,
+    orderId,
+    status: 'delivered',
+    message: 'Your order has been delivered successfully! Enjoy your meal.',
+    deliveryDetails: {
+      deliveryTime: '2 minutes',
+      method: 'Table service',
+      status: 'completed'
+    },
+    nextStep: 'Consider trying one of our desserts to complete your meal!'
+  };
 }
 
 // Handle dessert upsell
@@ -199,7 +186,7 @@ async function handleDessertUpsell(userId: string, orderId?: string) {
       body: 'Would you like to try one of our delicious desserts?',
       data: {
         type: 'dessert_upsell',
-        suggestions: dessertResult.dessertSuggestions?.map(d => d.name).join(', '),
+        suggestions: dessertResult.menuDisplay || 'Various desserts available',
         timestamp: new Date().toISOString()
       },
       priority: 'normal'
@@ -211,10 +198,10 @@ async function handleDessertUpsell(userId: string, orderId?: string) {
       userId,
       orderId,
       message: dessertResult.message,
-      dessertSuggestions: dessertResult.dessertSuggestions,
-      totalDesserts: dessertResult.totalDesserts,
+      dessertMenu: dessertResult.menuDisplay,
+      totalAvailable: dessertResult.totalAvailable,
       notificationSent: notification.success,
-      upsellMessage: dessertResult.upsellMessage
+      note: dessertResult.note
     };
   } else {
     return {

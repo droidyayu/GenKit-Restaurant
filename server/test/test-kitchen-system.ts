@@ -1,15 +1,19 @@
-import { kitchenOrchestratorAgent, availableDishesFlow, menuRecipeAgent, orderManagerAgent, chefAgent, waiterAgent } from './kitchen/index.js';
+import { kitchenOrchestratorFlow } from '../src/flows/kitchenOrchestratorFlow.js';
+import { menuRecipeAgent, orderManagerAgent, chefAgent, waiterAgent } from '../src/agents/index.js';
 
 console.log('🧪 Testing Kitchen Multi-Agent System...\n');
 
 async function testKitchenSystem() {
   try {
-    // Test 1: Available Dishes Flow
-    console.log('1️⃣ Testing Available Dishes Flow...');
-    const dishesResult = await availableDishesFlow({});
-    console.log('✅ Available Dishes Flow:', dishesResult.success ? 'SUCCESS' : 'FAILED');
-    if (dishesResult.success) {
-      console.log(`   Found ${dishesResult.totalAvailable} available dishes`);
+    // Test 1: Menu Recipe Agent
+    console.log('1️⃣ Testing Menu Recipe Agent...');
+    const menuTestResult = await menuRecipeAgent({
+      userId: 'test-user-1',
+      requestType: 'menu_generation'
+    });
+    console.log('✅ Menu Recipe Agent:', menuTestResult.success ? 'SUCCESS' : 'FAILED');
+    if (menuTestResult.success) {
+      console.log(`   Generated menu with ${menuTestResult.totalAvailable} dishes`);
     }
     console.log();
 
@@ -45,7 +49,7 @@ async function testKitchenSystem() {
       const chefResult = await chefAgent({
         orderId: orderResult.orderId,
         dishName: orderResult.dish,
-        userId: orderResult.userId
+        userId: orderResult.userId || 'test-user-1'
       });
       console.log('✅ Chef Agent:', chefResult.success ? 'SUCCESS' : 'FAILED');
       if (chefResult.success) {
@@ -58,13 +62,12 @@ async function testKitchenSystem() {
       if (chefResult.success) {
         console.log('5️⃣ Testing Waiter Agent...');
         const waiterResult = await waiterAgent({
-          userId: orderResult.userId,
+          userId: orderResult.userId || 'test-user-1',
           orderId: orderResult.orderId,
           action: 'checkStatus'
         });
         console.log('✅ Waiter Agent:', waiterResult.success ? 'SUCCESS' : 'FAILED');
         if (waiterResult.success) {
-          console.log(`   Status: ${waiterResult.status}`);
           console.log(`   Message: ${waiterResult.message}`);
         }
         console.log();
@@ -73,7 +76,7 @@ async function testKitchenSystem() {
 
     // Test 6: Kitchen Orchestrator Agent
     console.log('6️⃣ Testing Kitchen Orchestrator Agent...');
-    const orchestratorResult = await kitchenOrchestratorAgent({
+    const orchestratorResult = await kitchenOrchestratorFlow({
       userId: 'test-user-2',
       message: 'Show me the menu'
     });

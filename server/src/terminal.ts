@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { createInterface } from 'node:readline';
 import { ai } from './genkit.js';
-import { kitchenOrchestratorAgent } from './agents/kitchenOrchestratorAgent.js';
+import { kitchenOrchestratorFlow } from './flows/kitchenOrchestratorFlow.js';
 
 const rl = createInterface({
   input: process.stdin,
@@ -40,7 +40,9 @@ function printResponse(result: any) {
 
   if (result.message) console.log(result.message);
 
-  if (result.menu) {
+  if (result.menuDisplay) {
+    console.log(result.menuDisplay);
+  } else if (result.menu) {
     console.log('\nAvailable Dishes:');
     for (const dish of result.menu) {
       console.log(` - ${dish.name} (${dish.category})${dish.price ? ` - $${dish.price}` : ''}`);
@@ -91,7 +93,7 @@ async function main() {
             rl.close();
             process.exit(0);
           }
-          const result = await kitchenOrchestratorAgent({ userId, message: input });
+          const result = await kitchenOrchestratorFlow({ userId, message: input });
           printResponse(result);
           resolve();
         } catch (e) {
