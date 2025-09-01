@@ -49,13 +49,6 @@ function printResponse(result: any) {
     }
   }
 
-  if (result.availableDishes) {
-    console.log('\nAvailable Dishes:');
-    for (const dish of result.availableDishes) {
-      console.log(` - ${dish.name} (${dish.category})${dish.price ? ` - $${dish.price}` : ''}`);
-    }
-  }
-
   if (result.status && result.status !== 'no_orders') {
     console.log(`\nStatus: ${result.status}`);
     if (result.estimatedTime) console.log(`ETA: ${result.estimatedTime}`);
