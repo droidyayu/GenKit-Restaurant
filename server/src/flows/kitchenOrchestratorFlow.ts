@@ -1,11 +1,14 @@
 import { ai, z } from '../genkit.js';
-import { availableDishesFlow } from '../flows/availableDishesFlow.js';
 import { createOrderTool, getOrderStatusTool } from '../tools/orderTool.js';
 import { inventoryTool } from '../tools/inventoryTool.js';
+import { orderManagerAgent } from '../agents/orderManagerAgent.js';
+import { chefAgent } from '../agents/chefAgent.js';
+import { waiterAgent } from '../agents/waiterAgent.js';
+import { menuRecipeAgent } from '../agents/menuRecipeAgent.js';
 
-export const kitchenOrchestratorAgent = ai.defineFlow(
+export const kitchenOrchestratorFlow = ai.defineFlow(
   {
-    name: 'kitchenOrchestratorAgent',
+    name: 'kitchenOrchestratorFlow',
     inputSchema: z.object({
       userId: z.string().describe('User ID making the request'),
       message: z.string().describe('User message to process'),
@@ -84,17 +87,54 @@ async function classifyIntent(message: string) {
     };
   }
   
-  if (lowerMessage.includes('order') || lowerMessage.includes('take') || lowerMessage.includes('want') || lowerMessage.includes('i\'ll have')) {
-    // Extract dish name if possible
-    const dishKeywords = ['spaghetti', 'pizza', 'salad', 'pasta', 'carbonara', 'caesar', 'margherita', 'paneer', 'chicken', 'lamb', 'fish'];
-    const foundDish = dishKeywords.find(dish => lowerMessage.includes(dish));
+  // Check for order requests - both explicit and implicit
+  if (lowerMessage.includes('order') || lowerMessage.includes('take') || lowerMessage.includes('want') || 
+      lowerMessage.includes('i\'ll have') || 
+      (lowerMessage.includes('for') && lowerMessage.includes('person')) ||
+      // Check if message contains dish names directly
+      lowerMessage.includes('palak') || lowerMessage.includes('paneer') || 
+      lowerMessage.includes('butter') || lowerMessage.includes('chicken') ||
+      lowerMessage.includes('dal') || lowerMessage.includes('gobi') ||
+      lowerMessage.includes('samosa') || lowerMessage.includes('biryani') ||
+      lowerMessage.includes('fish') || lowerMessage.includes('lamb') ||
+      lowerMessage.includes('paratha') || lowerMessage.includes('naan') ||
+      lowerMessage.includes('rice') || lowerMessage.includes('kheer')) {
+    
+    // Extract dish name from the message
+    let foundDish = 'unknown';
+    
+    // Define common dish names to look for
+    const dishNames = [
+      'Palak Paneer', 'Paneer Butter Masala', 'Dal Tadka', 'Gobi Masala',
+      'Mixed Vegetable Curry', 'Samosas', 'Butter Chicken', 'Chicken Biryani',
+      'Fish Curry', 'Lamb Curry', 'Aloo Paratha', 'Naan', 'Jeera Rice', 'Kheer'
+    ];
+    
+    // Look for exact matches first
+    for (const dish of dishNames) {
+      if (lowerMessage.includes(dish.toLowerCase())) {
+        foundDish = dish;
+        break;
+      }
+    }
+    
+    // If no exact match, try partial matching
+    if (foundDish === 'unknown') {
+      for (const dish of dishNames) {
+        const dishWords = dish.toLowerCase().split(' ');
+        if (dishWords.some((word: string) => lowerMessage.includes(word))) {
+          foundDish = dish;
+          break;
+        }
+      }
+    }
     
     return {
       intent: 'PlaceOrder',
       confidence: 0.8,
       extractedData: { 
         requestType: 'order_placement',
-        dishName: foundDish || 'unknown',
+        dishName: foundDish,
         originalMessage: message
       }
     };
@@ -117,18 +157,25 @@ async function classifyIntent(message: string) {
 
 // Handle menu requests
 async function handleMenuRequest(userId: string, message: string) {
-  console.log(`[ORCHESTRATOR] Routing to Available Dishes Flow for menu request`);
+  console.log(`[ORCHESTRATOR] Routing to Menu Recipe Agent for menu request`);
   
-  const result = await availableDishesFlow({});
+  const result = await menuRecipeAgent({
+    userId,
+    requestType: 'menu_generation'
+  });
   
   if (result.success) {
+    // Format the menu for display
+    const menuItems = result.menuDisplay || 'Menu generated successfully';
+    
     return {
       success: true,
       intent: 'AskMenu',
       action: 'menu_displayed',
       userId,
-      message: 'Here\'s our current menu based on available ingredients:',
-      menu: result.feasibleDishes,
+      message: result.message,
+      menu: result.menuDisplay,
+      menuDisplay: `Available Dishes:\n${menuItems}`,
       totalAvailable: result.totalAvailable,
       note: 'Menu is generated dynamically based on current ingredient availability'
     };
@@ -137,16 +184,19 @@ async function handleMenuRequest(userId: string, message: string) {
       success: false,
       intent: 'AskMenu',
       error: 'Failed to generate menu',
-      message: 'Sorry, I couldn\'t generate the menu right now. Please try again later.'
+      message: result.message || 'Sorry, I couldn\'t generate the menu right now. Please try again later.'
     };
   }
 }
 
 // Handle available dishes requests
 async function handleAvailableDishesRequest(userId: string, message: string) {
-  console.log(`[ORCHESTRATOR] Routing to Available Dishes Flow for availability check`);
+  console.log(`[ORCHESTRATOR] Routing to Menu Recipe Agent for availability check`);
   
-  const result = await availableDishesFlow({});
+  const result = await menuRecipeAgent({
+    userId,
+    requestType: 'menu_generation'
+  });
   
   if (result.success) {
     return {
@@ -154,8 +204,8 @@ async function handleAvailableDishesRequest(userId: string, message: string) {
       intent: 'AskAvailableDishes',
       action: 'availability_checked',
       userId,
-      message: 'Here\'s what we can make for you today:',
-      availableDishes: result.feasibleDishes,
+      message: result.message,
+      availableDishes: result.menuDisplay, // Return the formatted menu display
       totalAvailable: result.totalAvailable,
       note: 'Dishes are filtered based on current ingredient availability'
     };
@@ -164,12 +214,12 @@ async function handleAvailableDishesRequest(userId: string, message: string) {
       success: false,
       intent: 'AskAvailableDishes',
       error: 'Failed to check availability',
-      message: 'Sorry, I couldn\'t check dish availability right now. Please try again later.'
+      message: result.message || 'Sorry, I couldn\'t check dish availability right now. Please try again later.'
     };
   }
 }
 
-// Handle place order requests
+// Handle place order requests with proper agent orchestration
 async function handlePlaceOrderRequest(userId: string, message: string, extractedData: any) {
   console.log(`[ORCHESTRATOR] Routing to Order Manager for order placement`);
   
@@ -184,51 +234,84 @@ async function handlePlaceOrderRequest(userId: string, message: string, extracte
     };
   }
   
-  // Create the order
-  const order = await createOrderTool({
-    dishes: [{ name: dishName, quantity: 1 }],
-    customerName: `User ${userId}`
+  // Step 1: Order Manager creates the order
+  const orderResult = await orderManagerAgent({
+    userId,
+    dish: dishName,
+    quantity: 1
   });
+  
+  if (!orderResult.success) {
+    return {
+      success: false,
+      intent: 'PlaceOrder',
+      error: 'Order creation failed',
+      message: orderResult.message || 'Sorry, there was an error creating your order.'
+    };
+  }
+  
+  // Step 2: Chef Agent starts cooking
+  console.log(`[ORCHESTRATOR] Order created, routing to Chef Agent for cooking`);
+  const chefResult = await chefAgent({
+    orderId: orderResult.orderId,
+    dishName: dishName,
+    userId
+  });
+  
+  if (!chefResult.success) {
+    return {
+      success: false,
+      intent: 'PlaceOrder',
+      error: 'Cooking failed',
+      message: chefResult.message || 'Sorry, there was an error starting the cooking process.'
+    };
+  }
   
   return {
     success: true,
     intent: 'PlaceOrder',
-    action: 'order_created',
+    action: 'order_created_and_cooking',
     userId,
-    orderId: order.orderId,
+    orderId: orderResult.orderId,
     dishName: dishName,
-    message: `Order placed successfully! Your ${dishName} will be ready in approximately 15-20 minutes.`,
-    nextStep: 'Order sent to Chef Agent for cooking',
-    estimatedTime: '15-20 minutes'
+    message: `Order placed successfully! Your ${dishName} is now being cooked and will be ready in approximately 15-20 minutes.`,
+    nextStep: 'Chef is cooking your order',
+    estimatedTime: '15-20 minutes',
+    cookingStatus: chefResult.status
   };
 }
 
-// Handle check status requests
+// Handle status requests
 async function handleCheckStatusRequest(userId: string, message: string) {
   console.log(`[ORCHESTRATOR] Routing to Waiter Agent for status check`);
   
-  const status = await getOrderStatusTool({});
+  // Extract order ID from message if present, otherwise assume current order
+  const orderIdMatch = message.match(/ORD_(\d+)/);
+  const orderId = orderIdMatch ? orderIdMatch[0] : undefined;
   
-  if (status.status === 'NO_ACTIVE_ORDER') {
-    return {
-      success: true,
-      intent: 'CheckStatus',
-      action: 'status_checked',
-      userId,
-      message: 'You have no active orders at the moment. Would you like to see our menu or place an order?',
-      status: 'no_orders'
-    };
+  const result = await waiterAgent({
+    userId,
+    orderId,
+    action: 'checkStatus'
+  });
+  
+  if (result.success) {
+          return {
+        success: true,
+        intent: 'CheckStatus',
+        action: 'status_provided',
+        userId,
+        status: 'status_checked',
+        estimatedTime: '15-20 minutes',
+        progress: 100,
+        message: result.message
+      };
   } else {
     return {
-      success: true,
+      success: false,
       intent: 'CheckStatus',
-      action: 'status_checked',
-      userId,
-      orderId: status.orderId,
-      status: status.status,
-      message: status.message,
-      estimatedTime: status.estimatedTime,
-      progress: status.progress
+      error: 'Failed to get order status',
+      message: result.message || 'Sorry, I couldn\'t retrieve your order status right now.'
     };
   }
 }

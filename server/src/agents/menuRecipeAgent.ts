@@ -1,173 +1,77 @@
 import { ai, z } from '../genkit.js';
-import { availableDishesFlow } from '../flows/availableDishesFlow.js';
 import { inventoryTool } from '../tools/inventoryTool.js';
 
-export const menuRecipeAgent = ai.defineFlow(
-  {
-    name: 'menuRecipeAgent',
-    inputSchema: z.object({
-      userId: z.string().optional().describe('Optional user ID for personalized suggestions'),
-      availableIngredients: z.array(z.string()).optional().describe('Optional list of available ingredients'),
-      category: z.string().optional().describe('Optional category filter'),
-      preferences: z.string().optional().describe('Optional dietary preferences'),
-      requestType: z.enum(['menu_generation', 'recipe_suggestion', 'dessert_upsell']).describe('Type of request'),
-    }),
-  },
-  async ({ userId, availableIngredients, category, preferences, requestType }) => {
-    console.log(`[MENU AGENT] Processing ${requestType} request for user ${userId || 'anonymous'}`);
-    
-    try {
-      switch (requestType) {
-        case 'menu_generation':
-          return await generateDynamicMenu(category, preferences);
-          
-        case 'recipe_suggestion':
-          return await suggestAlternativeRecipes(availableIngredients, preferences);
-          
-        case 'dessert_upsell':
-          return await suggestDesserts(preferences);
-          
-        default:
-          return {
-            success: false,
-            error: 'Invalid request type',
-            message: 'Please specify a valid request type: menu_generation, recipe_suggestion, or dessert_upsell'
-          };
-      }
-      
-    } catch (error) {
-      console.error(`[MENU AGENT] Error processing ${requestType}:`, error);
-      
-      return {
-        success: false,
-        error: `Failed to process ${requestType}`,
-        details: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Sorry, I couldn\'t process your request right now. Please try again later.'
-      };
-    }
-  }
-);
-
-// Generate dynamic menu based on available ingredients
-async function generateDynamicMenu(category?: string, preferences?: string) {
-  console.log(`[MENU AGENT] Generating dynamic menu (category: ${category}, preferences: ${preferences})`);
+export async function menuRecipeAgent(input: {
+  userId?: string;
+  category?: string;
+  preferences?: string;
+  requestType: 'menu_generation' | 'recipe_suggestion' | 'dessert_upsell';
+}) {
+  const { userId, category, preferences, requestType } = input;
+  console.log(`[MENU AGENT] Processing ${requestType} request for user ${userId || 'anonymous'}`);
   
-  const result = await availableDishesFlow({ category, preferences });
-  
-  if (result.success) {
-    // Group dishes by category for better presentation
-    const menuByCategory = result.feasibleDishes.reduce((acc: Record<string, any[]>, dish: any) => {
-      if (!acc[dish.category]) {
-        acc[dish.category] = [];
-      }
-      acc[dish.category].push(dish);
-      return acc;
-    }, {} as Record<string, any[]>);
-    
-    return {
-      success: true,
-      requestType: 'menu_generation',
-      message: 'Here\'s our dynamic menu based on current ingredient availability:',
-      menu: menuByCategory,
-      totalAvailable: result.totalAvailable,
-      category: category || 'all',
-      preferences: preferences || 'none',
-      note: 'Menu is generated in real-time based on current inventory',
-      timestamp: new Date().toISOString()
-    };
-  } else {
-    return {
-      success: false,
-      requestType: 'menu_generation',
-      error: 'Failed to generate menu',
-      message: 'Sorry, I couldn\'t generate the menu right now. Please try again later.'
-    };
-  }
-}
-
-// Suggest alternative recipes when ingredients are limited
-async function suggestAlternativeRecipes(availableIngredients?: string[], preferences?: string) {
-  console.log(`[MENU AGENT] Suggesting alternative recipes based on available ingredients`);
-  
-  if (!availableIngredients || availableIngredients.length === 0) {
-    // Get current inventory to suggest recipes
+  try {
+    // Get current inventory using the tool
     const inventory = await inventoryTool({});
-    availableIngredients = inventory
-      .filter((item: any) => item.available && item.quantity > 0)
-      .map((item: any) => item.ingredient);
-  }
-  
-  // Find recipes that can be made with available ingredients
-  const result = await availableDishesFlow({ preferences });
-  
-  if (result.success) {
-    // Filter to recipes that use mostly available ingredients
-    const alternativeRecipes = result.feasibleDishes.filter((recipe: any) => {
-      const availableIngredientCount = recipe.ingredients.filter((ingredient: any) =>
-        availableIngredients!.some(available => 
-          available.toLowerCase().includes(ingredient.toLowerCase()) ||
-          ingredient.toLowerCase().includes(available.toLowerCase())
-        )
-      ).length;
-      
-      // Recipe is feasible if at least 80% of ingredients are available
-      return (availableIngredientCount / recipe.ingredients.length) >= 0.8;
+    const availableIngredients = inventory.filter((item: any) => 
+      item.available && item.quantity > 0
+    );
+    
+    // Create ingredient list for AI prompt
+    const ingredientList = availableIngredients.map((item: any) => `${item.ingredient} (${item.quantity}${item.unit})`).join(', ');
+    
+    // Build AI prompt for recipe generation
+    let prompt = `You are a master chef at Indian Grill restaurant. Based on these available ingredients: ${ingredientList}, generate a delicious Indian menu.
+
+Please provide a nicely formatted menu with:
+- 8-12 authentic Indian dishes that can be made with these ingredients
+- Each dish should include: name, category, brief description, cooking time, and price
+- Group dishes by category (Vegetarian, Non-Vegetarian, Appetizers, Breads, Rice, Desserts)
+- Use primarily the available ingredients listed above
+- Include vegetarian and non-vegetarian options
+- Provide realistic cooking times and pricing
+- Consider Indian cooking techniques and spice combinations
+
+Format the response as a beautiful, readable menu that customers can easily understand.`;
+
+    // Add category and preference constraints
+    if (category) {
+      prompt += `\n\nFocus on dishes in the "${category}" category.`;
+    }
+    
+    if (preferences) {
+      prompt += `\n\nCater to these dietary preferences: ${preferences}`;
+    }
+    
+    // Generate menu using AI
+    const { text } = await ai.generate({
+      prompt,
     });
     
+    console.log(`[MENU AGENT] AI generated menu successfully`);
+    
+    // Return the formatted text directly
     return {
       success: true,
-      requestType: 'recipe_suggestion',
-      message: 'Here are some alternative recipes you can try with our current ingredients:',
-      alternativeRecipes,
-      availableIngredients,
-      totalAlternatives: alternativeRecipes.length,
-      note: 'These recipes use mostly available ingredients and can be customized',
-      suggestions: [
-        'Consider substituting missing ingredients with similar alternatives',
-        'Ask our chef about ingredient substitutions',
-        'We can modify recipes to match available ingredients'
-      ]
+      requestType,
+      message: 'Here\'s our AI-generated menu based on current ingredient availability:',
+      menuDisplay: text, // Direct text output for rendering
+      totalAvailable: 'Generated dynamically', // Since we're not counting individual dishes
+      category: category || 'all',
+      preferences: preferences || 'none',
+      note: 'Menu is generated in real-time by AI based on current inventory',
+      timestamp: new Date().toISOString()
     };
-  } else {
-    return {
-      success: false,
-      requestType: 'recipe_suggestion',
-      error: 'Failed to suggest alternative recipes',
-      message: 'Sorry, I couldn\'t suggest alternative recipes right now. Please try again later.'
-    };
-  }
-}
-
-// Suggest desserts for upsell
-async function suggestDesserts(preferences?: string) {
-  console.log(`[MENU AGENT] Suggesting desserts for upsell (preferences: ${preferences})`);
-  
-  const result = await availableDishesFlow({ 
-    category: 'Desserts',
-    preferences 
-  });
-  
-  if (result.success && result.feasibleDishes.length > 0) {
-    // Select best dessert suggestions
-    const dessertSuggestions = result.feasibleDishes.slice(0, 3); // Top 3 desserts
+    
+  } catch (error) {
+    console.error(`[MENU AGENT] Error processing ${requestType}:`, error);
     
     return {
-      success: true,
-      requestType: 'dessert_upsell',
-      message: 'Would you like to try one of our delicious desserts?',
-      dessertSuggestions,
-      totalDesserts: result.feasibleDishes.length,
-      preferences: preferences || 'none',
-      upsellMessage: 'Perfect way to complete your meal!',
-      note: 'All desserts are made fresh with premium ingredients'
-    };
-  } else {
-    return {
       success: false,
-      requestType: 'dessert_upsell',
-      error: 'No desserts available',
-      message: 'Sorry, we don\'t have any desserts available right now.',
-      note: 'Please check back later for our dessert menu'
+      requestType,
+      error: `Failed to process ${requestType}`,
+      details: error instanceof Error ? error.message : 'Unknown error',
+      message: 'Sorry, I couldn\'t process your request right now. Please try again later.'
     };
   }
 }

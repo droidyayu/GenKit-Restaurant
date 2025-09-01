@@ -224,7 +224,7 @@ FIREBASE_PROJECT_ID=your_project_id
 ```
 
 ### Customization
-- **Recipe Database**: Modify `availableDishesFlow.ts` for new dishes
+- **Recipe Templates**: Modify recipe templates in `menuRecipeAgent.ts` for new dishes
 - **Cooking Times**: Adjust timing in `cookingFlow.ts`
 - **Agent Behavior**: Customize prompts and logic in agent files
 
@@ -248,7 +248,6 @@ server/
 │   │   ├── chefAgent.ts
 │   │   └── waiterAgent.ts
 │   ├── flows/            # Supporting flows (logic helpers)
-│   │   ├── availableDishesFlow.ts
 │   │   ├── cookingFlow.ts
 │   │   └── deliveryFlow.ts
 │   ├── tools/            # Utility tools (stateless functions)
