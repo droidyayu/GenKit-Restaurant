@@ -1,4 +1,4 @@
-import { ai, z } from '../genkit.js';
+import { ai, z } from '../genkit';
 
 // Simple order interface for the new system
 interface SimpleOrder {
