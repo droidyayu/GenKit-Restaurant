@@ -1,12 +1,12 @@
 
 import { ai } from '../genkit.js';
-import { chefAgent } from '../chefAgent.js';
-import { inventoryAgent } from '../inventoryAgent.js';
-import { menuAgent } from '../menuAgent.js';
-import { orderAgent } from '../orderAgent.js';
-import { kitchenWorkflow } from '../kitchenWorkflow.js';
-import { deliveryAgent } from '../deliveryAgent.js';
-import { getInventory, getMenu, createOrder, getOrderStatus, updateOrderStatus } from '../kitchenTools.js';
+import { chefAgent } from '../agents/chefAgent.js';
+import { inventoryAgent } from '../agents/inventoryAgent.js';
+import { menuAgent } from '../agents/menuAgent.js';
+import { orderAgent } from '../agents/orderAgent.js';
+import { deliveryAgent } from '../agents/deliveryAgent.js';
+import { inventoryTool, ingredientDetailsTool } from '../tools/inventoryTool.js';
+import { createOrderTool, getOrderStatusTool, updateOrderStatusTool } from '../tools/orderTool.js';
 import type { KitchenState } from '../kitchenTypes.js';
 
 // Test data
@@ -25,10 +25,10 @@ async function testAgent(agent: any, input: string, expectedTools: string[] = []
     .chat(agent);
   
   try {
-    const { response } = await chat.send(input);
+    const result = await chat.send(input);
     
     // Check if expected tools were used
-    const toolsUsed = response.messages
+    const toolsUsed = result.messages
       .filter((m: any) => m.role === 'model')
       .flatMap((m: any) =>
         m.content
@@ -59,28 +59,28 @@ async function testAgent(agent: any, input: string, expectedTools: string[] = []
 async function testTools() {
   console.log('\n🔧 Testing Kitchen Tools...');
   
-  // Test getInventory
-  console.log('\n📦 Testing getInventory tool...');
+  // Test inventoryTool
+  console.log('\n📦 Testing inventoryTool...');
   try {
-    const inventory = await getInventory({});
+    const inventory = await inventoryTool({});
     console.log(`✅ Inventory retrieved: ${inventory.length} items`);
   } catch (error) {
-    console.log(`❌ getInventory error: ${error}`);
+    console.log(`❌ inventoryTool error: ${error}`);
   }
   
-  // Test getMenu
-  console.log('\n🍽️ Testing getMenu tool...');
+  // Test ingredientDetailsTool
+  console.log('\n🔍 Testing ingredientDetailsTool...');
   try {
-    const menu = await getMenu({});
-    console.log(`✅ Menu retrieved: ${menu.length} items`);
+    const details = await ingredientDetailsTool({});
+    console.log(`✅ Ingredient details retrieved: ${details.totalIngredients} total ingredients`);
   } catch (error) {
-    console.log(`❌ getMenu error: ${error}`);
+    console.log(`❌ ingredientDetailsTool error: ${error}`);
   }
   
-  // Test createOrder
-  console.log('\n📋 Testing createOrder tool...');
+  // Test createOrderTool
+  console.log('\n📋 Testing createOrderTool...');
   try {
-    const order = await createOrder({
+    const order = await createOrderTool({
       dishes: [
         { name: 'Palak Paneer', quantity: 1, spiceLevel: 'Medium' }
       ],
@@ -88,16 +88,16 @@ async function testTools() {
     });
     console.log(`✅ Order created: ${order.orderId}`);
   } catch (error) {
-    console.log(`❌ createOrder error: ${error}`);
+    console.log(`❌ createOrderTool error: ${error}`);
   }
   
-  // Test getOrderStatus
-  console.log('\n📊 Testing getOrderStatus tool...');
+  // Test getOrderStatusTool
+  console.log('\n📊 Testing getOrderStatusTool...');
   try {
-    const status = await getOrderStatus({});
+    const status = await getOrderStatusTool({});
     console.log(`✅ Order status retrieved: ${status.status}`);
   } catch (error) {
-    console.log(`❌ getOrderStatus error: ${error}`);
+    console.log(`❌ getOrderStatusTool error: ${error}`);
   }
 }
 
@@ -106,20 +106,20 @@ async function testAgents() {
   console.log('\n🤖 Testing Kitchen Agents...');
   
   // Test Inventory Agent
-  await testAgent(inventoryAgent, 'What ingredients do you have?', ['getInventory', 'getIngredientDetails']);
+  await testAgent(inventoryAgent, 'What ingredients do you have?', ['inventoryTool', 'ingredientDetailsTool']);
   
   // Test Menu Agent
-  await testAgent(menuAgent, 'Show me the menu', ['getMenu']);
+  await testAgent(menuAgent, 'Show me the menu', []);
   
   // Test Order Agent
-  await testAgent(orderAgent, 'I want Palak Paneer', []);
+  await testAgent(orderAgent, 'I want Palak Paneer', ['createOrderTool']);
   
   // Test Chef Agent (main interface)
-  await testAgent(chefAgent, 'What\'s on the menu?', ['menuAgent']);
+  await testAgent(chefAgent, 'What\'s on the menu?', []);
   
-  await testAgent(chefAgent, 'What ingredients do you have?', ['inventoryAgent']);
+  await testAgent(chefAgent, 'What ingredients do you have?', []);
   
-  await testAgent(chefAgent, 'I want Butter Chicken', ['orderAgent']);
+  await testAgent(chefAgent, 'I want Butter Chicken', []);
 }
 
 // Test complete workflow
@@ -141,11 +141,11 @@ async function testCompleteWorkflow() {
     console.log(`💬 Input: ${step.input}`);
     
     try {
-      const { response } = await chat.send(step.input);
+      const result = await chat.send(step.input);
       console.log(`✅ Step completed successfully`);
       
       // Show tools used
-      const toolsUsed = response.messages
+      const toolsUsed = result.messages
         .filter((m: any) => m.role === 'model')
         .flatMap((m: any) =>
           m.content

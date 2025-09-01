@@ -1,27 +1,20 @@
-
 import 'dotenv/config';
 import type { Message, ToolRequestPart } from 'genkit';
 import { createInterface } from 'node:readline';
 import { ai } from './genkit.js';
-import { chefAgent } from './chefAgent.js';
-import type { KitchenState } from './kitchenTypes.js';
+import { chefAgent } from './agents/chefAgent.js';
 
 const rl = createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-const EXAMPLE_KITCHEN_CONTEXT: KitchenState = {
-  customerId: 1001,
-  customerName: 'Sarah Johnson',
-  orderHistory: [],
-};
-
 // ANSI color codes for terminal output
 const COLORS = {
   CHEF: '\x1b[32m',
   PROMPT: '\x1b[36m',
   RESET: '\x1b[0m',
+  AGENT: '\x1b[33m',
 };
 
 // Helper to print colored text
@@ -32,7 +25,7 @@ function printColored(prefix: string, text: string, color: string) {
 // Get initial greeting from AI
 async function getGreeting() {
   const { text } = await ai.generate(
-    'Come up with a short friendly greeting for yourself talking to a customer as Chef Raj, the helpful AI chef at Indian Grill restaurant. Feel free to use emoji.'
+    'Come up with a short friendly greeting for yourself talking to a customer as Chef Raj, the coordinator of a multi-agent restaurant system at Indian Grill. Mention that you work with specialized agents for different tasks.'
   );
   return text;
 }
@@ -50,7 +43,7 @@ async function handleChatResponse(
     process.stdout.write(chunk.text);
   }
 
-  // Extract and display tools used
+  // Extract and display tools used (agents called)
   const toolsUsed = (await response).messages
     .slice(startMessageCount)
     .filter((m: Message) => m.role === 'model')
@@ -64,7 +57,9 @@ async function handleChatResponse(
     )
     .filter((t: ToolRequestPart) => !!t);
 
-  console.log('\nTools Used:', toolsUsed);
+  if (toolsUsed.length > 0) {
+    console.log(`\n${COLORS.AGENT}🤖 Agents Called:${COLORS.RESET}`, toolsUsed);
+  }
 }
 
 // Main chat loop
@@ -85,17 +80,21 @@ async function handleUserInput(chat: any): Promise<void> {
 }
 
 async function main() {
-  const chat = ai
-    .createSession({ initialState: EXAMPLE_KITCHEN_CONTEXT })
-    .chat(chefAgent);
+  const chat = ai.createSession().chat(chefAgent);
 
   const greeting = await getGreeting();
   console.log();
   printColored('chef', greeting, COLORS.CHEF);
+  console.log(`\n${COLORS.AGENT}🎭 Multi-Agent System Active:${COLORS.RESET}`);
+  console.log('   • MenuAgent - Menu display and recommendations');
+  console.log('   • OrderAgent - Order collection and processing');
+  console.log('   • InventoryAgent - Ingredient management');
+  console.log('   • KitchenAgent - Cooking process orchestration');
+  console.log('   • DeliveryAgent - Order delivery and customer service');
 
   while (true) {
     await handleUserInput(chat);
   }
 }
 
-setTimeout(main, 0);
+main().catch(console.error);
