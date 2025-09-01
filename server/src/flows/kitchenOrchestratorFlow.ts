@@ -28,9 +28,6 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
         case 'AskMenu':
           return await handleMenuRequest(userId, message);
           
-        case 'AskAvailableDishes':
-          return await handleAvailableDishesRequest(userId, message);
-          
         case 'PlaceOrder':
           return await handlePlaceOrderRequest(userId, message, intent.extractedData);
           
@@ -46,7 +43,6 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
             message: 'I\'m sorry, I didn\'t understand that. You can ask me about our menu, place an order, or check your order status.',
             suggestions: [
               'Show me the menu',
-              'What dishes can you make?',
               'I want to order [dish name]',
               'Where is my order?'
             ]
@@ -79,14 +75,6 @@ async function classifyIntent(message: string) {
     };
   }
   
-  if (lowerMessage.includes('available') || lowerMessage.includes('can') && lowerMessage.includes('make')) {
-    return {
-      intent: 'AskAvailableDishes',
-      confidence: 0.85,
-      extractedData: { requestType: 'availability_check' }
-    };
-  }
-  
   // Check for order requests - both explicit and implicit
   if (lowerMessage.includes('order') || lowerMessage.includes('take') || lowerMessage.includes('want') || 
       lowerMessage.includes('i\'ll have') || 
@@ -103,9 +91,9 @@ async function classifyIntent(message: string) {
     // Extract dish name from the message
     let foundDish = 'unknown';
     
-    // Define common dish names to look for
+    // Define common dish names to look for (including variations)
     const dishNames = [
-      'Palak Paneer', 'Paneer Butter Masala', 'Dal Tadka', 'Gobi Masala',
+      'Palak Paneer', 'Paneer Butter Masala', 'Paneer Tikka', 'Dal Tadka', 'Gobi Masala',
       'Mixed Vegetable Curry', 'Samosas', 'Butter Chicken', 'Chicken Biryani',
       'Fish Curry', 'Lamb Curry', 'Aloo Paratha', 'Naan', 'Jeera Rice', 'Kheer'
     ];
@@ -118,13 +106,20 @@ async function classifyIntent(message: string) {
       }
     }
     
-    // If no exact match, try partial matching
+    // If no exact match, try partial matching with priority
     if (foundDish === 'unknown') {
-      for (const dish of dishNames) {
-        const dishWords = dish.toLowerCase().split(' ');
-        if (dishWords.some((word: string) => lowerMessage.includes(word))) {
-          foundDish = dish;
-          break;
+      // Check for "Paneer Tikka" specifically (common request)
+      if (lowerMessage.includes('paneer') && lowerMessage.includes('tikka')) {
+        foundDish = 'Paneer Tikka';
+      }
+      // Check for other partial matches
+      else {
+        for (const dish of dishNames) {
+          const dishWords = dish.toLowerCase().split(' ');
+          if (dishWords.some((word: string) => lowerMessage.includes(word))) {
+            foundDish = dish;
+            break;
+          }
         }
       }
     }
@@ -189,35 +184,7 @@ async function handleMenuRequest(userId: string, message: string) {
   }
 }
 
-// Handle available dishes requests
-async function handleAvailableDishesRequest(userId: string, message: string) {
-  console.log(`[ORCHESTRATOR] Routing to Menu Recipe Agent for availability check`);
-  
-  const result = await menuRecipeAgent({
-    userId,
-    requestType: 'menu_generation'
-  });
-  
-  if (result.success) {
-    return {
-      success: true,
-      intent: 'AskAvailableDishes',
-      action: 'availability_checked',
-      userId,
-      message: result.message,
-      availableDishes: result.menuDisplay, // Return the formatted menu display
-      totalAvailable: result.totalAvailable,
-      note: 'Dishes are filtered based on current ingredient availability'
-    };
-  } else {
-    return {
-      success: false,
-      intent: 'AskAvailableDishes',
-      error: 'Failed to check availability',
-      message: result.message || 'Sorry, I couldn\'t check dish availability right now. Please try again later.'
-    };
-  }
-}
+
 
 // Handle place order requests with proper agent orchestration
 async function handlePlaceOrderRequest(userId: string, message: string, extractedData: any) {
@@ -234,11 +201,20 @@ async function handlePlaceOrderRequest(userId: string, message: string, extracte
     };
   }
   
+  // Extract quantity from message if specified
+  let quantity = 1;
+  const quantityMatch = message.match(/(\d+)\s*(?:person|people|serving|order)/i);
+  if (quantityMatch) {
+    quantity = parseInt(quantityMatch[1]);
+  }
+  
+  console.log(`[ORCHESTRATOR] Processing order for ${quantity}x ${dishName}`);
+  
   // Step 1: Order Manager creates the order
   const orderResult = await orderManagerAgent({
     userId,
     dish: dishName,
-    quantity: 1
+    quantity: quantity
   });
   
   if (!orderResult.success) {
@@ -274,7 +250,8 @@ async function handlePlaceOrderRequest(userId: string, message: string, extracte
     userId,
     orderId: orderResult.orderId,
     dishName: dishName,
-    message: `Order placed successfully! Your ${dishName} is now being cooked and will be ready in approximately 15-20 minutes.`,
+    quantity: quantity,
+    message: `Order placed successfully! Your ${quantity}x ${dishName} is now being cooked and will be ready in approximately 15-20 minutes.`,
     nextStep: 'Chef is cooking your order',
     estimatedTime: '15-20 minutes',
     cookingStatus: chefResult.status
@@ -296,7 +273,7 @@ async function handleCheckStatusRequest(userId: string, message: string) {
   });
   
   if (result.success) {
-          return {
+      return {
         success: true,
         intent: 'CheckStatus',
         action: 'status_provided',

@@ -4,13 +4,13 @@ A sophisticated restaurant kitchen simulation built with **Genkit SDK** and **Fi
 
 ## 🏗️ System Architecture
 
-The system is built around **5 specialized agents** that work together through **3 supporting flows** and **4 utility tools**:
+The system is built around **5 specialized agents** that work together through **1 main flow** and **4 utility tools**:
 
 ```
 User Request → Kitchen Orchestrator Agent → Route to Appropriate Agent/Flow
                 ↓
     ┌─────────────────────────────────────────────────────────┐
-    │                    AGENTS (Flows)                      │
+    │                    AGENTS                               │
     ├─────────────────────────────────────────────────────────┤
     │ • Kitchen Orchestrator Agent (Central Router)          │
     │ • Menu & Recipe Agent (Dynamic Menu Generation)        │
@@ -20,11 +20,9 @@ User Request → Kitchen Orchestrator Agent → Route to Appropriate Agent/Flow
     └─────────────────────────────────────────────────────────┘
                 ↓
     ┌─────────────────────────────────────────────────────────┐
-    │                  SUPPORTING FLOWS                      │
+    │                    MAIN FLOW                           │
     ├─────────────────────────────────────────────────────────┤
-    │ • Available Dishes Flow (Recipe Filtering)             │
-    │ • Cooking Flow (Simulated Cooking)                     │
-    │ • Delivery Flow (Order Delivery)                       │
+    │ • Kitchen Orchestrator Flow (Central Router)           │
     └─────────────────────────────────────────────────────────┘
                 ↓
     ┌─────────────────────────────────────────────────────────┐
@@ -39,52 +37,56 @@ User Request → Kitchen Orchestrator Agent → Route to Appropriate Agent/Flow
 
 ## 🧩 Agent Details
 
-### 1. Kitchen Orchestrator Agent
-- **Purpose**: Central router and coordinator
+### 1. Kitchen Orchestrator Flow
+- **Purpose**: Central router and coordinator (main flow)
 - **Input**: `{ userId, message }`
 - **Process**: Classifies intent and routes to appropriate agent
 - **Capabilities**: Intent classification, request routing, system coordination
+- **Implementation**: `ai.defineFlow` with persona
 
 ### 2. Menu & Recipe Agent
 - **Purpose**: Culinary "brain" for menu generation
-- **Input**: `{ userId?, availableIngredients?, category?, preferences?, requestType }`
+- **Input**: `{ userId?, category?, preferences?, requestType }`
 - **Process**: Generates dynamic menus based on inventory
 - **Capabilities**: Menu generation, recipe suggestions, dessert upsell
+- **Implementation**: Simple async function using `ai.generate`
 
 ### 3. Order Manager Agent
 - **Purpose**: Handles order lifecycle management
 - **Input**: `{ userId, dish, quantity?, specialInstructions? }`
 - **Process**: Validates orders and coordinates with Chef Agent
 - **Capabilities**: Order validation, ingredient checking, order creation
+- **Implementation**: Simple async function using `ai.generate`
 
 ### 4. Chef Agent
 - **Purpose**: Executes cooking tasks
 - **Input**: `{ orderId, dishName, userId, specialInstructions? }`
 - **Process**: Manages cooking process with accelerated timing
 - **Capabilities**: Ingredient validation, cooking execution, status updates
+- **Implementation**: Simple async function with direct cooking simulation
 
 ### 5. Waiter Agent
 - **Purpose**: Customer communication and delivery
 - **Input**: `{ userId, orderId?, action, message? }`
 - **Process**: Handles customer interactions and order delivery
 - **Capabilities**: Status checks, order delivery, dessert upsell
+- **Implementation**: Simple async function with direct delivery simulation
 
-## 🛠️ Supporting Flows
+## 🛠️ Main Flow
 
-### Available Dishes Flow
-- **Purpose**: Compute feasible dishes given inventory
-- **Input**: `{ category?, preferences? }`
-- **Output**: List of dishes that can be made with available ingredients
+### Kitchen Orchestrator Flow
+- **Purpose**: Central routing and intent classification
+- **Input**: `{ userId, message }`
+- **Process**: Classifies user intent and routes to appropriate agent
+- **Output**: Structured response based on intent type
+- **Implementation**: Single `ai.defineFlow` that orchestrates all interactions
 
-### Cooking Flow
-- **Purpose**: Simulate cooking process with accelerated time
-- **Input**: `{ orderId, dishName, userId }`
-- **Output**: Cooking completion status and timing
+## 🔄 Agent Architecture
 
-### Delivery Flow
-- **Purpose**: Handle order delivery and customer notification
-- **Input**: `{ orderId, userId, dishName }`
-- **Output**: Delivery completion and notification status
+The system uses a **hybrid approach**:
+- **Kitchen Orchestrator Flow**: Main `ai.defineFlow` with persona
+- **Other Agents**: Simple async functions that use `ai.generate` internally
+- **Benefits**: Simplified architecture, easier maintenance, consistent AI interactions
 
 ## 🔧 Tools
 
@@ -145,7 +147,7 @@ npm run deploy
 ### 1. Ask for Menu
 ```
 User: "Show me the menu"
-→ Orchestrator → Menu Agent → Available Dishes Flow → Inventory Tool
+→ Orchestrator → Menu & Recipe Agent → Inventory Tool
 → Returns: Dynamic menu based on current ingredients
 ```
 
@@ -186,8 +188,7 @@ Kitchen Orchestrator Agent
 ┌─────────────────────────────────────────────────┐
 │              ROUTING LOGIC                     │
 ├─────────────────────────────────────────────────┤
-│ • AskMenu → Menu & Recipe Agent                │
-│ • AskAvailableDishes → Available Dishes Flow   │
+│ • AskMenu → Menu & Recipe Agent               │
 │ • PlaceOrder → Order Manager Agent             │
 │ • CheckStatus → Waiter Agent                   │
 │ • Fallback → Helpful suggestions               │
@@ -205,14 +206,17 @@ Response to User
 The system includes comprehensive testing:
 
 ```bash
-# Test individual components
+# Test complete kitchen system
 npm run test:kitchen
 
-# Test specific flows
-npm run test:flows
+# Test orchestration flows
+npm run test:orchestration
 
-# Test agent interactions
-npm run test:agents
+# Test intent classification
+npm run test:intent
+
+# Run all tests
+npm test
 ```
 
 ## 🔧 Configuration

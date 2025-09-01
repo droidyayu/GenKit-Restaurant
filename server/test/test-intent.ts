@@ -3,38 +3,47 @@ import { kitchenOrchestratorFlow } from '../src/flows/kitchenOrchestratorFlow.js
 console.log('🧪 Testing Intent Classification...\n');
 
 async function testIntentClassification() {
-  const testCases = [
-    'Show me the menu',
-    'What dishes can you make?',
-    'I want to order Palak Paneer',
-    'Order status please',
-    'How long until my food is ready?',
-    'Can you make Butter Chicken?',
-    'What\'s available today?',
-    'I\'ll have Dal Tadka for 2 people'
-  ];
-
-  for (const testCase of testCases) {
-    console.log(`Testing: "${testCase}"`);
+  try {
+    const userId = 'test-user-1';
     
-    try {
-      const result = await kitchenOrchestratorFlow({
-        userId: 'test-user',
-        message: testCase
-      });
+    const testMessages = [
+      'What is the menu?',
+      'Show me the menu',
+      'I want to order Palak Paneer',
+      'Palak Paneer for 1 person',
+      'Palak Paneer for 2 people',
+      'What dishes can you make?',
+      'Where is my order?',
+      'Hello there'
+    ];
+    
+    for (const message of testMessages) {
+      console.log(`📝 Testing: "${message}"`);
       
-      console.log(`✅ Intent: ${result.intent}`);
-      console.log(`   Confidence: ${result.confidence || 'N/A'}`);
-      console.log(`   Success: ${result.success}`);
-      if (result.message) {
-        console.log(`   Response: ${result.message.substring(0, 100)}...`);
+      try {
+        const result = await kitchenOrchestratorFlow({
+          userId,
+          message
+        });
+        
+        console.log(`   ✅ Intent: ${result.intent} (confidence: ${result.confidence})`);
+        
+        if (result.intent === 'PlaceOrder' && result.orderId) {
+          console.log(`   📦 Order ID: ${result.orderId}`);
+          console.log(`   🍽️ Dish: ${result.dishName}`);
+        }
+        
+      } catch (error) {
+        console.log(`   ❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
-      console.log();
       
-    } catch (error) {
-      console.log(`❌ Error: ${error}`);
       console.log();
     }
+    
+    console.log('🎉 Intent Classification Test Completed!');
+    
+  } catch (error) {
+    console.error('❌ Test failed with error:', error);
   }
 }
 

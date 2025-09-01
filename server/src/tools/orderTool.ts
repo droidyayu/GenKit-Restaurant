@@ -65,7 +65,12 @@ export const createOrderTool = ai.defineTool(
     
     console.log(`[ORDER CREATED] ${orderId} for ${customerName}: ${dishes.length} dishes, $${totalAmount.toFixed(2)}`);
     
-    return order;
+    return {
+      success: true,
+      orderId: order.orderId,
+      message: `Order created successfully with ID: ${orderId}`,
+      order: order
+    };
   }
 );
 

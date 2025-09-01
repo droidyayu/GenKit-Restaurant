@@ -6,8 +6,10 @@
   "scripts": {
     "start": "node lib/terminal.js",
     "dev": "tsx --no-warnings --watch src/terminal.ts",
-    "test": "tsx src/test/kitchenTests.ts",
-    "test:kitchen": "tsx src/test-kitchen-system.ts",
+    "test": "tsx test/test-kitchen-system.ts",
+    "test:kitchen": "tsx test/test-kitchen-system.ts",
+    "test:orchestration": "tsx test/test-orchestration.ts",
+    "test:intent": "tsx test/test-intent.ts",
     "genkit:dev": "genkit start -- npm run dev",
     "compile": "tsc",
     "build": "npm run build:clean && npm run compile",

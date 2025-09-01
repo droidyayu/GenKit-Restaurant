@@ -74,18 +74,18 @@ Consider:
     }
     
     // Create order in system
-    const order = await createOrderTool({
+    const orderResult = await createOrderTool({
       dishes: [{ name: dish, quantity }],
       customerName: `User ${userId}`
     });
     
-    if (!order.success) {
+    if (!orderResult.success) {
       return {
         success: false,
         error: 'Failed to create order',
         dish,
         message: 'Sorry, there was an error creating your order. Please try again.',
-        details: order.error
+        details: orderResult.error || 'Unknown error'
       };
     }
     
@@ -95,13 +95,13 @@ Consider:
       message: 'Order received and queued for cooking'
     });
     
-    console.log(`[ORDER MANAGER] Order ${order.orderId} created successfully`);
+    console.log(`[ORDER MANAGER] Order ${orderResult.orderId} created successfully`);
     
     // Return order confirmation
     return {
       success: true,
       action: 'order_created',
-      orderId: order.orderId,
+      orderId: orderResult.orderId,
       userId,
       dish,
       quantity,
@@ -110,7 +110,7 @@ Consider:
       nextStep: 'Order sent to Chef Agent for cooking',
       estimatedTime: '15-20 minutes',
       orderDetails: {
-        orderId: order.orderId,
+        orderId: orderResult.orderId,
         dish,
         quantity,
         specialInstructions: specialInstructions || 'None',
