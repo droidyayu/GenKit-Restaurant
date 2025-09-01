@@ -22,7 +22,7 @@ import {setGlobalOptions} from "firebase-functions";
 // functions should each use functions.runWith({ maxInstances: 10 }) instead.
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({maxInstances: 10});
 
 // export const helloWorld = onRequest((request, response) => {
 //   logger.info("Hello logs!", {structuredData: true});
@@ -30,16 +30,16 @@ setGlobalOptions({ maxInstances: 10 });
 // });
 
 // Import the kitchen orchestrator flow
-import { kitchenOrchestratorFlow } from './flows/kitchenOrchestratorFlow';
+import {kitchenOrchestratorFlow} from "./flows/kitchenOrchestratorFlow";
 
 // Cloud Functions for Firebase supports Genkit natively. The onCallGenkit function creates a callable
 // function from a Genkit action. It automatically implements streaming if your flow does.
-import { onCallGenkit } from "firebase-functions/https";
+import {onCallGenkit} from "firebase-functions/https";
 
 // Genkit models generally depend on an API key. APIs should be stored in Cloud Secret Manager so that
 // access to these sensitive values can be controlled. defineSecret does this for you automatically.
 // If you are using Google generative AI you can get an API key at https://aistudio.google.com/app/apikey
-import { defineSecret } from "firebase-functions/params";
+import {defineSecret} from "firebase-functions/params";
 const apiKey = defineSecret("GOOGLE_GENAI_API_KEY");
 
 // Export the kitchen API as a Genkit callable function
