@@ -4,8 +4,8 @@
   "description": "Kitchen Multi-Agent System for restaurant management",
   "main": "lib/index.js",
   "scripts": {
-    "start": "node lib/kitchenTerminal.js",
-    "dev": "tsx --no-warnings --watch src/kitchenTerminal.ts",
+    "start": "node lib/terminal.js",
+    "dev": "tsx --no-warnings --watch src/terminal.ts",
     "test": "tsx src/test/kitchenTests.ts",
     "genkit:dev": "genkit start -- npm run dev",
     "compile": "tsc",

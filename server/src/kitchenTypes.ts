@@ -38,7 +38,7 @@ export interface InventoryItem {
 
 export interface MenuItem {
   name: string;
-  category: 'Vegetarian' | 'Non-Vegetarian' | 'Breads' | 'Rice' | 'Side Dishes' | 'Desserts';
+  category: 'Vegetarian' | 'Non-Vegetarian' | 'Breads' | 'Rice' | 'Side Dishes' | 'Desserts' | 'Appetizers';
   description: string;
   spiceLevels: string[];
   estimatedTime: string;

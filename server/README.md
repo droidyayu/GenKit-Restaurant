@@ -108,8 +108,8 @@ In your terminal, a commandline chat interface should show up:
 Telemetry API running on http://localhost:4033
 Genkit Developer UI: http://localhost:4000
 
-> school-agent@1.0.0 dev
-> tsx --no-warnings --watch src/kitchenTerminal.ts
+> kitchen-agent@1.0.1 dev
+> tsx --no-warnings --watch src/simpleKitchenTerminal.ts
 
 chef> Hi there! I'm Chef Raj, your friendly AI chef at Indian Grill! 🍽️ I can help you with our menu, ingredients, orders, and more. What would you like to know?
 
@@ -120,21 +120,17 @@ You can feel free to tweak the sample. The project builds in watch mode, so any 
 
 ## Usage
 
-The agent uses a multi-agent architecture:
+The system uses a simplified single-agent architecture:
 
-- Chef Agent: Acts as the main entry point and customer interface, handling general queries while delegating specialized requests to appropriate agents
-- Inventory Agent: Specialized agent focused on ingredient management and availability
-- Menu Agent: Manages dynamic menu generation based on available ingredients
-- Order Agent: Handles order collection and complete meal planning
-- Kitchen Workflow: Orchestrates the complete cooking process through sequential phases
-- Delivery Agent: Manages delivery and dessert upselling
+- **SimpleChefAgent**: Main customer interface that handles all interactions directly using tools
+- **Tools**: Direct access to menu, order creation, status checking, and inventory
 
 Example queries:
 
 - "What's on the menu?"
 - "What ingredients do you have?"
-- "I want Palak Paneer with Medium spice level"
-- "How's my order?"
+- "I want Palak Paratha with Medium spice level"
+- "Where is my order?"
 
 ## Development
 
@@ -145,19 +141,13 @@ Example queries:
 ## Project Structure
 
 - `src/`
-  - `chefAgent.ts` - Main customer interface agent
-  - `inventoryAgent.ts` - Ingredient management agent
-  - `menuAgent.ts` - Menu generation agent
-  - `orderAgent.ts` - Order processing agent
-  - `kitchenWorkflow.ts` - Cooking process orchestration
-  - `prepAgent.ts` - Ingredient preparation phase
-  - `cookAgent.ts` - Cooking process phase
-  - `plateAgent.ts` - Final presentation phase
-  - `deliveryAgent.ts` - Delivery and upselling agent
-  - `kitchenTools.ts` - Tool definitions
+  - `simpleChefAgent.ts` - Main customer interface agent
+  - `simpleKitchenTerminal.ts` - Terminal interface
+  - `kitchenTools.ts` - Tool definitions (getMenu, createOrder, getOrderStatus, getInventory)
   - `kitchenTypes.ts` - TypeScript types
   - `kitchenData.ts` - Menu and inventory data
-  - `kitchenTerminal.ts` - Terminal interface
+  - `genkit.ts` - Genkit configuration
+  - `util.ts` - Utility functions
   - `test/` - Test files
     - `kitchenTests.ts` - Comprehensive test suite
     - `chefTest.ts` - Chef agent demonstration
