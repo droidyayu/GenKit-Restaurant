@@ -1,5 +1,23 @@
 import { ai, z } from '../genkit.js';
-import type { KitchenState, KitchenDish } from '../kitchenTypes.js';
+
+// Simple order interface for the new system
+interface SimpleOrder {
+  orderId: string;
+  dishes: Array<{
+    name: string;
+    quantity: number;
+    spiceLevel?: string;
+    specialInstructions?: string;
+  }>;
+  customerName: string;
+  totalAmount: number;
+  status: 'PENDING' | 'PREP' | 'COOKING' | 'PLATING' | 'READY' | 'DELIVERED';
+  estimatedTime: string;
+  createdAt: number;
+}
+
+// Global order storage (in a real system this would be a database)
+let currentOrder: SimpleOrder | null = null;
 
 // Helper function to get progress percentage
 function getProgressPercentage(status: string): number {
@@ -32,21 +50,18 @@ export const createOrderTool = ai.defineTool(
       return sum + basePrice * dish.quantity;
     }, 0);
     
-    const order = {
+    const order: SimpleOrder = {
       orderId,
-      dishes: dishes as KitchenDish[],
+      dishes,
       customerName,
       totalAmount,
-      status: 'PENDING' as const,
+      status: 'PENDING',
       estimatedTime: '15-20 minutes',
       createdAt: Date.now(),
     };
     
-    // Store the order in the session state
-    const state = ai.currentSession<KitchenState>().state;
-    if (state) {
-      state.currentOrder = order;
-    }
+    // Store the order globally
+    currentOrder = order;
     
     console.log(`[ORDER CREATED] ${orderId} for ${customerName}: ${dishes.length} dishes, $${totalAmount.toFixed(2)}`);
     
@@ -63,9 +78,6 @@ export const getOrderStatusTool = ai.defineTool(
     }),
   },
   async ({ orderId }) => {
-    const state = ai.currentSession<KitchenState>().state;
-    const currentOrder = state?.currentOrder;
-    
     if (!currentOrder) {
       return {
         status: 'NO_ACTIVE_ORDER',
@@ -94,18 +106,19 @@ export const updateOrderStatusTool = ai.defineTool(
     }),
   },
   async ({ status, message }) => {
-    const state = ai.currentSession<KitchenState>().state;
-    if (!state?.currentOrder) {
+    if (!currentOrder) {
       throw new Error('No active order to update');
     }
     
-    state.currentOrder.status = status;
-    console.log(`[ORDER STATUS] ${state.currentOrder.orderId}: ${status} - ${message || ''}`);
+    currentOrder.status = status;
+    
+    console.log(`[ORDER STATUS UPDATED] ${currentOrder.orderId}: ${status}${message ? ` - ${message}` : ''}`);
     
     return {
-      orderId: state.currentOrder.orderId,
-      status,
-      message,
+      success: true,
+      orderId: currentOrder.orderId,
+      status: currentOrder.status,
+      message: message || `Order status updated to ${status}`,
       timestamp: new Date().toISOString()
     };
   }
@@ -114,35 +127,27 @@ export const updateOrderStatusTool = ai.defineTool(
 export const completeOrderTool = ai.defineTool(
   {
     name: 'completeOrderTool',
-    description: 'Complete the current order and move it to history',
-    inputSchema: z.object({
-      finalAmount: z.number().describe('Final order amount'),
-    }),
+    description: 'Complete the current order and clear it from the system',
+    inputSchema: z.object({}),
   },
-  async ({ finalAmount }) => {
-    const state = ai.currentSession<KitchenState>().state;
-    if (!state?.currentOrder) {
-      throw new Error('No active order to complete');
+  async () => {
+    if (!currentOrder) {
+      return {
+        success: false,
+        error: 'No active order to complete'
+      };
     }
     
-    const completedOrder = {
-      ...state.currentOrder,
-      status: 'COMPLETED' as const,
-      totalAmount: finalAmount,
-      completedAt: Date.now()
-    };
+    const completedOrder = { ...currentOrder };
+    currentOrder = null; // Clear the current order
     
-    // Move to order history
-    state.orderHistory.push(completedOrder);
-    delete state.currentOrder;
-    
-    console.log(`[ORDER COMPLETED] ${completedOrder.orderId}: $${finalAmount.toFixed(2)}`);
+    console.log(`[ORDER COMPLETED] ${completedOrder.orderId} has been completed and cleared`);
     
     return {
+      success: true,
       orderId: completedOrder.orderId,
-      status: 'COMPLETED',
-      totalAmount: finalAmount,
-      message: 'Order completed successfully'
+      message: 'Order completed successfully',
+      timestamp: new Date().toISOString()
     };
   }
 );

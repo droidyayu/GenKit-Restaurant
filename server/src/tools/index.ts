@@ -11,3 +11,6 @@ export {
   updateOrderStatusTool, 
   completeOrderTool 
 } from './orderTool';
+
+// Notification tools
+export { notificationTool } from './notificationTool';
