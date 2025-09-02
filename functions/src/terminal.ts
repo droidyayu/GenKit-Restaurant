@@ -25,7 +25,7 @@ function printColored(prefix: string, text: string, color: string) {
 async function getGreeting() {
   const {text} = await ai.generate({
     prompt: "Come up with a short friendly greeting for yourself talking to a customer " +
-      "as the Kitchen Orchestrator at Indian Grill. " +
+              "as the Kitchen Orchestrator at Bollywood Grill. " +
       "Mention that you coordinate specialized agents for menu, orders, cooking, and delivery.",
   });
   return text;

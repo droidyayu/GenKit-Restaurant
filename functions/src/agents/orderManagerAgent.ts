@@ -26,7 +26,7 @@ export async function orderManagerAgent(input: {
     // Use AI to validate if the dish can be made with available ingredients
     const {text} = await ai.generate({
       prompt: `
-You are a kitchen manager at Indian Grill restaurant. 
+      You are a kitchen manager at Bollywood Grill restaurant. 
 
 Available ingredients: ${ingredientList}
 

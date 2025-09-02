@@ -27,7 +27,7 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
     try {
       // Use AI to understand intent and route to appropriate agent
       const {text} = await ai.generate({
-        prompt: "You are the Kitchen Orchestrator at Indian Grill restaurant. " +
+        prompt: "You are the Kitchen Orchestrator at Bollywood Grill restaurant. " +
           `Your job is to understand customer requests and provide helpful responses.
 
 Available services:
