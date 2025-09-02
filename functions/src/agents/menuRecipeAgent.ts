@@ -23,7 +23,7 @@ export async function menuRecipeAgent(input: {
       .join(", ");
 
     // Build AI prompt for recipe generation
-    let prompt = "You are a master chef at Indian Grill restaurant. " +
+    let prompt = "You are a master chef at Bollywood Grill restaurant. " +
       `Based on these available ingredients: ${ingredientList}, ` +
       `generate a delicious Indian menu.
 

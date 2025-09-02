@@ -25,7 +25,7 @@ export async function chefAgent(input: {
     // Use AI to validate if the dish can be cooked with available ingredients
     const {text} = await ai.generate({
       prompt: `
-You are a master chef at Indian Grill restaurant. 
+You are a master chef at Bollywood Grill restaurant. 
 
 Available ingredients: ${ingredientList}
 
