@@ -2,155 +2,27 @@ import {ai} from "../genkit";
 import {createOrderTool, updateOrderStatusTool} from "../tools/orderTool";
 import {inventoryTool} from "../tools/inventoryTool";
 
-export async function orderManagerAgent(input: {
-  userId: string;
-  dish: string;
-  quantity?: number;
-  specialInstructions?: string;
-  conversationHistory?: Array<{
-    role: "user" | "assistant";
-    content: string;
-    timestamp: string;
-    metadata?: Record<string, any>;
-  }>;
-}) {
-  const {userId, dish, quantity = 1, specialInstructions, conversationHistory} = input;
-  console.log(`[ORDER MANAGER] Processing order for user ${userId}: ${quantity}x ${dish}`);
+export const orderManagerAgent = ai.definePrompt({
+  name: "orderManagerAgent",
+  description: "Order Manager Agent handles order creation, validation, and management",
+  tools: [createOrderTool, updateOrderStatusTool, inventoryTool],
+  system: `You are a kitchen manager at Bollywood Grill restaurant. Your role is to:
 
-  try {
-    // Get current inventory to check ingredient availability
-    const inventory = await inventoryTool({});
-    const availableIngredients = inventory.filter((item: any) =>
-      item.available && item.quantity > 0
-    );
+1. Validate customer orders against available ingredients
+2. Create and manage orders in the system
+3. Check ingredient availability before accepting orders
+4. Provide alternatives when dishes cannot be made
+5. Update order status throughout the process
 
-    // Create ingredient list for AI validation
-    const ingredientList = availableIngredients
-      .map((item: any) => `${item.ingredient} (${item.quantity}${item.unit})`)
-      .join(", ");
+When processing an order:
+- Check ingredient availability using the inventory tool
+- Validate if the requested dish can be prepared
+- Create the order using the createOrderTool
+- Update order status to "PENDING" when created
+- Provide clear feedback about order status and timing
+- Suggest alternatives if the requested dish cannot be made
 
-    // Build AI prompt with conversation history context
-    let prompt = `You are a kitchen manager at Bollywood Grill restaurant. 
-
-Available ingredients: ${ingredientList}
-
-Customer wants to order: ${quantity}x ${dish}${
-  specialInstructions ? ` with special instructions: ${specialInstructions}` : ""
-}`;
-
-    // Add conversation history context if available
-    if (conversationHistory && conversationHistory.length > 0) {
-      const recentContext = conversationHistory
-        .slice(-5) // Last 5 messages for context
-        .map((msg) => `${msg.role}: ${msg.content}`)
-        .join("\n");
-
-      prompt += `\n\nConsider this recent conversation context:\n${recentContext}`;
-    }
-
-    prompt += `
-
-Please analyze if this dish can be made with the available ingredients and provide a response in this JSON format:
-
-{
-  "canMake": true/false,
-  "reason": "Brief explanation",
-  "missingIngredients": ["list of missing ingredients if any"],
-  "suggestions": ["alternative dishes or modifications if needed"]
-}
-
-Consider:
-- Whether the dish name is recognizable as an Indian dish
-- If the required ingredients are available
-- If modifications can be made with available ingredients
-- What alternatives might be possible
-- Previous orders or preferences from conversation history`;
-
-    // Use AI to validate if the dish can be made with available ingredients
-    const {text} = await ai.generate({
-      prompt,
-    });
-
-    // Parse AI response
-    let validation;
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        validation = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No valid JSON found in AI response");
-      }
-    } catch (parseError) {
-      console.error("[ORDER MANAGER] Error parsing AI validation:", parseError);
-      // Default to allowing the order if AI fails
-      validation = {canMake: true, reason: "AI validation failed, proceeding with order"};
-    }
-
-    if (!validation.canMake) {
-      return {
-        success: false,
-        error: "Dish not available",
-        dish,
-        reason: validation.reason,
-        message: `Sorry, ${dish} is not available right now. ${validation.reason}`,
-        suggestions: validation.suggestions || [],
-      };
-    }
-
-    // Create order in system
-    const orderResult = await createOrderTool({
-      dishes: [{name: dish, quantity}],
-      customerName: `User ${userId}`,
-    });
-
-    if (!orderResult.success) {
-      return {
-        success: false,
-        error: "Failed to create order",
-        dish,
-        message: "Sorry, there was an error creating your order. Please try again.",
-        details: orderResult.error || "Unknown error",
-      };
-    }
-
-    // Update order status to pending
-    await updateOrderStatusTool({
-      status: "PENDING",
-      message: "Order received and queued for cooking",
-    });
-
-    console.log(`[ORDER MANAGER] Order ${orderResult.orderId} created successfully`);
-
-    // Return order confirmation
-    return {
-      success: true,
-      action: "order_created",
-      orderId: orderResult.orderId,
-      userId,
-      dish,
-      quantity,
-      status: "PENDING",
-      message: `Order placed successfully! Your ${dish} will be ready in approximately 15-20 minutes.`,
-      nextStep: "Order sent to Chef Agent for cooking",
-      estimatedTime: "15-20 minutes",
-      orderDetails: {
-        orderId: orderResult.orderId,
-        dish,
-        quantity,
-        specialInstructions: specialInstructions || "None",
-        timestamp: new Date().toISOString(),
-      },
-    };
-  } catch (error) {
-    console.error(`[ORDER MANAGER] Error processing order for ${dish}:`, error);
-
-    return {
-      success: false,
-      error: "Failed to process order",
-      dish,
-      details: error instanceof Error ? error.message : "Unknown error",
-      message: "Sorry, there was an error processing your order. Please try again later.",
-    };
-  }
-}
+Always be helpful, efficient, and focused on customer satisfaction. 
+Provide clear explanations and realistic timing estimates.`,
+});
 
