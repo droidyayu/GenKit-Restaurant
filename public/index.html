@@ -702,9 +702,15 @@
         showTypingIndicator();
 
         try {
+          // Get the current authenticated user
+          const currentUser = auth.currentUser;
+          if (!currentUser) {
+            throw new Error('Please sign in to continue chatting');
+          }
+
           const kitchenFlow = httpsCallable(getFunctions(app), 'kitchenFlow');
           const response = await kitchenFlow({ 
-            userId: 'web-user',
+            userId: currentUser.uid,
             message: message 
           });
           
@@ -769,16 +775,19 @@
       const sendBtn = document.querySelector('#sendBtn');
       const messageInput = document.querySelector('#message');
 
-      if (signinBtn) {
-        signinBtn.addEventListener('click', signIn);
+      // Initially disable send button until user is authenticated
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.addEventListener('click', callKitchenFlow);
       }
 
-      if (sendBtn) {
-        sendBtn.addEventListener('click', callKitchenFlow);
+      if (signinBtn) {
+        signinBtn.addEventListener('click', signIn);
       }
       
       // Enter key support
       if (messageInput) {
+        messageInput.placeholder = 'Please sign in to chat...';
         messageInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') {
             callKitchenFlow();
@@ -834,12 +843,31 @@
             }
           };
           
+          // Function to update send button state based on authentication
+          function updateSendButtonState(user) {
+            const sendBtn = document.querySelector('#sendBtn');
+            const messageInput = document.querySelector('#message');
+            
+            if (sendBtn && messageInput) {
+              if (user) {
+                sendBtn.disabled = false;
+                messageInput.placeholder = 'Type your message...';
+              } else {
+                sendBtn.disabled = true;
+                messageInput.placeholder = 'Please sign in to chat...';
+              }
+            }
+          }
+
           // Set up auth state listener using the single auth instance
           console.log('Setting up auth state listener...');
 
           let initialAuthResolved = false;
           onAuthStateChanged(auth, (user) => {
             console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+            
+            // Update send button state
+            updateSendButtonState(user);
             
             // Only switch UI after the first resolution of auth state
             if (!initialAuthResolved) {
