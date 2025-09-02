@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Indian Grill Kitchen Flow</title>
+    <title>Indian Grill Kitchen</title>
     <style>
       * {
         margin: 0;
@@ -16,6 +16,13 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         height: 100vh;
         overflow: hidden;
+        min-height: 0;
+      }
+      
+      html {
+        height: 100%;
+        overflow: hidden;
+        min-height: 0;
       }
       
       .chat-container {
@@ -28,21 +35,39 @@
         box-shadow: 0 0 20px rgba(0,0,0,0.1);
         margin: 0 auto;
         overflow: hidden;
+        min-height: 0;
       }
       
       .chat-header {
+        flex-shrink: 0;
         background: linear-gradient(135deg, #ff6b6b, #ee5a24);
         color: white;
         padding: 20px;
-        text-align: center;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        height: 80px;
-        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border-radius: 15px 15px 0 0;
+        overflow: hidden;
+      }
+      
+      .header-title {
+        text-align: center;
+      }
+      
+      #callGenkit {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      
+      #signin {
+        flex: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        flex-shrink: 0;
-        z-index: 10;
+        min-height: 0;
       }
       
       .chat-header h1 {
@@ -60,15 +85,14 @@
       .chat-messages {
         flex: 1;
         overflow-y: auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         padding: 20px;
         background: #f8f9fa;
         scroll-behavior: smooth;
-        padding-bottom: 20px;
         scrollbar-width: thin;
         scrollbar-color: #cbd5e0 #f8f9fa;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
       }
       
       .chat-messages > * {
@@ -84,6 +108,12 @@
         flex-shrink: 0;
         margin-bottom: 20px;
       }
+      
+      .chat-messages .message {
+        flex-shrink: 0;
+      }
+      
+
       
       .chat-messages::-webkit-scrollbar {
         width: 12px;
@@ -103,6 +133,8 @@
       .chat-messages::-webkit-scrollbar-thumb:hover {
         background: #a0aec0;
       }
+      
+
       
       .message {
         margin-bottom: 20px;
@@ -187,20 +219,11 @@
       }
       
       .chat-input-container {
-        padding: 20px;
-        background: white;
-        border-top: 1px solid #e9ecef;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        flex-shrink: 0;
-        z-index: 10;
-        height: 80px;
-        overflow: hidden;
-        width: 100%;
-        box-sizing: border-box;
+        background: rgba(255,255,255,0.9);
+        border-radius: 25px;
+        padding: 10px 15px;
         display: flex;
         align-items: center;
-        position: sticky;
-        bottom: 0;
       }
       
       @media (max-width: 768px) {
@@ -210,10 +233,7 @@
           height: 100vh;
         }
         
-        .chat-input-container {
-          padding: 15px;
-          height: 70px;
-        }
+
         
         .input-group {
           gap: 8px;
@@ -230,8 +250,8 @@
         }
         
         .chat-header {
-          height: 70px;
           padding: 15px;
+          gap: 10px;
         }
         
         .chat-messages {
@@ -250,18 +270,20 @@
       
       input[type="text"] {
         flex: 1;
-        padding: 15px 20px;
-        border: 2px solid #e9ecef;
-        border-radius: 25px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 20px;
         font-size: 16px;
         outline: none;
-        transition: border-color 0.3s ease;
+        transition: all 0.3s ease;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         word-wrap: break-word;
         resize: none;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
       }
       
       input[type="text"]:focus {
@@ -269,18 +291,19 @@
       }
       
       button {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 15px 25px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 12px 20px;
         border: none;
-        border-radius: 25px;
+        border-radius: 20px;
         cursor: pointer;
         font-size: 16px;
         font-weight: 600;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: all 0.3s ease;
         white-space: nowrap;
         flex-shrink: 0;
         min-width: fit-content;
+        margin-left: 10px;
       }
       
       button:hover {
@@ -295,6 +318,23 @@
       .signin-container {
         text-align: center;
         padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      /* Header layout adjustments for integrated sign-in */
+      .chat-header {
+        gap: 20px;
+      }
+      
+      .signin-container {
+        text-align: center;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
       }
       
       .signin-btn {
@@ -429,39 +469,42 @@
   <body>
     <div class="chat-container">
       <div class="chat-header">
-        <h1>🍽️ Indian Grill Kitchen</h1>
-        <p>Your AI-powered kitchen assistant</p>
-      </div>
-      
-      <div id="signin" class="signin-container" hidden>
-        <h3>Welcome to Indian Grill Kitchen</h3>
-        <p>Sign in to start chatting with our kitchen AI</p>
-        <button id="signinBtn" class="signin-btn">Sign in with Google</button>
-      </div>
-      
-      <div id="callGenkit" hidden>
-        <div class="chat-messages" id="chatMessages">
-          <div class="welcome-message">
-            <h3>👋 Welcome to Indian Grill Kitchen!</h3>
-            <p>I'm your AI kitchen assistant. I can help you with:</p>
-            <div class="suggestions">
-              <div class="suggestion-chip" onclick="setMessage('Show me the menu')">Show me the menu</div>
-              <div class="suggestion-chip" onclick="setMessage('I want to order Palak Paneer')">Order Palak Paneer</div>
-              <div class="suggestion-chip" onclick="setMessage('What are your hours?')">Restaurant hours</div>
-              <div class="suggestion-chip" onclick="setMessage('Tell me about your specialties')">Specialties</div>
-            </div>
-          </div>
+        <div class="header-title">
+          <h1>🍽️ Indian Grill Kitchen</h1>
+          <p>Your AI-powered kitchen assistant</p>
         </div>
-        
-        <div class="chat-input-container">
+
+        <!-- Sign-in UI integrated into header -->
+        <div id="signin" class="signin-container">
+          <h3>Welcome to Indian Grill Kitchen</h3>
+          <p>Sign in to start chatting with our kitchen AI</p>
+          <button id="signinBtn" class="signin-btn">Sign in with Google</button>
+        </div>
+
+        <!-- Chat input container (hidden initially) -->
+        <div id="callGenkit" class="chat-input-container" style="display: none;">
           <div class="input-group">
             <input type="text" id="message" placeholder="Ask me anything about our menu, place an order, or get kitchen updates..." />
             <button id="sendBtn">Send</button>
           </div>
         </div>
       </div>
+      
+      <!-- Chat messages area -->
+      <div class="chat-messages" id="chatMessages" style="display: none;">
+        <div class="welcome-message">
+          <h3>👋 Welcome to Indian Grill Kitchen!</h3>
+          <p>I'm your AI kitchen assistant. I can help you with:</p>
+          <div class="suggestions">
+            <div class="suggestion-chip" onclick="setMessage('Show me the menu')">Show me the menu</div>
+            <div class="suggestion-chip" onclick="setMessage('I want to order Palak Paneer')">Order Palak Paneer</div>
+            <div class="suggestion-chip" onclick="setMessage('What are your hours?')">Restaurant hours</div>
+            <div class="suggestion-chip" onclick="setMessage('Tell me about your specialties')">Specialties</div>
+          </div>
+        </div>
+      </div>
     </div>
-
+    
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
       import {
@@ -469,15 +512,22 @@
         onAuthStateChanged,
         GoogleAuthProvider,
         signInWithPopup,
+        setPersistence,
+        browserLocalPersistence,
       } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
       import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-functions.js';
 
       // For local development (emulator)
       let firebaseConfig;
+      let app;
       try {
+        console.log('Trying to fetch Firebase config from emulator...');
         firebaseConfig = await fetch('/__/firebase/init.json');
-        initializeApp(await firebaseConfig.json());
+        const config = await firebaseConfig.json();
+        console.log('Emulator config loaded:', config);
+        app = initializeApp(config);
       } catch (error) {
+        console.log('Using production Firebase config...');
         // For production - use your actual Firebase config
         firebaseConfig = {
           apiKey: "AIzaSyDXj3Ouqz65aGBKs_XgNgnzUN2kR2TBt1A",
@@ -489,9 +539,24 @@
           measurementId: "G-G1D9Q34CWC"
         };
 
-        initializeApp(firebaseConfig);
+        app = initializeApp(firebaseConfig);
       }
-
+      
+            console.log('Firebase app initialized:', app);
+      
+      // Create single auth instance with explicit persistence
+      const auth = getAuth(app);
+      
+      // Ensure persistence is set before doing anything else
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        console.log('Auth persistence set to local');
+      } catch (error) {
+        console.error('Error setting auth persistence:', error);
+      }
+      
+      console.log('Single auth instance created:', auth);
+      
       function addMessage(content, isUser = false, timestamp = null) {
         const chatMessages = document.querySelector('#chatMessages');
         const messageDiv = document.createElement('div');
@@ -604,7 +669,7 @@
         showTypingIndicator();
 
         try {
-          const kitchenFlow = httpsCallable(getFunctions(), 'kitchenFlow');
+          const kitchenFlow = httpsCallable(getFunctions(app), 'kitchenFlow');
           const response = await kitchenFlow({ 
             userId: 'web-user',
             message: message 
@@ -641,30 +706,128 @@
       window.addEventListener('resize', scrollToBottom);
 
       function signIn() {
-        signInWithPopup(getAuth(), new GoogleAuthProvider());
+        console.log('Sign in clicked');
+        signInWithPopup(auth, new GoogleAuthProvider())
+          .then((result) => {
+            console.log('Sign in successful:', result.user);
+            // Immediately switch UI after successful sign-in
+            if (showChat) {
+              console.log('Calling showChat() to switch UI');
+              showChat();
+            } else {
+              console.log('showChat not available yet, manually switching UI');
+              const signinEl = document.querySelector('#signin');
+              const genkitEl = document.querySelector('#callGenkit');
+              console.log('Found elements for manual switch:', { signinEl, genkitEl });
+              if (signinEl && genkitEl) {
+                console.log('Before switch - signinEl.display:', signinEl.style.display, 'genkitEl.display:', genkitEl.style.display);
+                signinEl.style.display = 'none';
+                genkitEl.style.display = 'block';
+                document.querySelector('#chatMessages').style.display = 'block';
+                console.log('After switch - signinEl.display:', signinEl.style.display, 'genkitEl.display:', genkitEl.style.display);
+                console.log('Manual UI switch completed');
+              } else {
+                console.error('Elements not found for manual UI switch');
+              }
+            }
+          })
+          .catch((error) => {
+            console.error('Sign in error:', error);
+          });
       }
 
-      // Event listeners
-      document.querySelector('#signinBtn').addEventListener('click', signIn);
-      document.querySelector('#sendBtn').addEventListener('click', callKitchenFlow);
+      // Event listeners - ensure elements exist before adding listeners
+      const signinBtn = document.querySelector('#signinBtn');
+      const sendBtn = document.querySelector('#sendBtn');
+      const messageInput = document.querySelector('#message');
+
+      if (signinBtn) {
+        signinBtn.addEventListener('click', signIn);
+      }
+
+      if (sendBtn) {
+        sendBtn.addEventListener('click', callKitchenFlow);
+      }
       
       // Enter key support
-      document.querySelector('#message').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          callKitchenFlow();
-        }
-      });
+      if (messageInput) {
+        messageInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            callKitchenFlow();
+          }
+        });
+      }
 
-      const signinEl = document.querySelector('#signin');
-      const genkitEl = document.querySelector('#callGenkit');
-
-      onAuthStateChanged(getAuth(), (user) => {
-        if (!user) {
-          signinEl.hidden = false;
-          genkitEl.hidden = true;
+      // Global UI switching functions - define at top level
+      let showSignin, showChat;
+      let signinEl, genkitEl;
+      
+      // Wait for DOM to be ready
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM loaded, setting up authentication...');
+        
+        signinEl = document.querySelector('#signin');
+        genkitEl = document.querySelector('#callGenkit');
+        
+        console.log('Found elements:', { signinEl, genkitEl });
+        
+        if (signinEl && genkitEl) {
+          // Don't force hidden here. Let onAuthStateChanged decide.
+          // Just log what we found.
+          console.log('Initial elements:', { signinEl, genkitEl });
+          
+          // Centralized UI switching functions
+          showSignin = function() {
+            console.log('showSignin called, elements:', { signinEl, genkitEl });
+            if (signinEl && genkitEl) {
+              signinEl.style.display = 'block';
+              genkitEl.style.display = 'none';
+              document.querySelector('#chatMessages').style.display = 'none';
+              console.log('UI switched to signin');
+            } else {
+              console.error('showSignin: Elements not found');
+            }
+          };
+          
+          showChat = function() {
+            console.log('showChat called, elements:', { signinEl, genkitEl });
+            if (signinEl && genkitEl) {
+              signinEl.style.display = 'none';
+              genkitEl.style.display = 'block';
+              document.querySelector('#chatMessages').style.display = 'block';
+              console.log('UI switched to chat');
+            } else {
+              console.error('showChat: Elements not found');
+            }
+          };
+          
+          // Set up auth state listener using the single auth instance
+          console.log('Setting up auth state listener...');
+          
+          onAuthStateChanged(auth, (user) => {
+            console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+            
+            if (user) {
+              console.log('Auth listener: User logged in, calling showChat');
+              showChat();
+            } else {
+              console.log('Auth listener: No user, calling showSignin');
+              showSignin();
+            }
+          });
+          
+          // Check current auth state immediately
+          const currentUser = auth.currentUser;
+          console.log('Current auth state:', currentUser ? 'User logged in' : 'No user');
+          if (currentUser) {
+            console.log('User already logged in, switching UI immediately');
+            showChat();
+          } else {
+            console.log('No user, showing signin');
+            showSignin();
+          }
         } else {
-          signinEl.hidden = true;
-          genkitEl.hidden = false;
+          console.error('Required elements not found in DOM');
         }
       });
     </script>
