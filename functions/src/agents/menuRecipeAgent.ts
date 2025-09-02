@@ -6,8 +6,14 @@ export async function menuRecipeAgent(input: {
   category?: string;
   preferences?: string;
   requestType: "menu_generation" | "recipe_suggestion" | "dessert_upsell";
+  conversationHistory?: Array<{
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+    metadata?: Record<string, any>;
+  }>;
 }) {
-  const {userId, category, preferences, requestType} = input;
+  const {userId, category, preferences, requestType, conversationHistory} = input;
   console.log(`[MENU AGENT] Processing ${requestType} request for user ${userId || "anonymous"}`);
 
   try {
@@ -45,6 +51,16 @@ Format the response as a beautiful, readable menu that customers can easily unde
 
     if (preferences) {
       prompt += `\n\nCater to these dietary preferences: ${preferences}`;
+    }
+
+    // Add conversation history context if available
+    if (conversationHistory && conversationHistory.length > 0) {
+      const recentContext = conversationHistory
+        .slice(-5) // Last 5 messages for context
+        .map((msg) => `${msg.role}: ${msg.content}`)
+        .join("\n");
+
+      prompt += `\n\nConsider this recent conversation context when generating the menu:\n${recentContext}`;
     }
 
     // Generate menu using AI

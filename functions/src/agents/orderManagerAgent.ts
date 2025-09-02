@@ -7,8 +7,14 @@ export async function orderManagerAgent(input: {
   dish: string;
   quantity?: number;
   specialInstructions?: string;
+  conversationHistory?: Array<{
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+    metadata?: Record<string, any>;
+  }>;
 }) {
-  const {userId, dish, quantity = 1, specialInstructions} = input;
+  const {userId, dish, quantity = 1, specialInstructions, conversationHistory} = input;
   console.log(`[ORDER MANAGER] Processing order for user ${userId}: ${quantity}x ${dish}`);
 
   try {
@@ -23,16 +29,26 @@ export async function orderManagerAgent(input: {
       .map((item: any) => `${item.ingredient} (${item.quantity}${item.unit})`)
       .join(", ");
 
-    // Use AI to validate if the dish can be made with available ingredients
-    const {text} = await ai.generate({
-      prompt: `
-      You are a kitchen manager at Bollywood Grill restaurant. 
+    // Build AI prompt with conversation history context
+    let prompt = `You are a kitchen manager at Bollywood Grill restaurant. 
 
 Available ingredients: ${ingredientList}
 
 Customer wants to order: ${quantity}x ${dish}${
   specialInstructions ? ` with special instructions: ${specialInstructions}` : ""
-}
+}`;
+
+    // Add conversation history context if available
+    if (conversationHistory && conversationHistory.length > 0) {
+      const recentContext = conversationHistory
+        .slice(-5) // Last 5 messages for context
+        .map((msg) => `${msg.role}: ${msg.content}`)
+        .join("\n");
+
+      prompt += `\n\nConsider this recent conversation context:\n${recentContext}`;
+    }
+
+    prompt += `
 
 Please analyze if this dish can be made with the available ingredients and provide a response in this JSON format:
 
@@ -48,7 +64,11 @@ Consider:
 - If the required ingredients are available
 - If modifications can be made with available ingredients
 - What alternatives might be possible
-`,
+- Previous orders or preferences from conversation history`;
+
+    // Use AI to validate if the dish can be made with available ingredients
+    const {text} = await ai.generate({
+      prompt,
     });
 
     // Parse AI response

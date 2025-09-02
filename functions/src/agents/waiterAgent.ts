@@ -8,23 +8,29 @@ export async function waiterAgent(input: {
   orderId?: string;
   action: "checkStatus" | "deliverOrder" | "upsellDessert" | "generalInquiry";
   message?: string;
+  conversationHistory?: Array<{
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+    metadata?: Record<string, any>;
+  }>;
 }) {
-  const {userId, orderId, action, message} = input;
+  const {userId, orderId, action, message, conversationHistory} = input;
   console.log(`[WAITER AGENT] Processing ${action} for user ${userId}`);
 
   try {
     switch (action) {
     case "checkStatus":
-      return await handleStatusCheck(userId, orderId);
+      return await handleStatusCheck(userId, orderId, conversationHistory);
 
     case "deliverOrder":
-      return await handleOrderDelivery(userId, orderId!);
+      return await handleOrderDelivery(userId, orderId!, conversationHistory);
 
     case "upsellDessert":
-      return await handleDessertUpsell(userId, orderId);
+      return await handleDessertUpsell(userId, orderId, conversationHistory);
 
     case "generalInquiry":
-      return await handleGeneralInquiry(userId, message);
+      return await handleGeneralInquiry(userId, message, conversationHistory);
 
     default:
       return {
@@ -46,7 +52,16 @@ export async function waiterAgent(input: {
 }
 
 // Handle order status check
-async function handleStatusCheck(userId: string, orderId?: string) {
+async function handleStatusCheck(
+  userId: string,
+  orderId?: string,
+  conversationHistory?: Array<{
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+    metadata?: Record<string, any>;
+  }>
+) {
   console.log(`[WAITER AGENT] Checking status for user ${userId}, order ${orderId || "current"}`);
 
   const status = await getOrderStatusTool({orderId});
@@ -115,7 +130,16 @@ async function handleStatusCheck(userId: string, orderId?: string) {
 }
 
 // Handle order delivery
-async function handleOrderDelivery(userId: string, orderId: string) {
+async function handleOrderDelivery(
+  userId: string,
+  orderId: string,
+  conversationHistory?: Array<{
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+    metadata?: Record<string, any>;
+  }>
+) {
   console.log(`[WAITER AGENT] Delivering order ${orderId} to user ${userId}`);
 
   // First check if order is ready
@@ -167,13 +191,23 @@ async function handleOrderDelivery(userId: string, orderId: string) {
 }
 
 // Handle dessert upsell
-async function handleDessertUpsell(userId: string, orderId?: string) {
+async function handleDessertUpsell(
+  userId: string,
+  orderId?: string,
+  conversationHistory?: Array<{
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+    metadata?: Record<string, any>;
+  }>
+) {
   console.log(`[WAITER AGENT] Suggesting desserts to user ${userId}`);
 
   // Get dessert suggestions from Menu & Recipe Agent
   const dessertResult = await menuRecipeAgent({
     userId,
     requestType: "dessert_upsell",
+    conversationHistory, // Pass conversation history
   });
 
   if (dessertResult.success) {
@@ -214,7 +248,16 @@ async function handleDessertUpsell(userId: string, orderId?: string) {
 }
 
 // Handle general inquiries
-async function handleGeneralInquiry(userId: string, message?: string) {
+async function handleGeneralInquiry(
+  userId: string,
+  message?: string,
+  conversationHistory?: Array<{
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+    metadata?: Record<string, any>;
+  }>
+) {
   console.log(`[WAITER AGENT] Handling general inquiry from user ${userId}: "${message}"`);
 
   if (!message) {
