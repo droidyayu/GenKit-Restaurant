@@ -49,7 +49,7 @@ export const kitchenFlow = onCallGenkit({
   // enforceAppCheck: true,
 
   // Require users to be signed in and have verified email
-  authPolicy: hasClaim('email_verified'),
+  authPolicy: hasClaim("email_verified"),
 
   // Grant access to the API key to this function:
   secrets: [apiKey],
