@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Indian Grill Kitchen</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        overflow: hidden;
+        min-height: 0;
+      }
+      
+      html {
+        height: 100%;
+        overflow: hidden;
+        min-height: 0;
+      }
+      
+      .chat-container {
+        max-width: 900px;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        margin: 0 auto;
+        overflow: hidden;
+        min-height: 0;
+      }
+      
+      .chat-header {
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        border-radius: 15px 15px 0 0;
+        overflow: hidden;
+      }
+      
+      .header-title {
+        text-align: center;
+      }
+      
+      #callGenkit {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      
+      #signin {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 0;
+      }
+      
+      .chat-header h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      
+      .chat-header p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+      
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        background: #f8f9fa;
+        scroll-behavior: smooth;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f8f9fa;
+      }
+      
+      .chat-messages > * {
+        flex-shrink: 0;
+      }
+      
+      .chat-messages .welcome-message {
+        flex-shrink: 0;
+        margin-bottom: 20px;
+      }
+      
+      .chat-messages .typing-indicator {
+        flex-shrink: 0;
+        margin-bottom: 20px;
+      }
+      
+      .chat-messages .message {
+        flex-shrink: 0;
+      }
+      
+
+      
+      .chat-messages::-webkit-scrollbar {
+        width: 12px;
+      }
+      
+      .chat-messages::-webkit-scrollbar-track {
+        background: #f8f9fa;
+        border-radius: 6px;
+      }
+      
+      .chat-messages::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 6px;
+        border: 2px solid #f8f9fa;
+      }
+      
+      .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+      }
+      
+
+      
+      .message {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        animation: fadeInUp 0.3s ease-out;
+        flex-shrink: 0;
+        max-width: 70%;
+        width: fit-content;
+      }
+      
+      .message.user {
+        justify-content: flex-end;
+        margin-left: auto;
+      }
+      
+      .message.kitchen {
+        justify-content: flex-start;
+        margin-right: auto;
+      }
+      
+      .message-bubble {
+        max-width: 70%;
+        padding: 15px 20px;
+        border-radius: 20px;
+        position: relative;
+        word-wrap: break-word;
+        line-height: 1.4;
+      }
+      
+      .message.user .message-bubble {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-bottom-right-radius: 5px;
+      }
+      
+      .message.kitchen .message-bubble {
+        background: white;
+        color: #333;
+        border: 1px solid #e9ecef;
+        border-bottom-left-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      
+      .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin: 0 12px;
+        flex-shrink: 0;
+      }
+      
+      .message.user .message-avatar {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        order: 2;
+      }
+      
+      .message.kitchen .message-avatar {
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        order: 0;
+      }
+      
+      .message-time {
+        font-size: 11px;
+        opacity: 0.7;
+        margin-top: 5px;
+        text-align: right;
+      }
+      
+      .message.user .message-time {
+        text-align: right;
+      }
+      
+      .message.kitchen .message-time {
+        text-align: left;
+      }
+      
+      .chat-input-container {
+        background: rgba(255,255,255,0.9);
+        border-radius: 25px;
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+      }
+      
+      @media (max-width: 768px) {
+        .chat-container {
+          max-width: 100%;
+          width: 100%;
+          height: 100vh;
+        }
+        
+
+        
+        .input-group {
+          gap: 8px;
+        }
+        
+        input[type="text"] {
+          padding: 12px 16px;
+          font-size: 14px;
+        }
+        
+        button {
+          padding: 12px 20px;
+          font-size: 14px;
+        }
+        
+        .chat-header {
+          padding: 15px;
+          gap: 10px;
+        }
+        
+        .chat-messages {
+          padding: 15px;
+        }
+      }
+      
+      .input-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+        flex: 1;
+      }
+      
+      input[type="text"] {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 20px;
+        font-size: 16px;
+        outline: none;
+        transition: all 0.3s ease;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        word-wrap: break-word;
+        resize: none;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+      }
+      
+      input[type="text"]:focus {
+        border-color: #667eea;
+      }
+      
+      button {
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: fit-content;
+        margin-left: 10px;
+      }
+      
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+      
+      button:active {
+        transform: translateY(0);
+      }
+      
+      .signin-container {
+        text-align: center;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      /* Header layout adjustments for integrated sign-in */
+      .chat-header {
+        gap: 20px;
+      }
+      
+      .signin-container {
+        text-align: center;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+      }
+      
+      .signin-btn {
+        background: linear-gradient(135deg, #4285f4, #34a853);
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 25px;
+      }
+      
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: #666;
+        font-style: italic;
+      }
+      
+      .loading::after {
+        content: '';
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e9ecef;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+      
+      .typing-indicator {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #e9ecef;
+        max-width: 70%;
+        margin-bottom: 20px;
+        animation: fadeInUp 0.3s ease-out;
+        position: relative;
+        z-index: 5;
+        flex-shrink: 0;
+      }
+      
+      .typing-dots {
+        display: flex;
+        gap: 4px;
+      }
+      
+      .typing-dots span {
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        animation: typing 1.4s infinite ease-in-out;
+      }
+      
+      .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+      .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+      
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes typing {
+        0%, 80%, 100% {
+          transform: scale(0.8);
+          opacity: 0.5;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      
+      .welcome-message {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+        font-style: italic;
+        margin-bottom: 20px;
+        flex-shrink: 0;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 200px;
+      }
+      
+      .welcome-message h3 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      
+      .suggestions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 15px;
+      }
+      
+      .suggestion-chip {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .suggestion-chip:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="header-title">
+          <h1>🍽️ Bollywood Grill Kitchen</h1>
+          <p>Your AI-powered kitchen assistant</p>
+        </div>
+
+        <!-- Sign-in UI integrated into header -->
+        <div id="signin" class="signin-container">
+          <p>Sign in to start chatting with our Bollywood Grill kitchen AI</p>
+          <button id="signinBtn" class="signin-btn">Sign in with Google</button>
+        </div>
+
+        <!-- Chat input container (hidden initially) -->
+        <div id="callGenkit" class="chat-input-container" style="display: none;">
+          <div class="input-group">
+            <input type="text" id="message" placeholder="Ask me anything about our menu, place an order, or get kitchen updates..." />
+            <button id="sendBtn">Send</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat messages area -->
+      <div class="chat-messages" id="chatMessages" style="display: none;">
+        <div class="welcome-message">
+          <h3>👋 Welcome to Bollywood Grill Kitchen!</h3>
+          <p>I'm your AI kitchen assistant. I can help you with:</p>
+          <div class="suggestions">
+            <div class="suggestion-chip" onclick="setMessage('Show me the menu')">Show me the menu</div>
+            <div class="suggestion-chip" onclick="setMessage('I want to order Palak Paneer')">Order Palak Paneer</div>
+            <div class="suggestion-chip" onclick="setMessage('What are your hours?')">Restaurant hours</div>
+            <div class="suggestion-chip" onclick="setMessage('Tell me about your specialties')">Specialties</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+      import {
+        getAuth,
+        onAuthStateChanged,
+        GoogleAuthProvider,
+        signInWithPopup,
+        setPersistence,
+        browserLocalPersistence,
+      } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+      import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-functions.js';
+
+      // For local development (emulator)
+      let firebaseConfig;
+      let app;
+      try {
+        console.log('Trying to fetch Firebase config from emulator...');
+        firebaseConfig = await fetch('/__/firebase/init.json');
+        const config = await firebaseConfig.json();
+        console.log('Emulator config loaded:', config);
+        app = initializeApp(config);
+      } catch (error) {
+        console.log('Using production Firebase config...');
+        // For production - use your actual Firebase config
+        firebaseConfig = {
+          apiKey: "AIzaSyDXj3Ouqz65aGBKs_XgNgnzUN2kR2TBt1A",
+          authDomain: "genkit-restaurant.firebaseapp.com",
+          projectId: "genkit-restaurant",
+          storageBucket: "genkit-restaurant.firebasestorage.app",
+          messagingSenderId: "341691918117",
+          appId: "1:341691918117:web:d4aa71d87acce62a34dccc",
+          measurementId: "G-G1D9Q34CWC"
+        };
+
+        app = initializeApp(firebaseConfig);
+      }
+      
+            console.log('Firebase app initialized:', app);
+      
+      // Create single auth instance with explicit persistence
+      const auth = getAuth(app);
+      
+      // Ensure persistence is set before doing anything else
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        console.log('Auth persistence set to local');
+      } catch (error) {
+        console.error('Error setting auth persistence:', error);
+      }
+      
+      console.log('Single auth instance created:', auth);
+      
+      function setMessage(text) {
+        const messageInput = document.querySelector('#message');
+        if (messageInput) {
+          messageInput.value = text;
+          messageInput.focus();
+          console.log('Message set to:', text);
+        }
+      }
+      
+      // Make setMessage globally accessible for onclick handlers
+      window.setMessage = setMessage;
+      
+      function addMessage(content, isUser = false, timestamp = null) {
+        const chatMessages = document.querySelector('#chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user' : 'kitchen'}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.textContent = isUser ? '👤' : '🍽️';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        
+        // Format the content based on the response structure
+        if (!isUser && content.message) {
+          // Extract the actual message content from the kitchen response
+          const messageContent = content.message;
+          bubble.innerHTML = formatKitchenMessage(messageContent);
+        } else {
+          bubble.textContent = content;
+        }
+        
+        const timeDiv = document.createElement('div');
+        timeDiv.className = 'message-time';
+        timeDiv.textContent = timestamp || new Date().toLocaleTimeString();
+        
+        bubble.appendChild(timeDiv);
+        
+        if (isUser) {
+          messageDiv.appendChild(bubble);
+          messageDiv.appendChild(avatar);
+        } else {
+          messageDiv.appendChild(avatar);
+          messageDiv.appendChild(bubble);
+        }
+        
+        chatMessages.appendChild(messageDiv);
+        
+        // Force scroll to bottom with a small delay to ensure DOM update
+        setTimeout(() => {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+      }
+
+      function formatKitchenMessage(message) {
+        // Convert markdown-like formatting to HTML
+        let formatted = message
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>');
+        
+        // Handle headers
+        formatted = formatted.replace(/^## (.*?)$/gm, '<h3>$1</h3>');
+        formatted = formatted.replace(/^### (.*?)$/gm, '<h4>$1</h4>');
+        
+        // Handle lists
+        formatted = formatted.replace(/^\* (.*?)$/gm, '<li>$1</li>');
+        formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        
+        // Handle numbered lists
+        formatted = formatted.replace(/^\*\*(\d+)\. (.*?)\*\*/gm, '<h4>$1. $2</h4>');
+        
+        return `<p>${formatted}</p>`;
+      }
+
+      function showTypingIndicator() {
+        const chatMessages = document.querySelector('#chatMessages');
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = `
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span style="margin-left: 10px; color: #666;">Kitchen is thinking...</span>
+        `;
+        typingDiv.id = 'typingIndicator';
+        chatMessages.appendChild(typingDiv);
+        
+        // Scroll to show typing indicator
+        setTimeout(() => {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 50);
+      }
+
+      function hideTypingIndicator() {
+        const typingIndicator = document.querySelector('#typingIndicator');
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+      }
+
+      async function callKitchenFlow() {
+        const messageInput = document.querySelector('#message');
+        const message = messageInput.value.trim();
+        
+        if (!message) {
+          alert('Please enter a message');
+          return;
+        }
+
+        // Add user message to chat
+        addMessage(message, true);
+        
+        // Clear input
+        messageInput.value = '';
+        
+        // Show typing indicator
+        showTypingIndicator();
+
+        try {
+          const kitchenFlow = httpsCallable(getFunctions(app), 'kitchenFlow');
+          const response = await kitchenFlow({ 
+            userId: 'web-user',
+            message: message 
+          });
+          
+          // Hide typing indicator
+          hideTypingIndicator();
+          
+          // Add kitchen response to chat
+          addMessage(response.data, false);
+          
+        } catch (error) {
+          hideTypingIndicator();
+          addMessage(`Sorry, I encountered an error: ${error.message}`, false);
+        }
+      }
+
+      function scrollToBottom() {
+        const chatMessages = document.querySelector('#chatMessages');
+        if (chatMessages) {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+      }
+      
+      // Scroll to bottom when page loads
+      window.addEventListener('load', scrollToBottom);
+      
+      // Scroll to bottom when window is resized
+      window.addEventListener('resize', scrollToBottom);
+
+      function signIn() {
+        console.log('Sign in clicked');
+        signInWithPopup(auth, new GoogleAuthProvider())
+          .then((result) => {
+            console.log('Sign in successful:', result.user);
+            // Immediately switch UI after successful sign-in
+            if (showChat) {
+              console.log('Calling showChat() to switch UI');
+              showChat();
+            } else {
+              console.log('showChat not available yet, manually switching UI');
+              const signinEl = document.querySelector('#signin');
+              const genkitEl = document.querySelector('#callGenkit');
+              console.log('Found elements for manual switch:', { signinEl, genkitEl });
+              if (signinEl && genkitEl) {
+                console.log('Before switch - signinEl.display:', signinEl.style.display, 'genkitEl.display:', genkitEl.style.display);
+                signinEl.style.display = 'none';
+                genkitEl.style.display = 'block';
+                document.querySelector('#chatMessages').style.display = 'block';
+                console.log('After switch - signinEl.display:', signinEl.style.display, 'genkitEl.display:', genkitEl.style.display);
+                console.log('Manual UI switch completed');
+              } else {
+                console.error('Elements not found for manual UI switch');
+              }
+            }
+          })
+          .catch((error) => {
+            console.error('Sign in error:', error);
+          });
+      }
+
+      // Event listeners - ensure elements exist before adding listeners
+      const signinBtn = document.querySelector('#signinBtn');
+      const sendBtn = document.querySelector('#sendBtn');
+      const messageInput = document.querySelector('#message');
+
+      if (signinBtn) {
+        signinBtn.addEventListener('click', signIn);
+      }
+
+      if (sendBtn) {
+        sendBtn.addEventListener('click', callKitchenFlow);
+      }
+      
+      // Enter key support
+      if (messageInput) {
+        messageInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            callKitchenFlow();
+          }
+        });
+      }
+
+      // Global UI switching functions - define at top level
+      let showSignin, showChat;
+      let signinEl, genkitEl;
+      
+      // Wait for DOM to be ready
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM loaded, setting up authentication...');
+        
+        signinEl = document.querySelector('#signin');
+        genkitEl = document.querySelector('#callGenkit');
+        
+        console.log('Found elements:', { signinEl, genkitEl });
+        
+        if (signinEl && genkitEl) {
+          // Don't force hidden here. Let onAuthStateChanged decide.
+          // Just log what we found.
+          console.log('Initial elements:', { signinEl, genkitEl });
+          
+          // Centralized UI switching functions
+          showSignin = function() {
+            console.log('showSignin called, elements:', { signinEl, genkitEl });
+            if (signinEl && genkitEl) {
+              signinEl.style.display = 'block';
+              genkitEl.style.display = 'none';
+              document.querySelector('#chatMessages').style.display = 'none';
+              console.log('UI switched to signin');
+            } else {
+              console.error('showSignin: Elements not found');
+            }
+          };
+          
+          showChat = function() {
+            console.log('showChat called, elements:', { signinEl, genkitEl });
+            if (signinEl && genkitEl) {
+              signinEl.style.display = 'none';
+              genkitEl.style.display = 'block';
+              document.querySelector('#chatMessages').style.display = 'block';
+              console.log('UI switched to chat');
+            } else {
+              console.error('showChat: Elements not found');
+            }
+          };
+          
+          // Set up auth state listener using the single auth instance
+          console.log('Setting up auth state listener...');
+          
+          onAuthStateChanged(auth, (user) => {
+            console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+            
+            if (user) {
+              console.log('Auth listener: User logged in, calling showChat');
+              showChat();
+            } else {
+              console.log('Auth listener: No user, calling showSignin');
+              showSignin();
+            }
+          });
+          
+          // Check current auth state immediately
+          const currentUser = auth.currentUser;
+          console.log('Current auth state:', currentUser ? 'User logged in' : 'No user');
+          if (currentUser) {
+            console.log('User already logged in, switching UI immediately');
+            showChat();
+          } else {
+            console.log('No user, showing signin');
+            showSignin();
+          }
+        } else {
+          console.error('Required elements not found in DOM');
+        }
+      });
+    </script>
+  </body>
+</html>
