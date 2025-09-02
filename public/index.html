@@ -476,7 +476,6 @@
 
         <!-- Sign-in UI integrated into header -->
         <div id="signin" class="signin-container">
-          <h3>Welcome to Indian Grill Kitchen</h3>
           <p>Sign in to start chatting with our kitchen AI</p>
           <button id="signinBtn" class="signin-btn">Sign in with Google</button>
         </div>
@@ -556,6 +555,18 @@
       }
       
       console.log('Single auth instance created:', auth);
+      
+      function setMessage(text) {
+        const messageInput = document.querySelector('#message');
+        if (messageInput) {
+          messageInput.value = text;
+          messageInput.focus();
+          console.log('Message set to:', text);
+        }
+      }
+      
+      // Make setMessage globally accessible for onclick handlers
+      window.setMessage = setMessage;
       
       function addMessage(content, isUser = false, timestamp = null) {
         const chatMessages = document.querySelector('#chatMessages');
@@ -687,11 +698,6 @@
         }
       }
 
-      function setMessage(text) {
-        document.querySelector('#message').value = text;
-        document.querySelector('#message').focus();
-      }
-      
       function scrollToBottom() {
         const chatMessages = document.querySelector('#chatMessages');
         if (chatMessages) {
