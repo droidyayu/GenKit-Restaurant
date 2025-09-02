@@ -3,7 +3,7 @@ import "dotenv/config";
 
 // Import the Genkit core libraries and plugins.
 import {genkit, z} from "genkit";
-import {gemini15Pro, googleAI} from "@genkit-ai/googleai";
+import {gemini20Flash, googleAI} from "@genkit-ai/googleai";
 
 // The Firebase telemetry plugin exports a combination of metrics, traces, and logs to Google Cloud
 // Observability. See https://firebase.google.com/docs/genkit/observability/telemetry-collection.
@@ -18,7 +18,7 @@ const ai = genkit({
     // the recommended practice.
     googleAI(),
   ],
-  model: gemini15Pro,
+  model: gemini20Flash,
 });
 
 // Export the ai instance and z for use in other files

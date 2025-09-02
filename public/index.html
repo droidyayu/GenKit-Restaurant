@@ -1,17 +1,82 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Genkit demo</title>
+    <title>Indian Grill Kitchen Flow</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      .input-group {
+        margin: 20px 0;
+      }
+      input[type="text"] {
+        width: 70%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+      button {
+        background: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-left: 10px;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      .response {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-left: 4px solid #4CAF50;
+        white-space: pre-wrap;
+        font-family: monospace;
+      }
+      .error {
+        border-left-color: #f44336;
+        background: #ffebee;
+      }
+      .loading {
+        color: #666;
+        font-style: italic;
+      }
+    </style>
   </head>
   <body>
-    <div id="signin" hidden>
-      <button id="signinBtn">Sign in with Google</button>
+    <div class="container">
+      <h1>🍽️ Indian Grill Kitchen Flow</h1>
+      <p>Test the kitchen multi-agent system with natural language requests.</p>
+      
+      <div id="signin" hidden>
+        <button id="signinBtn">Sign in with Google</button>
+      </div>
+      
+      <div id="callGenkit" hidden>
+        <div class="input-group">
+          <input type="text" id="message" placeholder="Try: 'Show me the menu', 'I want to order Palak Paneer', or 'What are your hours?'" />
+          <button id="sendBtn">Send Request</button>
+        </div>
+        
+        <div id="response" class="response" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">Processing your request...</div>
+      </div>
     </div>
-    <div id="callGenkit" hidden>
-      Subject: <input type="text" id="subject" />
-      <button id="kitchenApi">Place your order</button>
-      <p id="kitchenApi"></p>
-    </div>
+
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
       import {
@@ -22,14 +87,56 @@
       } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
       import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-functions.js';
 
-      const firebaseConfig = await fetch('/__/firebase/init.json');
-      initializeApp(await firebaseConfig.json());
+      // For local development (emulator)
+      let firebaseConfig;
+      try {
+        firebaseConfig = await fetch('/__/firebase/init.json');
+        initializeApp(await firebaseConfig.json());
+      } catch (error) {
+        // For production - use your actual Firebase config
+        firebaseConfig = {
+          apiKey: "AIzaSyDXj3Ouqz65aGBKs_XgNgnzUN2kR2TBt1A",
+          authDomain: "genkit-restaurant.firebaseapp.com",
+          projectId: "genkit-restaurant",
+          storageBucket: "genkit-restaurant.firebasestorage.app",
+          messagingSenderId: "341691918117",
+          appId: "1:341691918117:web:d4aa71d87acce62a34dccc",
+          measurementId: "G-G1D9Q34CWC"
+        };
 
-      async function generatePoem() {
-        const poemFlow = httpsCallable(getFunctions(), 'generatePoem');
-        const subject = document.querySelector('#subject').value;
-        const response = await poemFlow({ subject });
-        document.querySelector('#generatedPoem').innerText = response.data.poem;
+        initializeApp(firebaseConfig);
+      }
+
+      async function callKitchenFlow() {
+        const message = document.querySelector('#message').value;
+        if (!message.trim()) {
+          alert('Please enter a message');
+          return;
+        }
+
+        const loadingEl = document.querySelector('#loading');
+        const responseEl = document.querySelector('#response');
+        
+        loadingEl.style.display = 'block';
+        responseEl.style.display = 'none';
+
+        try {
+          const kitchenFlow = httpsCallable(getFunctions(), 'kitchenFlow');
+          const response = await kitchenFlow({ 
+            userId: 'web-user',
+            message: message 
+          });
+          
+          loadingEl.style.display = 'none';
+          responseEl.style.display = 'block';
+          responseEl.className = 'response';
+          responseEl.textContent = JSON.stringify(response.data, null, 2);
+        } catch (error) {
+          loadingEl.style.display = 'none';
+          responseEl.style.display = 'block';
+          responseEl.className = 'response error';
+          responseEl.textContent = `Error: ${error.message}`;
+        }
       }
 
       function signIn() {
@@ -37,7 +144,7 @@
       }
 
       document.querySelector('#signinBtn').addEventListener('click', signIn);
-      document.querySelector('#generatePoem').addEventListener('click', generatePoem);
+      document.querySelector('#sendBtn').addEventListener('click', callKitchenFlow);
 
       const signinEl = document.querySelector('#signin');
       const genkitEl = document.querySelector('#callGenkit');
