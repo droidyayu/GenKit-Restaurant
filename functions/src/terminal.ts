@@ -1,7 +1,7 @@
 import "dotenv/config";
 import {createInterface} from "node:readline";
 import {ai} from "./genkit";
-import {kitchenOrchestratorFlow} from "./flows/kitchenOrchestratorFlow";
+import {kitchenAgent} from "./agents/kitchenAgent";
 
 const rl = createInterface({
   input: process.stdin,
@@ -25,13 +25,21 @@ function printColored(prefix: string, text: string, color: string) {
 async function getGreeting() {
   const {text} = await ai.generate({
     prompt: "Come up with a short friendly greeting for yourself talking to a customer " +
-              "as the Kitchen Orchestrator at Bollywood Grill. " +
+              "as the Kitchen Agent at Bollywood Grill. " +
       "Mention that you coordinate specialized agents for menu, orders, cooking, and delivery.",
   });
   return text;
 }
 
-function printResponse(result: any) {
+function printResponse(result: {
+  message?: string;
+  menuDisplay?: string;
+  menu?: Array<{name: string; category: string; price?: string}>;
+  status?: string;
+  estimatedTime?: string;
+  progress?: number;
+  suggestions?: string[];
+} | null) {
   console.log();
   process.stdout.write(`${COLORS.CHEF}chef>${COLORS.RESET} `);
 
@@ -65,7 +73,7 @@ function printResponse(result: any) {
   }
 }
 
-// Main loop calling orchestrator flow directly
+// Main loop calling kitchen agent directly
 async function main() {
   const userId = "cli-user";
 
@@ -73,7 +81,7 @@ async function main() {
   console.log();
   printColored("chef", greeting, COLORS.CHEF);
   console.log(`\n${COLORS.AGENT}🎭 Kitchen Multi-Agent System Active:${COLORS.RESET}`);
-  console.log("   • Kitchen Orchestrator - Central router and coordinator");
+  console.log("   • Kitchen Agent - Central router and coordinator");
   console.log("   • Menu & Recipe Agent - Dynamic menu generation");
   console.log("   • Order Manager Agent - Order lifecycle management");
   console.log("   • Chef Agent - Cooking execution and timing");
@@ -88,8 +96,18 @@ async function main() {
             rl.close();
             process.exit(0);
           }
-          const result = await kitchenOrchestratorFlow.run({userId, message: input});
-          printResponse(result);
+
+          // Use the kitchenAgent with proper Genkit API
+          const result = await ai.generate({
+            prompt: [
+              {text: `User ${userId}: ${input}`},
+            ],
+            config: {
+              model: kitchenAgent,
+            },
+          });
+
+          printResponse({message: result.text});
           resolve();
         } catch (e) {
           console.log("Error:", e);

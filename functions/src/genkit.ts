@@ -1,8 +1,8 @@
 // Load environment variables from .env file
 import "dotenv/config";
 
-// Import the Genkit core libraries and plugins.
-import {genkit, z} from "genkit";
+// Import the Genkit core libraries and plugins with beta features
+import {genkit, z} from "genkit/beta";
 import {gemini20Flash, googleAI} from "@genkit-ai/googleai";
 import {initializeApp, getApps} from "firebase-admin/app";
 
