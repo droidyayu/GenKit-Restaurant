@@ -4,6 +4,17 @@ import "dotenv/config";
 // Import the Genkit core libraries and plugins.
 import {genkit, z} from "genkit";
 import {gemini20Flash, googleAI} from "@genkit-ai/googleai";
+import {initializeApp, getApps} from "firebase-admin/app";
+
+// Initialize Firebase Admin (only if not already initialized)
+if (getApps().length === 0) {
+  try {
+    initializeApp();
+    console.log("[GENKIT] Firebase Admin initialized");
+  } catch (error) {
+    console.warn("[GENKIT] Firebase Admin initialization failed:", error);
+  }
+}
 
 // The Firebase telemetry plugin exports a combination of metrics, traces, and logs to Google Cloud
 // Observability. See https://firebase.google.com/docs/genkit/observability/telemetry-collection.

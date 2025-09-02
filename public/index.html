@@ -513,6 +513,8 @@
         signInWithPopup,
         setPersistence,
         browserLocalPersistence,
+        browserSessionPersistence,
+        inMemoryPersistence,
       } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
       import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-functions.js';
 
@@ -546,13 +548,33 @@
       // Create single auth instance with explicit persistence
       const auth = getAuth(app);
       
-      // Ensure persistence is set before doing anything else
-      try {
-        await setPersistence(auth, browserLocalPersistence);
-        console.log('Auth persistence set to local');
-      } catch (error) {
-        console.error('Error setting auth persistence:', error);
+      // Ensure persistence is set before doing anything else, with fallbacks
+      async function ensurePersistence() {
+        try {
+          await setPersistence(auth, browserLocalPersistence);
+          console.log('Auth persistence set to local');
+          return 'local';
+        } catch (error) {
+          console.warn('Local persistence failed, falling back to session:', error);
+          try {
+            await setPersistence(auth, browserSessionPersistence);
+            console.log('Auth persistence set to session');
+            return 'session';
+          } catch (error2) {
+            console.warn('Session persistence failed, falling back to memory:', error2);
+            try {
+              await setPersistence(auth, inMemoryPersistence);
+              console.log('Auth persistence set to memory');
+              return 'memory';
+            } catch (error3) {
+              console.error('All persistence options failed:', error3);
+              return 'none';
+            }
+          }
+        }
       }
+
+      const chosenPersistence = await ensurePersistence();
       
       console.log('Single auth instance created:', auth);
       
@@ -778,9 +800,14 @@
         console.log('Found elements:', { signinEl, genkitEl });
         
         if (signinEl && genkitEl) {
-          // Don't force hidden here. Let onAuthStateChanged decide.
-          // Just log what we found.
-          console.log('Initial elements:', { signinEl, genkitEl });
+          // Hide UI until auth state is restored to avoid flashing sign-in
+          signinEl.style.display = 'none';
+          genkitEl.style.display = 'none';
+          const chatMessagesEl = document.querySelector('#chatMessages');
+          if (chatMessagesEl) {
+            chatMessagesEl.style.display = 'none';
+          }
+          console.log('Initial elements hidden while waiting for auth state:', { signinEl, genkitEl });
           
           // Centralized UI switching functions
           showSignin = function() {
@@ -809,29 +836,31 @@
           
           // Set up auth state listener using the single auth instance
           console.log('Setting up auth state listener...');
-          
+
+          let initialAuthResolved = false;
           onAuthStateChanged(auth, (user) => {
             console.log('Auth state changed:', user ? 'User logged in' : 'No user');
             
+            // Only switch UI after the first resolution of auth state
+            if (!initialAuthResolved) {
+              initialAuthResolved = true;
+              if (user) {
+                console.log('Initial auth: User logged in, calling showChat');
+                showChat();
+              } else {
+                console.log('Initial auth: No user, calling showSignin');
+                showSignin();
+              }
+              return;
+            }
+
+            // For subsequent auth changes, update UI accordingly
             if (user) {
-              console.log('Auth listener: User logged in, calling showChat');
               showChat();
             } else {
-              console.log('Auth listener: No user, calling showSignin');
               showSignin();
             }
           });
-          
-          // Check current auth state immediately
-          const currentUser = auth.currentUser;
-          console.log('Current auth state:', currentUser ? 'User logged in' : 'No user');
-          if (currentUser) {
-            console.log('User already logged in, switching UI immediately');
-            showChat();
-          } else {
-            console.log('No user, showing signin');
-            showSignin();
-          }
         } else {
           console.error('Required elements not found in DOM');
         }
