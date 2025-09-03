@@ -87,6 +87,8 @@ async function main() {
   console.log("   • Chef Agent - Cooking execution and timing");
   console.log("   • Waiter Agent - Customer communication and delivery");
 
+  const chat = ai.chat(kitchenAgent);
+
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await new Promise<void>((resolve) => {
@@ -97,15 +99,9 @@ async function main() {
             process.exit(0);
           }
 
-          // Use the kitchenAgent with proper Genkit API
-          const result = await ai.generate({
-            prompt: [
-              {text: `User ${userId}: ${input}`},
-            ],
-            config: {
-              model: kitchenAgent,
-            },
-          });
+          const result = await chat.send(
+            `User ${userId}: ${input}`
+          );
 
           printResponse({message: result.text});
           resolve();

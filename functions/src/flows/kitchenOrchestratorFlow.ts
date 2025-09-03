@@ -14,55 +14,45 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      // Get conversation history
       const history = await getConversationHistory(userId, 10);
 
-      // Add user message to conversation history
       await addConversationMessage(userId, "user", message, {
         timestamp: new Date().toISOString(),
         requestId,
         step: "user_input",
       });
 
-      // Format conversation history for context
       const historyContext = history.length > 0 ?
         `\n\nPrevious conversation context:\n${history
-          .slice(-10) // Last 10 messages
+          .slice(-10)
           .map((msg: ConversationMessage) => `${msg.role}: ${msg.content}`)
           .join("\n")}` :
         "";
 
-      // Use the kitchenAgent to handle the request with conversation history
-      const result = await ai.generate({
-        prompt: [
-          {text: `User ${userId}: ${message}${historyContext}`},
-        ],
-        config: {
-          model: kitchenAgent,
-        },
-      });
+      const chat = ai.chat(kitchenAgent);
+      const aiResponse = await chat.send(
+        `User ${userId}: ${message}${historyContext}`
+      );
 
-      // Add assistant response to conversation history
-      await addConversationMessage(userId, "assistant", result.text, {
-        timestamp: new Date().toISOString(),
-        requestId,
+      await addConversationMessage(userId, "assistant", aiResponse.text, {
+            timestamp: new Date().toISOString(),
+            requestId,
         step: "agent_response",
         agent: "kitchenAgent",
-      });
+          });
 
-      return {
-        success: true,
-        message: result.text,
-        userId,
-        timestamp: new Date().toISOString(),
-        requestId,
-      };
+          return {
+            success: true,
+        message: aiResponse.text,
+          userId,
+          timestamp: new Date().toISOString(),
+          requestId,
+        };
     } catch (error) {
       console.error("[FLOW_ERROR] Error in kitchenOrchestratorFlow:", error);
 
       const errorMessage = "Sorry, there was an error processing your request. Please try again.";
 
-      // Add error message to conversation history
       await addConversationMessage(userId, "assistant", errorMessage, {
         timestamp: new Date().toISOString(),
         requestId,
