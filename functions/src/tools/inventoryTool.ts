@@ -47,7 +47,7 @@ export const inventoryTool = ai.defineTool(
     }),
   },
   async ({category}: { category?: string }) => {
-    console.log(`[INVENTORY_TOOL] Called with category: ${category || 'all'}`);
+    console.log(`[INVENTORY_TOOL] Called with category: ${category || "all"}`);
 
     if (category) {
       const categories = DYNAMIC_INVENTORY.reduce((acc, item) => {
@@ -79,7 +79,7 @@ export const ingredientDetailsTool = ai.defineTool(
     }),
   },
   async ({ingredientName}: { ingredientName?: string }) => {
-    console.log(`[INGREDIENT_DETAILS_TOOL] Called with ingredientName: ${ingredientName || 'all'}`);
+    console.log(`[INGREDIENT_DETAILS_TOOL] Called with ingredientName: ${ingredientName || "all"}`);
 
     if (ingredientName) {
       const ingredient = DYNAMIC_INVENTORY.find((item) =>
