@@ -1,6 +1,5 @@
 import "dotenv/config";
 import {createInterface} from "node:readline";
-import {ai} from "./genkit";
 import {kitchenOrchestratorFlow} from "./flows/kitchenOrchestratorFlow";
 
 const rl = createInterface({
@@ -8,76 +7,37 @@ const rl = createInterface({
   output: process.stdout,
 });
 
-// ANSI color codes for terminal output
 const COLORS = {
-  CHEF: "\x1b[32m",
-  PROMPT: "\x1b[36m",
   RESET: "\x1b[0m",
-  AGENT: "\x1b[33m",
+  PROMPT: "\x1b[36m",
+  CHEF: "\x1b[33m",
+  AGENT: "\x1b[35m",
+  USER: "\x1b[32m",
+  ASSISTANT: "\x1b[34m",
 };
 
-// Helper to print colored text
-function printColored(prefix: string, text: string, color: string) {
-  console.log(`${color}${prefix}>${COLORS.RESET}`, text);
+function printColored(role: string, message: string, color: string) {
+  const roleLabel = role === "chef" ? "chef>" : role === "user" ? "user>" : "assistant>";
+  console.log(`${color}${roleLabel}${COLORS.RESET} ${message}`);
 }
 
-// Get initial greeting from AI
-async function getGreeting() {
-  const {text} = await ai.generate({
-    prompt: "Come up with a short friendly greeting for yourself talking to a customer " +
-              "as the Kitchen Orchestrator at Bollywood Grill. " +
-      "Mention that you coordinate specialized agents for menu, orders, cooking, and delivery.",
-  });
-  return text;
+function printResponse(response: {message: string}) {
+  printColored("assistant", response.message, COLORS.ASSISTANT);
 }
 
-function printResponse(result: any) {
-  console.log();
-  process.stdout.write(`${COLORS.CHEF}chef>${COLORS.RESET} `);
-
-  if (!result) {
-    console.log("Sorry, I had trouble responding. Please try again.");
-    return;
-  }
-
-  if (result.message) console.log(result.message);
-
-  if (result.menuDisplay) {
-    console.log(result.menuDisplay);
-  } else if (result.menu) {
-    console.log("\nAvailable Dishes:");
-    for (const dish of result.menu) {
-      console.log(` - ${dish.name} (${dish.category})${dish.price ? ` - $${dish.price}` : ""}`);
-    }
-  }
-
-  if (result.status && result.status !== "no_orders") {
-    console.log(`\nStatus: ${result.status}`);
-    if (result.estimatedTime) console.log(`ETA: ${result.estimatedTime}`);
-    if (typeof result.progress === "number") console.log(`Progress: ${result.progress}%`);
-  }
-
-  if (Array.isArray(result.suggestions) && result.suggestions.length > 0) {
-    console.log("\nSuggestions:");
-    for (const s of result.suggestions) {
-      console.log(` - ${s}`);
-    }
-  }
+async function getGreeting(): Promise<string> {
+  return `Hi there! Welcome to Bollywood Grill! I'm your Kitchen Agent, and it's great to have you. 
+  Need help with our delicious menu, placing an order, checking on your cooking, or even delivery? 
+  I coordinate our specialized agents for all of those areas, so let me know what you need!`;
 }
 
-// Main loop calling orchestrator flow directly
+// Main loop calling kitchen orchestrator flow directly
 async function main() {
-  const userId = "cli-user";
-
   const greeting = await getGreeting();
   console.log();
-  printColored("chef", greeting, COLORS.CHEF);
   console.log(`\n${COLORS.AGENT}🎭 Kitchen Multi-Agent System Active:${COLORS.RESET}`);
-  console.log("   • Kitchen Orchestrator - Central router and coordinator");
-  console.log("   • Menu & Recipe Agent - Dynamic menu generation");
-  console.log("   • Order Manager Agent - Order lifecycle management");
-  console.log("   • Chef Agent - Cooking execution and timing");
-  console.log("   • Waiter Agent - Customer communication and delivery");
+
+  printColored("chef", greeting, COLORS.CHEF);
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -88,8 +48,14 @@ async function main() {
             rl.close();
             process.exit(0);
           }
-          const result = await kitchenOrchestratorFlow.run({userId, message: input});
-          printResponse(result);
+
+          // Use the kitchenOrchestratorFlow with proper Genkit API
+          const result = await kitchenOrchestratorFlow.run({
+            userId: "cli-user",
+            message: input,
+          });
+
+          printResponse({message: result.result.message});
           resolve();
         } catch (e) {
           console.log("Error:", e);

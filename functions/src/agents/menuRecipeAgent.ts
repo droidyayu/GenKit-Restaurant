@@ -1,80 +1,37 @@
 import {ai} from "../genkit";
 import {inventoryTool} from "../tools/inventoryTool";
 
-export async function menuRecipeAgent(input: {
-  userId?: string;
-  category?: string;
-  preferences?: string;
-  requestType: "menu_generation" | "recipe_suggestion" | "dessert_upsell";
-}) {
-  const {userId, category, preferences, requestType} = input;
-  console.log(`[MENU AGENT] Processing ${requestType} request for user ${userId || "anonymous"}`);
+export const menuRecipeAgent = ai.definePrompt({
+  name: "menuRecipeAgent",
+  description: "Menu Recipe Agent generates dynamic menus and recipe suggestions " +
+    "based on available ingredients",
+  tools: [inventoryTool],
+  system: `You are the Menu Agent for Indian Grill restaurant. Your role is to:
 
-  try {
-    // Get current inventory using the tool
-    const inventory = await inventoryTool({});
-    const availableIngredients = inventory.filter((item: any) =>
-      item.available && item.quantity > 0
-    );
+1. Immediately generate today's dynamic menu using the 'inventoryTool' based on available ingredients.
+2. Provide recipe suggestions and cooking guidance.
+3. Create dessert menus for upselling opportunities.
+4. Adapt menus based on dietary preferences and categories (e.g., "vegetarian").
+5. Ensure authentic Indian flavors and cooking techniques.
 
-    // Create ingredient list for AI prompt
-    const ingredientList = availableIngredients
-      .map((item: any) => `${item.ingredient} (${item.quantity}${item.unit})`)
-      .join(", ");
+**CRITICAL: DO NOT ASK CLARIFYING QUESTIONS. IMMEDIATELY GENERATE A MENU.**
 
-    // Build AI prompt for recipe generation
-    let prompt = "You are a master chef at Bollywood Grill restaurant. " +
-      `Based on these available ingredients: ${ingredientList}, ` +
-      `generate a delicious Indian menu.
+When generating menus:
+- Check available ingredients using the 'inventoryTool'.
+- Create 8-12 authentic Indian dishes that can be made with available ingredients.
+- Group dishes by category (Vegetarian, Non-Vegetarian, Appetizers, Breads, Rice, Desserts).
+- Include realistic cooking times and pricing.
+- Consider Indian cooking techniques and spice combinations.
+- Adapt to specific categories or dietary preferences when requested (e.g., if "vegetarian" is mentioned,
+  prioritize vegetarian dishes).
 
-Please provide a nicely formatted menu with:
-- 8-12 authentic Indian dishes that can be made with these ingredients
-- Each dish should include: name, category, brief description, cooking time, and price
-- Group dishes by category (Vegetarian, Non-Vegetarian, Appetizers, Breads, Rice, Desserts)
-- Use primarily the available ingredients listed above
-- Include vegetarian and non-vegetarian options
-- Provide realistic cooking times and pricing
-- Consider Indian cooking techniques and spice combinations
+**Response Format:**
+- Start with a welcoming message about today's special menu.
+- Present each category with appealing descriptions.
+- Include spice level options where applicable.
+- Mention custom dish creation possibilities.
+- End with an invitation to place an order.
 
-Format the response as a beautiful, readable menu that customers can easily understand.`;
-
-    // Add category and preference constraints
-    if (category) {
-      prompt += `\n\nFocus on dishes in the "${category}" category.`;
-    }
-
-    if (preferences) {
-      prompt += `\n\nCater to these dietary preferences: ${preferences}`;
-    }
-
-    // Generate menu using AI
-    const {text} = await ai.generate({
-      prompt,
-    });
-
-    console.log("[MENU AGENT] AI generated menu successfully");
-
-    // Return the formatted text directly
-    return {
-      success: true,
-      requestType,
-      message: "Here's our AI-generated menu based on current ingredient availability:",
-      menuDisplay: text, // Direct text output for rendering
-      totalAvailable: "Generated dynamically", // Since we're not counting individual dishes
-      category: category || "all",
-      preferences: preferences || "none",
-      note: "Menu is generated in real-time by AI based on current inventory",
-      timestamp: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error(`[MENU AGENT] Error processing ${requestType}:`, error);
-
-    return {
-      success: false,
-      requestType,
-      error: `Failed to process ${requestType}`,
-      details: error instanceof Error ? error.message : "Unknown error",
-      message: "Sorry, I couldn't process your request right now. Please try again later.",
-    };
-  }
-}
+Always maintain the authentic taste and quality of traditional Indian cuisine while being creative with
+available ingredients.`,
+});
