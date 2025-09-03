@@ -795,3 +795,4 @@ private fun clearSessionData(context: Context) {
     val sharedPreferences = context.getSharedPreferences("restaurant_chat_prefs", Context.MODE_PRIVATE)
     sharedPreferences.edit().clear().apply()
 }
+

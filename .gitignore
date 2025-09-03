@@ -39,6 +39,7 @@ captures/
 
 # IntelliJ
 *.iml
+.idea/
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/gradle.xml
@@ -114,12 +115,27 @@ test_verification.sh
 .genkit-prod/
 .genkit-test/
 
+# Additional development files
+*.orig
+*.rej
+*.patch
+*.diff
+
 # Firebase
 .firebase/
-firebase.json
 firebase.init.json
 firebase.debug.log
 firebase.debug.log.*
 firebase.debug.log.*.*
 firebase.debug.log.*.*.*
 firebase.debug.log.*.*.*.*
+
+# Firebase Functions
+functions/lib/
+functions/node_modules/
+functions/.env
+functions/.env.local
+functions/.env.production
+functions/.env.development
+functions/firebase-debug.log
+functions/firebase-debug.log.*

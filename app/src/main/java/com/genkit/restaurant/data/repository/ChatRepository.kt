@@ -13,6 +13,11 @@ import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import java.io.BufferedReader
 import java.util.UUID
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.ktx.functions
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
 
 /**
  * Repository for handling chat-related data operations and API communication
@@ -21,6 +26,12 @@ class ChatRepository(private val context: Context) {
     
     private val apiService: ApiService = NetworkModule.apiService
     private val sseApiService: ApiService = NetworkModule.sseApiService
+    
+    // Firebase Functions integration
+    private val firebaseFunctions: FirebaseFunctions = Firebase.functions
+    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    
+
     
     companion object {
         private const val APP_NAME = "restaurant-chat-android"
@@ -90,6 +101,15 @@ class ChatRepository(private val context: Context) {
             return@withContext Result.failure(error)
         }
         
+        // Try Firebase Functions first (authentication bypassed for testing)
+        try {
+            Logger.d(Logger.Tags.REPOSITORY, "Attempting Firebase Functions call (auth bypassed)")
+            return@withContext sendMessageViaFirebase(message)
+        } catch (e: Exception) {
+            Logger.w(Logger.Tags.REPOSITORY, "Firebase Functions call failed, falling back to API: ${e.message}")
+        }
+        
+        // Fallback to existing API implementation
         return@withContext executeWithRetry(MAX_RETRY_ATTEMPTS) {
             val sendMessageRequest = SendMessageRequest(
                 appName = sessionData.appName,
@@ -139,6 +159,71 @@ class ChatRepository(private val context: Context) {
                 Logger.logPerformance("sendMessage", duration, "Failed with HTTP ${response.code()}")
                 Result.failure(error)
             }
+        }
+    }
+    
+    /**
+     * Checks if Firebase Functions are available and user is authenticated
+     * @return Result indicating if Firebase Functions can be used
+     */
+    private suspend fun checkFirebaseAvailability(): Result<Boolean> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val currentUser = firebaseAuth.currentUser
+            if (currentUser != null) {
+                Result.success(true)
+            } else {
+                // Try to sign in anonymously
+                try {
+                    val result = firebaseAuth.signInAnonymously().await()
+                    Logger.d(Logger.Tags.REPOSITORY, "Anonymous authentication successful")
+                    Result.success(result.user != null)
+                } catch (e: Exception) {
+                    Logger.w(Logger.Tags.REPOSITORY, "Firebase anonymous sign-in failed: ${e.message}")
+                    Result.success(false)
+                }
+            }
+        } catch (e: Exception) {
+            Logger.w(Logger.Tags.REPOSITORY, "Firebase availability check failed: ${e.message}")
+            Result.success(false)
+        }
+    }
+    
+    /**
+     * Sends a message using Firebase Functions
+     * @param message The message text to send
+     * @return Result containing agent response on success or error message on failure
+     */
+    private suspend fun sendMessageViaFirebase(message: String): Result<AgentResponse> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            Logger.d(Logger.Tags.REPOSITORY, "Sending message via Firebase Functions: ${message.take(50)}...")
+            
+            // Use a simple user ID for testing (authentication bypassed)
+            val userId = "demo_user_${System.currentTimeMillis()}"
+            
+            val data = mapOf(
+                "userId" to userId,
+                "message" to message
+            )
+            
+            val result = firebaseFunctions
+                .getHttpsCallable("kitchenFlow")
+                .call(data)
+                .await()
+            
+            val response = result.data as? Map<*, *>
+            val responseText = response?.get("message") as? String ?: "I'm sorry, I couldn't process your request."
+            
+            Logger.logMessage("RECEIVED_FIREBASE", responseText)
+            
+            val agentResponse = AgentResponse(
+                text = responseText,
+                agentName = "Kitchen Assistant"
+            )
+            
+            Result.success(agentResponse)
+        } catch (e: Exception) {
+            Logger.logApiError("sendMessageViaFirebase", e, "Firebase Functions call failed")
+            Result.failure(e)
         }
     }
     
