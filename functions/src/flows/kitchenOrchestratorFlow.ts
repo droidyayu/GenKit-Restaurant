@@ -87,8 +87,8 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
 
 Conversation history (last ${Math.min(history.length, 10)} messages):
 ${history.slice(-10).map((msg: any, index: number) =>
-    `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ? 
-    ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
+    `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ?
+      ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
   ).join("\n")}
 
 Please consider the full conversation context when routing and responding. Use this history to:
