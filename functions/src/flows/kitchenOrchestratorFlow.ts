@@ -2,7 +2,6 @@ import {ai, z} from "../genkit";
 import {getConversationHistory, addConversationMessage} from "../data/conversationHistory";
 import {orderManagerAgent} from "../agents/orderManagerAgent";
 import {chefAgent} from "../agents/chefAgent";
-import {waiterAgent} from "../agents/waiterAgent";
 import {menuRecipeAgent} from "../agents/menuRecipeAgent";
 
 export const kitchenOrchestratorFlow = ai.defineFlow(
@@ -45,18 +44,29 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
         "";
 
       // Use AI to determine which agent to route to
-      const routingPrompt = `You are a routing agent for an Indian restaurant. 
-      Based on the user's message, determine which specialized agent should handle their request.
+      const routingPrompt = `You are a routing agent for an Indian restaurant.
+      Based on the user's message and conversation context, determine which specialized agent should handle their request.
 
 Available agents:
-1. menuRecipeAgent - for menu requests, food options, "what's available", "show menu", "vegetarian options"
-2. orderManagerAgent - for placing orders, "I want", "order", "buy", specific dish names
-3. chefAgent - for cooking status, kitchen questions, "how long", "cooking time"
-4. waiterAgent - for delivery status, "where is my order", "ready yet", "delivery"
+1. menuRecipeAgent - ONLY for menu requests, food options, "what's available", "show menu", "vegetarian options", "menu please"
+2. orderManagerAgent - for placing orders, "I want", "order", "buy", "get me", specific dish names like "palak paneer", "chicken tikka", OR completing order details like spice levels, quantities
+3. chefAgent - for cooking status, kitchen questions, "how long", "cooking time", delivery status, "where is my order", "ready yet", "delivery"
+
+Context-aware routing rules:
+- PRIORITY 1: If message contains "order", "want", "get me", "buy" → route to orderManagerAgent
+- PRIORITY 2: If message mentions specific dish names → route to orderManagerAgent
+- PRIORITY 3: If the last assistant message asked about spice level, quantity, or order details → route to orderManagerAgent
+- PRIORITY 4: If user mentions spice levels (mild, medium, hot, extra hot, spicy, not spicy) → route to orderManagerAgent
+- PRIORITY 5: If user says "yes", "no", "confirmed", "ok", "sure", or gives short answers → route to orderManagerAgent
+- PRIORITY 6: If message is just a number (likely quantity) → route to orderManagerAgent
+- PRIORITY 7: If user is responding to order-related questions → route to orderManagerAgent
+- PRIORITY 8: Menu requests only: "show menu", "what's available", "menu please", "vegetarian options" → route to menuRecipeAgent
+- Otherwise, use the message content to determine the agent
 
 User message: "${message}"
+${historyContext}
 
-Respond with ONLY the agent name (menuRecipeAgent, orderManagerAgent, chefAgent, or waiterAgent).`;
+Respond with ONLY the agent name (menuRecipeAgent, orderManagerAgent, or chefAgent).`;
 
       const routingResult = await ai.generate({
         prompt: routingPrompt,
@@ -64,23 +74,36 @@ Respond with ONLY the agent name (menuRecipeAgent, orderManagerAgent, chefAgent,
 
       const selectedAgent = routingResult.text.trim().toLowerCase();
 
-      // Route to appropriate agent based on AI decision
+      // Manual override for order requests to ensure proper routing
+      const messageLower = message.toLowerCase();
+      let finalAgent = selectedAgent;
+
+      if (messageLower.includes('order') ||
+          messageLower.includes('want') ||
+          messageLower.includes('get me') ||
+          messageLower.includes('buy') ||
+          messageLower.includes('palak paneer') ||
+          messageLower.includes('chicken tikka') ||
+          messageLower.includes('butter chicken') ||
+          messageLower.includes('chana masala') ||
+          messageLower.includes('gulab jamun') ||
+          messageLower.includes('naan')) {
+        finalAgent = 'ordermanageragent';
+      }
+
+      // Route to appropriate agent based on AI decision (with manual override)
       let agentResponse: string;
 
-      if (selectedAgent.includes("menurecipeagent") || selectedAgent.includes("menu")) {
+      if (finalAgent.includes("menurecipeagent") || finalAgent.includes("menu")) {
         const chat = ai.chat(menuRecipeAgent);
         const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
-      } else if (selectedAgent.includes("ordermanageragent") || selectedAgent.includes("order")) {
+      } else if (finalAgent.includes("ordermanageragent") || finalAgent.includes("order")) {
         const chat = ai.chat(orderManagerAgent);
         const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
-      } else if (selectedAgent.includes("chefagent") || selectedAgent.includes("chef")) {
+      } else if (finalAgent.includes("chefagent") || finalAgent.includes("chef")) {
         const chat = ai.chat(chefAgent);
-        const result = await chat.send(`${message}${historyContext}`);
-        agentResponse = result.text;
-      } else if (selectedAgent.includes("waiteragent") || selectedAgent.includes("waiter")) {
-        const chat = ai.chat(waiterAgent);
         const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
       } else {
@@ -95,7 +118,7 @@ Respond with ONLY the agent name (menuRecipeAgent, orderManagerAgent, chefAgent,
         timestamp: new Date().toISOString(),
         requestId,
         step: "agent_response",
-        agent: selectedAgent,
+        agent: finalAgent,
       });
 
       return {

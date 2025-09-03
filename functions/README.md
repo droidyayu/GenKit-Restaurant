@@ -267,7 +267,6 @@ functions/
 │   │   ├── menuRecipeAgent.ts
 │   │   ├── orderManagerAgent.ts
 │   │   ├── chefAgent.ts
-│   │   ├── waiterAgent.ts
 │   │   └── index.ts
 │   ├── flows/            # Main orchestration flow
 │   │   ├── kitchenOrchestratorFlow.ts
