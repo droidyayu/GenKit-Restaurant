@@ -67,6 +67,9 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
   async ({userId, message}) => {
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+    console.log(`[KITCHEN_ORCHESTRATOR] Processing request ${requestId} for user ${userId}`);
+    console.log(`[KITCHEN_ORCHESTRATOR] User message: "${message}"`);
+
     try {
       // Get conversation history
       const history = await getConversationHistory(userId, 10);
@@ -79,6 +82,8 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
       });
 
       // Use triage agent to handle routing and get response
+      console.log(`[TRIAGE_AGENT] Starting triage agent for user ${userId}, request ${requestId}`);
+      console.log("[TRIAGE_AGENT] Available tools: menuRecipeAgent, orderManagerAgent");
       const chat = ai.chat(triageAgent);
 
       // Create a structured context that includes both the current message and history
@@ -100,8 +105,11 @@ Please consider the full conversation context when routing and responding. Use t
 
 This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.`;
 
+      console.log(`[TRIAGE_AGENT] Sending context to triage agent (length: ${fullContext.length} chars)`);
       const result = await chat.send(fullContext);
       const agentResponse = result.text;
+      console.log(`[TRIAGE_AGENT] Received response from triage agent (length: ${agentResponse.length} chars)`);
+      console.log(`[TRIAGE_AGENT] Response preview: ${agentResponse.substring(0, 100)}${agentResponse.length > 100 ? "..." : ""}`);
 
       // Add assistant response to conversation history
       await addConversationMessage(userId, "assistant", agentResponse, {
@@ -121,7 +129,15 @@ This is the first message in the conversation. Welcome to our Indian restaurant!
     } catch (error) {
       console.error("[FLOW_ERROR] Error in kitchenOrchestratorFlow:", error);
 
-      const errorMessage = "Sorry, there was an error processing your request. Please try again.";
+      // Provide more specific error messages based on error type
+      let errorMessage = "Sorry, there was an error processing your request. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("500") || error.message.includes("Internal Server Error")) {
+          errorMessage = "The AI service is temporarily unavailable. Please try again in a moment.";
+        } else if (error.message.includes("rate limit") || error.message.includes("quota")) {
+          errorMessage = "The service is currently busy. Please try again in a few minutes.";
+        }
+      }
 
       // Add error message to conversation history
       await addConversationMessage(userId, "assistant", errorMessage, {
