@@ -1,17 +1,51 @@
 import {ai, z} from "../genkit";
+import {getConversationHistory, addConversationMessage} from "../data/conversationHistory";
 import {orderManagerAgent} from "../agents/orderManagerAgent";
-import {chefAgent} from "../agents/chefAgent";
-import {waiterAgent} from "../agents/waiterAgent";
 import {menuRecipeAgent} from "../agents/menuRecipeAgent";
 
-// Helper function to check if message contains food-related keywords
-function containsFoodKeywords(message: string): boolean {
-  const foodKeywords = [
-    "order", "want", "take", "i'll have", "palak", "paneer", "butter", "chicken",
-    "dal", "gobi", "samosa", "biryani", "fish", "lamb", "paratha", "naan", "rice", "kheer",
-  ];
-  return foodKeywords.some((keyword) => message.includes(keyword));
-}
+// Define the triage agent that handles initial routing
+const triageAgent = ai.definePrompt({
+  name: "triageAgent",
+  description: "Triage Agent for Indian Restaurant - routes customer requests to menu and order specialists",
+  tools: [menuRecipeAgent, orderManagerAgent],
+  system: `You are an AI customer service agent for an Indian restaurant.
+
+Greet customers warmly and determine how you can help them. 
+Use the available tools to transfer to the most appropriate specialist agent based on the customer's INTENT and needs:
+
+Available specialists:
+1. menuRecipeAgent - For menu exploration, dish suggestions, availability checking, and recipe information
+2. orderManagerAgent - For placing orders, collecting order details, and managing the ordering process
+
+Intent-based routing guidelines:
+
+MENU INTENT - Route to menuRecipeAgent when customer wants to:
+- Explore menu options and see what's available
+- Get dish suggestions and recommendations
+- Check ingredient availability and feasibility
+- Learn about menu items and recipes
+- Filter by dietary preferences (vegetarian, etc.)
+Examples: "What do you have?", "Show me the menu", "Suggest something good", "What's vegetarian?"
+
+ORDER INTENT - Route to orderManagerAgent when customer wants to:
+- Place an order for specific dishes
+- Specify quantities and portions
+- Choose spice levels and customizations
+- Complete order details and finalize
+- Make modifications to existing orders
+Examples: "I want to order", "Get me chicken tikka", "Two portions please", "Make it spicy"
+
+CLARIFICATION: If intent is unclear, ask a brief clarifying question before routing
+CONTEXT AWARENESS: Use conversation history to understand ongoing conversations and route appropriately
+
+Response style:
+- Be friendly, welcoming, and efficient
+- Use conversation history to maintain context and avoid asking for information already provided
+- Don't repeat information already discussed
+- Route immediately when intent is clear
+
+If you cannot help with available tools, politely explain your limitations.`,
+});
 
 export const kitchenOrchestratorFlow = ai.defineFlow(
   {
@@ -20,149 +54,94 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
       userId: z.string().describe("User ID making the request"),
       message: z.string().describe("User message to process"),
     }),
+    outputSchema: z.object({
+      success: z.boolean(),
+      message: z.string(),
+      userId: z.string(),
+      timestamp: z.string(),
+      requestId: z.string().optional(),
+      error: z.string().optional(),
+      details: z.string().optional(),
+    }),
   },
   async ({userId, message}) => {
-    console.log(`[ORCHESTRATOR] Processing request from user ${userId}: "${message}"`);
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      // Use AI to understand intent and route to appropriate agent
-      const {text} = await ai.generate({
-        prompt: "You are the Kitchen Orchestrator at Bollywood Grill restaurant. " +
-          `Your job is to understand customer requests and provide helpful responses.
+      // Get conversation history
+      const history = await getConversationHistory(userId, 10);
 
-Available services:
-1. Menu inquiries - For showing available dishes, asking what's on the menu
-2. Order placement - For placing orders, ordering food, requesting specific dishes  
-3. Status checks - For checking order status, asking where food is, order progress
-
-Customer message: "${message}"
-
-Analyze the customer's intent and respond appropriately. If they want to:
-- See the menu → Tell them you'll get the menu and then call the menu agent
-- Order food → Extract the dish name and quantity, then tell them you'll process their order
-- Check order status → Tell them you'll check the status
-
-Respond naturally as if you're a helpful restaurant staff member. Be conversational and helpful.
-
-After your initial response, I will route the request to the appropriate agent based on your analysis.`,
+      // Add user message to conversation history
+      await addConversationMessage(userId, "user", message, {
+        timestamp: new Date().toISOString(),
+        requestId,
+        step: "user_input",
       });
 
-      // Route to appropriate agent based on AI analysis
-      const lowerMessage = message.toLowerCase();
+      // Use triage agent to handle routing and get response
+      const chat = ai.chat(triageAgent);
 
-      if (lowerMessage.includes("menu") || lowerMessage.includes("what") || lowerMessage.includes("serve")) {
-        // Handle menu request
-        const result = await menuRecipeAgent({
-          userId,
-          requestType: "menu_generation",
-        });
+      // Create a structured context that includes both the current message and history
+      const fullContext = history.length > 0 ?
+        `Current message: "${message}"
 
-        if (result.success) {
-          return {
-            success: true,
-            intent: "AskMenu",
-            message: `${text}\n\n${result.menuDisplay}`,
-            userId,
-            timestamp: new Date().toISOString(),
-          };
-        } else {
-          return {
-            success: false,
-            intent: "AskMenu",
-            message: `${text}\n\nSorry, I couldn't generate the menu right now. Please try again later.`,
-            userId,
-            timestamp: new Date().toISOString(),
-          };
-        }
-      } else if (containsFoodKeywords(lowerMessage)) {
-        // Handle order request
-        const result = await orderManagerAgent({
-          userId,
-          dish: "Palak Paneer", // This will be extracted by AI in the future
-          quantity: 1,
-        });
+Conversation history (last ${Math.min(history.length, 10)} messages):
+${history.slice(-10).map((msg: any, index: number) =>
+    `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ?
+      ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
+  ).join("\n")}
 
-        if (result.success) {
-          // Start cooking process
-          const chefResult = await chefAgent({
-            orderId: result.orderId,
-            dishName: result.dish as string,
-            userId: result.userId || userId,
-          });
+Please consider the full conversation context when routing and responding. Use this history to:
+- Determine if this is a menu exploration or order placement request
+- Remember previous menu suggestions or ongoing orders
+- Avoid asking for information already provided
+- Maintain continuity in the customer experience` :
+        `Current message: "${message}"
 
-          if (chefResult.success) {
-            return {
-              success: true,
-              intent: "PlaceOrder",
-              message: `${text}\n\nOrder placed successfully! Your ${result.dish} is now being cooked ` +
-                `and will be ready in approximately 15-20 minutes. Order ID: ${result.orderId}`,
-              userId,
-              orderId: result.orderId,
-              timestamp: new Date().toISOString(),
-            };
-          } else {
-            return {
-              success: false,
-              intent: "PlaceOrder",
-              message: `${text}\n\nOrder created but cooking failed: ${chefResult.message}`,
-              userId,
-              timestamp: new Date().toISOString(),
-            };
-          }
-        } else {
-          return {
-            success: false,
-            intent: "PlaceOrder",
-            message: `${text}\n\nFailed to place order: ${result.message}`,
-            userId,
-            timestamp: new Date().toISOString(),
-          };
-        }
-      } else if (lowerMessage.includes("status") || lowerMessage.includes("where") ||
-                 lowerMessage.includes("ready") || lowerMessage.includes("done")) {
-        // Handle status request
-        const result = await waiterAgent({
-          userId,
-          action: "checkStatus",
-        });
+This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.`;
 
-        if (result.success) {
-          return {
-            success: true,
-            intent: "CheckStatus",
-            message: `${text}\n\n${result.message}`,
-            userId,
-            timestamp: new Date().toISOString(),
-          };
-        } else {
-          return {
-            success: false,
-            intent: "CheckStatus",
-            message: `${text}\n\nFailed to check status: ${result.message}`,
-            userId,
-            timestamp: new Date().toISOString(),
-          };
-        }
-      } else {
-        // Fallback response
-        return {
-          success: true,
-          intent: "Fallback",
-          message: `${text}\n\nI'm here to help! You can ask me about our menu, place an order, ` +
-            "or check your order status.",
-          userId,
-          timestamp: new Date().toISOString(),
-        };
-      }
+      const result = await chat.send(fullContext);
+      const agentResponse = result.text;
+
+      // Add assistant response to conversation history
+      await addConversationMessage(userId, "assistant", agentResponse, {
+        timestamp: new Date().toISOString(),
+        requestId,
+        step: "agent_response",
+        agent: "triageAgent",
+      });
+
+      return {
+        success: true,
+        message: agentResponse,
+        userId,
+        timestamp: new Date().toISOString(),
+        requestId,
+      };
     } catch (error) {
-      console.error("[ORCHESTRATOR] Error processing request:", error);
+      console.error("[FLOW_ERROR] Error in kitchenOrchestratorFlow:", error);
+
+      const errorMessage = "Sorry, there was an error processing your request. Please try again.";
+
+      // Add error message to conversation history
+      await addConversationMessage(userId, "assistant", errorMessage, {
+        timestamp: new Date().toISOString(),
+        requestId,
+        step: "error_response",
+        agent: "kitchenOrchestratorFlow",
+        error: true,
+        errorDetails: error instanceof Error ? error.message : "Unknown error",
+      });
 
       return {
         success: false,
         error: "Failed to process request",
         details: error instanceof Error ? error.message : "Unknown error",
-        message: "Sorry, there was an error processing your request. Please try again.",
+        message: errorMessage,
+        timestamp: new Date().toISOString(),
+        requestId,
+        userId,
       };
     }
-  }
+  },
 );

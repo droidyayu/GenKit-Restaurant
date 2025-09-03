@@ -1,154 +1,44 @@
 import {ai} from "../genkit";
 import {inventoryTool, updateOrderStatusTool} from "../tools/index";
+import {getOrderStatusTool, completeOrderTool} from "../tools/orderTool";
+import {notificationTool} from "../tools/notificationTool";
 
-export async function chefAgent(input: {
-  orderId: string;
-  dishName: string;
-  userId: string;
-  specialInstructions?: string;
-}) {
-  const {orderId, dishName, userId, specialInstructions} = input;
-  console.log(`[CHEF AGENT] Starting cooking for order ${orderId}: ${dishName}`);
+export const chefAgent = ai.definePrompt({
+  name: "chefAgent",
+  description: "Chef Agent handles cooking orders, kitchen workflow, customer service, and order delivery",
+  tools: [inventoryTool, updateOrderStatusTool, getOrderStatusTool, completeOrderTool, notificationTool],
+  system: `You are the Chef/Waiter agent for Indian Grill responsible for the complete order lifecycle from cooking to delivery.
 
-  try {
-    // Get current inventory to check ingredient availability
-    const inventory = await inventoryTool({});
-    const availableIngredients = inventory.filter((item: any) =>
-      item.available && item.quantity > 0
-    );
+Available tools:
+- inventoryTool → check real-time ingredient availability and details
+- updateOrderStatusTool → set PREP/COOKING/READY/DELIVERED statuses and messages
+- getOrderStatusTool → current status, ETA, progress
+- completeOrderTool → finalize order lifecycle
+- notificationTool → optional notifications
 
-    // Create ingredient list for AI validation
-    const ingredientList = availableIngredients
-      .map((item: any) => `${item.ingredient} (${item.quantity}${item.unit})`)
-      .join(", ");
+COOKING RESPONSIBILITIES:
+When called for cooking:
+1) Validate ingredients and feasibility using inventoryTool
+2) Set status to PREP/COOKING/READY with clear, concise updates
+3) Provide brief, engaging progress updates and an ETA
+4) Return a short summary of what happened and next steps
 
-    // Use AI to validate if the dish can be cooked with available ingredients
-    const {text} = await ai.generate({
-      prompt: `
-You are a master chef at Bollywood Grill restaurant. 
+DELIVERY RESPONSIBILITIES:
+When called for delivery:
+1) Give friendly status and ETA updates
+2) Announce food readiness and delivery progress
+3) Deliver with a warm "enjoy your meal" message
+4) Offer dessert upsell (Gulab Jamun, Rasmalai, Kulfi, Halwa, Mango Lassi)
+5) Ask if the customer would like anything else
 
-Available ingredients: ${ingredientList}
+Message templates:
+- Ready: "🎉 Your food is ready! We're bringing it to you now."
+- En route: "🚚 Your delicious meal is on its way."
+- Final: "🍽️ Here's your meal! Enjoy!"
 
-Need to cook: ${dishName}${
-  specialInstructions ? ` with special instructions: ${specialInstructions}` : ""
-}
-
-Please analyze if this dish can be cooked with the available ingredients and provide a response in this JSON format:
-
-{
-  "canCook": true/false,
-  "reason": "Brief explanation",
-  "missingIngredients": ["list of missing ingredients if any"],
-  "cookingSteps": ["brief cooking steps if possible"],
-  "estimatedTime": "estimated cooking time in minutes"
-}
-
-Consider:
-- Whether the dish name is recognizable as an Indian dish
-- If the required ingredients are available
-- What cooking steps would be involved
-- How long it would take to prepare
-`,
-    });
-
-    // Parse AI response
-    let validation;
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        validation = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No valid JSON found in AI response");
-      }
-    } catch (parseError) {
-      console.error("[CHEF AGENT] Error parsing AI validation:", parseError);
-      // Default to allowing cooking if AI fails
-      validation = {
-        canCook: true,
-        reason: "AI validation failed, proceeding with cooking",
-        estimatedTime: 15,
-      };
-    }
-
-    if (!validation.canCook) {
-      return {
-        success: false,
-        orderId,
-        dishName,
-        userId,
-        error: "Insufficient ingredients",
-        reason: validation.reason,
-        missingIngredients: validation.missingIngredients || [],
-        message: `Sorry, I cannot cook ${dishName} due to missing ingredients.`,
-      };
-    }
-
-    // Update order status to cooking
-    await updateOrderStatusTool({
-      status: "COOKING",
-      message: `Chef is now cooking your ${dishName}`,
-    });
-
-    console.log(`[CHEF AGENT] Order ${orderId} status updated to cooking`);
-
-    // Simulate cooking with accelerated time (1 second = 1 minute)
-    console.log(`[CHEF AGENT] Starting cooking simulation for ${dishName}`);
-
-    // Simulate cooking phases
-    const cookingPhases = [
-      {phase: "Prep", duration: 2, message: "Preparing ingredients and spices"},
-      {phase: "Cooking", duration: 8, message: "Cooking the main dish"},
-      {phase: "Garnishing", duration: 3, message: "Adding final touches and garnishes"},
-      {phase: "Plating", duration: 2, message: "Plating the dish beautifully"},
-    ];
-
-    let totalCookTime = 0;
-    const phases = [];
-
-    for (const phase of cookingPhases) {
-      console.log(`[CHEF AGENT] ${phase.phase} phase: ${phase.message}`);
-      // Simulate time passing (accelerated: 1 second = 1 minute)
-      await new Promise((resolve) => setTimeout(resolve, phase.duration * 1000));
-      totalCookTime += phase.duration;
-      phases.push({phase: phase.phase, duration: phase.duration, message: phase.message});
-    }
-
-    console.log(`[CHEF AGENT] Cooking completed in ${totalCookTime} minutes (simulated)`);
-
-    // Update order status to ready
-    await updateOrderStatusTool({
-      status: "READY",
-      message: `Your ${dishName} is ready for delivery!`,
-    });
-
-    console.log(`[CHEF AGENT] Order ${orderId} completed successfully`);
-
-    // Return cooking completion
-    return {
-      success: true,
-      orderId,
-      dishName,
-      userId,
-      action: "cooking_completed",
-      status: "ready",
-      totalCookTime: totalCookTime,
-      phases: phases,
-      message: `Successfully cooked ${dishName} in ${totalCookTime} minutes`,
-      nextStep: "Order ready for delivery by Waiter Agent",
-      timestamp: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error(`[CHEF AGENT] Error cooking ${dishName}:`, error);
-
-    return {
-      success: false,
-      orderId,
-      dishName,
-      userId,
-      error: "Cooking process failed",
-      details: error instanceof Error ? error.message : "Unknown error",
-      message: `Sorry, there was an error cooking your ${dishName}. Please try again later.`,
-    };
-  }
-}
+Communication style:
+- Friendly, efficient, and focused on clarity
+- No long lists unless asked; highlight timing and progress
+- Provide actionable next steps for all order stages`,
+});
 

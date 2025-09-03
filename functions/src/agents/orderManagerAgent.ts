@@ -2,135 +2,43 @@ import {ai} from "../genkit";
 import {createOrderTool, updateOrderStatusTool} from "../tools/orderTool";
 import {inventoryTool} from "../tools/inventoryTool";
 
-export async function orderManagerAgent(input: {
-  userId: string;
-  dish: string;
-  quantity?: number;
-  specialInstructions?: string;
-}) {
-  const {userId, dish, quantity = 1, specialInstructions} = input;
-  console.log(`[ORDER MANAGER] Processing order for user ${userId}: ${quantity}x ${dish}`);
+export const orderManagerAgent = ai.definePrompt({
+  name: "orderManagerAgent",
+  description: "Order Manager Agent handles order creation, validation, and management",
+  tools: [createOrderTool, updateOrderStatusTool, inventoryTool],
+  system: `You are the OrderAgent. Collect complete order details and provide a clear summary.
 
-  try {
-    // Get current inventory to check ingredient availability
-    const inventory = await inventoryTool({});
-    const availableIngredients = inventory.filter((item: any) =>
-      item.available && item.quantity > 0
-    );
+Available tools (registered for orchestration; do not call directly in your response):
+- inventoryTool → ingredient availability when planner needs it
+- createOrderTool → create order record
+- updateOrderStatusTool → set order status
 
-    // Create ingredient list for AI validation
-    const ingredientList = availableIngredients
-      .map((item: any) => `${item.ingredient} (${item.quantity}${item.unit})`)
-      .join(", ");
+CRITICAL RESPONSE RULES:
+- DO NOT call tools or transfer agents inside your response text
+- Provide text-only questions/answers to complete slot-filling
+- When complete, IMMEDIATELY call createOrderTool and provide order summary
+- Always call createOrderTool when you have: dish name + quantity + spice level (for non-sweet dishes)
+- Always call createOrderTool when you have: dish name + quantity (for sweet dishes)
+- Never ask redundant questions once you have all required information
 
-    // Use AI to validate if the dish can be made with available ingredients
-    const {text} = await ai.generate({
-      prompt: `
-      You are a kitchen manager at Bollywood Grill restaurant. 
+Sweet dishes (NO spice level): Kheer, Gulab Jamun, Rasmalai, Gajar Ka Halwa
 
-Available ingredients: ${ingredientList}
+Complete order detection:
+- Regular: dish + quantity + spice → CREATE ORDER
+- Regular: dish + quantity → ASK for spice level
+- Sweet: dish + quantity → CREATE ORDER
+- Dish only → ASK for quantity (and spice only for non-sweet)
+- Spice level response → CREATE ORDER (if quantity is known)
+- Short confirmations (yes, confirmed, ok) → CREATE ORDER (if all details known)
 
-Customer wants to order: ${quantity}x ${dish}${
-  specialInstructions ? ` with special instructions: ${specialInstructions}` : ""
-}
+Summary should include:
+- Main dish line(s) with quantity and spice (if applicable)
+- Sides if stated (naan, rice, raita)
+- Special instructions/dietary notes
+- Confirmation and realistic ETA
 
-Please analyze if this dish can be made with the available ingredients and provide a response in this JSON format:
-
-{
-  "canMake": true/false,
-  "reason": "Brief explanation",
-  "missingIngredients": ["list of missing ingredients if any"],
-  "suggestions": ["alternative dishes or modifications if needed"]
-}
-
-Consider:
-- Whether the dish name is recognizable as an Indian dish
-- If the required ingredients are available
-- If modifications can be made with available ingredients
-- What alternatives might be possible
-`,
-    });
-
-    // Parse AI response
-    let validation;
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        validation = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No valid JSON found in AI response");
-      }
-    } catch (parseError) {
-      console.error("[ORDER MANAGER] Error parsing AI validation:", parseError);
-      // Default to allowing the order if AI fails
-      validation = {canMake: true, reason: "AI validation failed, proceeding with order"};
-    }
-
-    if (!validation.canMake) {
-      return {
-        success: false,
-        error: "Dish not available",
-        dish,
-        reason: validation.reason,
-        message: `Sorry, ${dish} is not available right now. ${validation.reason}`,
-        suggestions: validation.suggestions || [],
-      };
-    }
-
-    // Create order in system
-    const orderResult = await createOrderTool({
-      dishes: [{name: dish, quantity}],
-      customerName: `User ${userId}`,
-    });
-
-    if (!orderResult.success) {
-      return {
-        success: false,
-        error: "Failed to create order",
-        dish,
-        message: "Sorry, there was an error creating your order. Please try again.",
-        details: orderResult.error || "Unknown error",
-      };
-    }
-
-    // Update order status to pending
-    await updateOrderStatusTool({
-      status: "PENDING",
-      message: "Order received and queued for cooking",
-    });
-
-    console.log(`[ORDER MANAGER] Order ${orderResult.orderId} created successfully`);
-
-    // Return order confirmation
-    return {
-      success: true,
-      action: "order_created",
-      orderId: orderResult.orderId,
-      userId,
-      dish,
-      quantity,
-      status: "PENDING",
-      message: `Order placed successfully! Your ${dish} will be ready in approximately 15-20 minutes.`,
-      nextStep: "Order sent to Chef Agent for cooking",
-      estimatedTime: "15-20 minutes",
-      orderDetails: {
-        orderId: orderResult.orderId,
-        dish,
-        quantity,
-        specialInstructions: specialInstructions || "None",
-        timestamp: new Date().toISOString(),
-      },
-    };
-  } catch (error) {
-    console.error(`[ORDER MANAGER] Error processing order for ${dish}:`, error);
-
-    return {
-      success: false,
-      error: "Failed to process order",
-      dish,
-      details: error instanceof Error ? error.message : "Unknown error",
-      message: "Sorry, there was an error processing your order. Please try again later.",
-    };
-  }
-}
+Style:
+- Efficient, friendly, ask for only missing details
+- Suggest complementary items for a complete meal when relevant`,
+});
 
