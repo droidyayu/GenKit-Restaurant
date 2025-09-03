@@ -6,8 +6,6 @@ import {
 import { orderManagerAgent } from "../agents/orderManagerAgent";
 import { menuRecipeAgent } from "../agents/menuRecipeAgent";
 
-
-
 export const kitchenOrchestratorFlow = ai.defineFlow(
   {
     name: "kitchenOrchestratorFlow",
@@ -32,7 +30,7 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
 
     try {
       // Conversation history
-      const history = await getConversationHistory(userId, 10);
+      const history = await getConversationHistory(userId, 15);
 
       // Save user message
       await addConversationMessage(userId, "user", message, {
@@ -41,53 +39,82 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
         step: "user_input",
       });
 
+      // Build short user-only context
       const historyContext = history
-        .slice(-4)
-        .filter((h: any) => h?.content)
-        .map((h: any) => `${h.role}: ${h.content}`)
+        .filter((h: any) => h.role === "user")
+        .slice(-6)
+        .map((h: any) => `user: ${h.content}`)
         .join("\n");
 
+      // ✅ Extract the authoritative latest menu only
+      const lastMenu = history
+        .slice()
+        .reverse()
+        .find((h: any) => h.step === "menu_generated");
 
+      // ✅ Track last ordered dish (saved with step: "dish_selected")
+      const lastDish = history
+        .slice()
+        .reverse()
+        .find((h: any) => h.step === "dish_selected");
 
-      // --- DIRECT INTENT CLASSIFICATION (No more unreliable triage) ---
+      // ✅ Build enriched context (menu authoritative, chatter excluded)
+      const enrichedContext = `
+${historyContext}
+
+${
+  lastMenu
+    ? `\n\nLATEST MENU (authoritative - use ONLY this for dish validation):\n${lastMenu.content}`
+    : ""
+}
+`;
+
+      // --- DIRECT INTENT CLASSIFICATION ---
       let intent: string;
       const lowerMessage = message.toLowerCase();
-      
-      // Direct pattern matching - much more reliable than Gemini
-      if (lowerMessage.includes("order") || 
-          lowerMessage.includes("get me") || 
-          lowerMessage.includes("i want") || 
-          lowerMessage.includes("i'd like") || 
-          lowerMessage.includes("can i have") ||
-          lowerMessage.includes("buy") ||
-          lowerMessage.includes("purchase") ||
-          // Order context responses
-          /\d+\s*serving/.test(lowerMessage) ||  // "2 servings", "1 serving"
-          /\d+\s*piece/.test(lowerMessage) ||    // "2 pieces", "1 piece"
-          /\d+\s*portion/.test(lowerMessage) ||  // "2 portions", "1 portion"
-          lowerMessage.includes("serving") ||
-          lowerMessage.includes("piece") ||
-          lowerMessage.includes("portion") ||
-          lowerMessage.includes("spicy") ||
-          lowerMessage.includes("mild") ||
-          lowerMessage.includes("hot") ||
-          lowerMessage.includes("medium") ||
-          lowerMessage.includes("yes") ||
-          lowerMessage.includes("no") ||
-          lowerMessage.includes("vegetarian") ||
-          lowerMessage.includes("vegan")) {
+
+      if (
+        lowerMessage.includes("order") ||
+        lowerMessage.includes("get me") ||
+        lowerMessage.includes("i want") ||
+        lowerMessage.includes("i'd like") ||
+        lowerMessage.includes("can i have") ||
+        lowerMessage.includes("buy") ||
+        lowerMessage.includes("purchase") ||
+        /\d+\s*serving/.test(lowerMessage) || // "2 servings"
+        /\d+\s*piece/.test(lowerMessage) || // "2 pieces"
+        /\d+\s*portion/.test(lowerMessage) || // "2 portions"
+        lowerMessage.includes("serving") ||
+        lowerMessage.includes("piece") ||
+        lowerMessage.includes("portion") ||
+        lowerMessage.includes("spicy") ||
+        lowerMessage.includes("mild") ||
+        lowerMessage.includes("hot") ||
+        lowerMessage.includes("medium") ||
+        lowerMessage.includes("yes") ||
+        lowerMessage.includes("no") ||
+        lowerMessage.includes("vegetarian") ||
+        lowerMessage.includes("vegan")
+      ) {
         intent = "order";
-      } else if (lowerMessage.includes("menu") || 
-                 lowerMessage.includes("what do you have") || 
-                 lowerMessage.includes("show me") ||
-                 lowerMessage.includes("what's available") ||
-                 lowerMessage.includes("browse")) {
+      } else if (
+        lowerMessage.includes("menu") ||
+        lowerMessage.includes("what do you have") ||
+        lowerMessage.includes("show me") ||
+        lowerMessage.includes("what's available") ||
+        lowerMessage.includes("browse")
+      ) {
         intent = "menu";
       } else {
         intent = "clarify";
       }
-      
-      console.log("Direct intent classification:", intent, "for message:", message);
+
+      console.log(
+        "Direct intent classification:",
+        intent,
+        "for message:",
+        message
+      );
 
       // --- ROUTING ---
       let agentResponse: string;
@@ -100,25 +127,64 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
         );
         agentResponse = menuResult.text ?? "[menu agent returned no text]";
         specialistAgent = "menuRecipeAgent";
+
+        // Save menu with step = menu_generated
+        await addConversationMessage(userId, "assistant", agentResponse, {
+          timestamp: new Date().toISOString(),
+          requestId,
+          step: "menu_generated",
+          agent: specialistAgent,
+        });
       } else if (intent === "order") {
+        // ✅ If user only says "2 servings" etc., attach last dish
+        let adjustedMessage = message;
+        if (
+          (/\d+\s*serving/.test(lowerMessage) ||
+            /\d+\s*piece/.test(lowerMessage) ||
+            /\d+\s*portion/.test(lowerMessage)) &&
+          lastDish
+        ) {
+          adjustedMessage = `${message} of ${lastDish.content}`;
+        }
+
         const orderResult = await orderManagerAgent(
-          message ?? "[empty message]",
-          historyContext
+          adjustedMessage ?? "[empty message]",
+          enrichedContext
         );
         agentResponse = orderResult.text ?? "[order agent returned no text]";
         specialistAgent = "orderManagerAgent";
+
+        await addConversationMessage(userId, "assistant", agentResponse, {
+          timestamp: new Date().toISOString(),
+          requestId,
+          step: "agent_response",
+          agent: specialistAgent,
+        });
+
+        // ✅ If this message contains a known dish, save as dish_selected
+        if (
+          /(gulab jamun|gajar ka halwa|mango kulfi|ras malai|kheer|jalebi|butter chicken|chicken tikka masala|dal makhani|palak paneer|aloo gobi|malai kofta|naan|roti|rice|biryani|pulao)/i.test(
+            message
+          )
+        ) {
+          await addConversationMessage(userId, "assistant", message, {
+            timestamp: new Date().toISOString(),
+            requestId,
+            step: "dish_selected",
+            agent: specialistAgent,
+          });
+        }
       } else {
         agentResponse =
           "Hello! Welcome to our Indian restaurant. I can help you explore our menu or place an order.";
-      }
 
-      // Save assistant response
-      await addConversationMessage(userId, "assistant", agentResponse, {
-        timestamp: new Date().toISOString(),
-        requestId,
-        step: "agent_response",
-        agent: specialistAgent,
-      });
+        await addConversationMessage(userId, "assistant", agentResponse, {
+          timestamp: new Date().toISOString(),
+          requestId,
+          step: "agent_response",
+          agent: specialistAgent,
+        });
+      }
 
       return {
         success: true,
