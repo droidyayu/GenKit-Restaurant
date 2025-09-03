@@ -1,30 +1,12 @@
 import {ai, z} from "../genkit";
+import {
+  SimpleOrder,
+  createOrderInDatabase,
+  getOrdersForStatusCheck,
+  markOrdersAsComplete
+} from "../data/orderRepository";
 
-// Simple order interface for the new system
-interface SimpleOrder {
-  orderId: string;
-  dishes: Array<{
-    name: string;
-    quantity: number;
-    spiceLevel?: string;
-    specialInstructions?: string;
-  }>;
-  customerName: string;
-  totalAmount: number;
-  status: "PENDING" | "PREP" | "COOKING" | "PLATING" | "READY" | "DELIVERED";
-  estimatedTime: string;
-  createdAt: number;
-}
 
-// Global order storage (in a real system this would be a database)
-let currentOrder: SimpleOrder | null = null;
-
-// Helper function to get progress percentage
-function getProgressPercentage(status: string): number {
-  const statusOrder = ["PENDING", "PREP", "COOKING", "PLATING", "READY", "DELIVERED"];
-  const index = statusOrder.indexOf(status);
-  return index >= 0 ? Math.round((index / (statusOrder.length - 1)) * 100) : 0;
-}
 
 export const createOrderTool = ai.defineTool(
   {
@@ -37,10 +19,10 @@ export const createOrderTool = ai.defineTool(
         spiceLevel: z.string().optional().describe("Spice level (Mild, Medium, Hot, Extra Hot)"),
         specialInstructions: z.string().optional().describe("Special instructions"),
       })).describe("List of dishes to order"),
-      customerName: z.string().describe("Customer name"),
+      userId: z.string().describe("User ID of the customer"),
     }),
   },
-  async ({dishes, customerName}) => {
+  async ({dishes, userId}) => {
     const orderId = `ORD_${Date.now()}`;
 
     // Calculate total amount (simplified pricing)
@@ -53,17 +35,20 @@ export const createOrderTool = ai.defineTool(
     const order: SimpleOrder = {
       orderId,
       dishes,
-      customerName,
+      customerName: userId, // Use userId as customer identifier
       totalAmount,
       status: "PENDING",
       estimatedTime: "15-20 minutes",
       createdAt: Date.now(),
     };
 
-    // Store the order globally
-    currentOrder = order;
+    // Insert order into database
+    const dbSuccess = await createOrderInDatabase(order);
+    if (!dbSuccess) {
+      console.warn("[ORDER CREATION] Database not available, order not persisted");
+    }
 
-    console.log(`[ORDER CREATED] ${orderId} for ${customerName}: ${dishes.length} dishes, $${totalAmount.toFixed(2)}`);
+    console.log(`[ORDER CREATED] ${orderId} for user ${userId}: ${dishes.length} dishes, $${totalAmount.toFixed(2)}`);
 
     return {
       success: true,
@@ -77,92 +62,60 @@ export const createOrderTool = ai.defineTool(
 export const getOrderStatusTool = ai.defineTool(
   {
     name: "getOrderStatusTool",
-    description: "Get the current status of an order",
+    description: "Get status of user's orders and mark incomplete ones as complete",
     inputSchema: z.object({
-      orderId: z.string().optional().describe(
-        "Order ID (if not provided, returns current order status)"
-      ),
+      userId: z.string().describe("User ID to get orders for"),
     }),
   },
-  async () => {
-    console.log("[GET_ORDER_STATUS_TOOL] Called");
+  async ({userId}) => {
+    console.log("[GET_ORDER_STATUS_TOOL] Called - fetching orders from database");
 
-    if (!currentOrder) {
-      console.log("[GET_ORDER_STATUS_TOOL] No active order found");
+    try {
+      // Get user's orders for status check (incomplete or last 5)
+      const ordersToProcess = await getOrdersForStatusCheck(userId, 10);
+
+      if (ordersToProcess.length === 0) {
+        return {
+          success: true,
+          message: "No orders found to process",
+          orders: [],
+          totalOrders: 0,
+        };
+      }
+
+      // Mark all fetched orders as complete
+      const orderIds = ordersToProcess.map(order => order.orderId);
+      await markOrdersAsComplete(orderIds);
+
+      // Prepare response with updated status
+      const processedOrders = ordersToProcess.map(order => ({
+        orderId: order.orderId,
+        customerName: order.customerName,
+        status: "DELIVERED" as const, // Updated status
+        dishes: order.dishes,
+        totalAmount: order.totalAmount,
+        estimatedTime: order.estimatedTime,
+        createdAt: order.createdAt,
+        progress: 100, // Complete
+      }));
+
+      console.log(`[GET_ORDER_STATUS_TOOL] Processed ${processedOrders.length} orders, marked as DELIVERED`);
+
       return {
-        status: "NO_ACTIVE_ORDER",
-        message: "No active order found",
+        success: true,
+        message: `Found and completed ${processedOrders.length} orders`,
+        orders: processedOrders,
+        totalOrders: processedOrders.length,
       };
-    }
 
-    console.log(`[GET_ORDER_STATUS_TOOL] Returning status for order ${currentOrder.orderId}: ${currentOrder.status} (${getProgressPercentage(currentOrder.status)}% complete)`);
-    return {
-      orderId: currentOrder.orderId,
-      status: currentOrder.status,
-      estimatedTime: currentOrder.estimatedTime,
-      dishes: currentOrder.dishes,
-      createdAt: currentOrder.createdAt,
-      progress: getProgressPercentage(currentOrder.status),
-    };
-  }
-);
-
-export const updateOrderStatusTool = ai.defineTool(
-  {
-    name: "updateOrderStatusTool",
-    description: "Update the status of the current order",
-    inputSchema: z.object({
-      status: z.enum(["PENDING", "PREP", "COOKING", "PLATING", "READY", "DELIVERED"])
-        .describe("New order status"),
-      message: z.string().optional().describe("Status update message"),
-    }),
-  },
-  async ({status, message}) => {
-    if (!currentOrder) {
-      throw new Error("No active order to update");
-    }
-
-    currentOrder.status = status;
-
-    console.log(`[ORDER STATUS UPDATED] ${currentOrder.orderId}: ${status}${message ? ` - ${message}` : ""}`);
-
-    return {
-      success: true,
-      orderId: currentOrder.orderId,
-      status: currentOrder.status,
-      message: message || `Order status updated to ${status}`,
-      timestamp: new Date().toISOString(),
-    };
-  }
-);
-
-export const completeOrderTool = ai.defineTool(
-  {
-    name: "completeOrderTool",
-    description: "Complete the current order and clear it from the system",
-    inputSchema: z.object({}),
-  },
-  async () => {
-    console.log("[COMPLETE_ORDER_TOOL] Called");
-
-    if (!currentOrder) {
-      console.log("[COMPLETE_ORDER_TOOL] No active order to complete");
+    } catch (error) {
+      console.error("[GET_ORDER_STATUS_TOOL] Error:", error);
       return {
         success: false,
-        error: "No active order to complete",
+        message: "Failed to fetch orders",
+        orders: [],
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
-
-    const completedOrder = {...currentOrder};
-    currentOrder = null; // Clear the current order
-
-    console.log(`[COMPLETE_ORDER_TOOL] Order ${completedOrder.orderId} completed and cleared`);
-
-    return {
-      success: true,
-      orderId: completedOrder.orderId,
-      message: "Order completed successfully",
-      timestamp: new Date().toISOString(),
-    };
   }
 );

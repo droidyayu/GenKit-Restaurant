@@ -8,8 +8,6 @@ export {inventoryTool, ingredientDetailsTool} from "./inventoryTool";
 export {
   createOrderTool,
   getOrderStatusTool,
-  updateOrderStatusTool,
-  completeOrderTool,
 } from "./orderTool";
 
 // Notification tools
