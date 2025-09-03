@@ -3,7 +3,7 @@ import "dotenv/config";
 
 // Import the Genkit core libraries and plugins with beta features
 import {genkit, z} from "genkit/beta";
-import {gemini25FlashLite, googleAI} from "@genkit-ai/googleai";
+import {gemini20Flash, googleAI} from "@genkit-ai/googleai";
 import {initializeApp, getApps} from "firebase-admin/app";
 
 // Initialize Firebase Admin (only if not already initialized)
@@ -29,7 +29,7 @@ const ai = genkit({
     // the recommended practice.
     googleAI(),
   ],
-  model: gemini25FlashLite,
+  model: gemini20Flash,
 });
 
 // Export the ai instance and z for use in other files
