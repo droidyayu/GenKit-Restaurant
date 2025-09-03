@@ -85,7 +85,7 @@ export const getOrderStatusTool = ai.defineTool(
 
       // Mark all fetched orders as complete
       const orderIds = ordersToProcess.map(order => order.orderId);
-      await markOrdersAsComplete(orderIds);
+      await markOrdersAsComplete(userId, orderIds);
 
       // Prepare response with updated status
       const processedOrders = ordersToProcess.map(order => ({

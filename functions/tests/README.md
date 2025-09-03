@@ -1,150 +1,113 @@
-# Genkit Agent Test Harness
+# Integration Tests for Restaurant AI Agents
 
-This directory contains a comprehensive test harness for testing Genkit agents using Jest and CSV-driven test cases.
+This directory contains standalone integration tests for the Restaurant AI agents (OrderManagerAgent and MenuRecipeAgent) that work with actual Firebase services and AI agents.
 
-## Features
+## Test Files
 
-- **CSV-driven testing**: Store test cases in CSV files for easy maintenance
-- **Multi-turn conversations**: Support for conversational flows with state preservation
-- **Single-turn interactions**: Simple request-response testing
-- **Flexible assertions**: Case-insensitive keyword matching in responses
-- **Comprehensive reporting**: Detailed console output for debugging
+### `test-order-agent.js`
+Comprehensive integration test that runs through all test scenarios from `data/orderAgent.csv`:
+- Tests complete order creation workflows
+- Validates database operations
+- Tests multi-turn conversations
+- Provides detailed success/failure reporting
 
-## Directory Structure
-
-```
-tests/
-├── data/           # CSV test data files
-│   ├── orderAgent.csv
-│   └── menuAgent.csv
-├── utils/          # Test utilities
-│   ├── loadCsv.ts      # CSV parsing and grouping
-│   └── runConversation.ts  # Conversation execution
-├── setup.ts        # Jest environment setup
-├── *.test.ts       # Test files
-└── README.md       # This file
+**Run the comprehensive order agent test:**
+```bash
+cd functions
+GOOGLE_GENAI_API_KEY=your_api_key node tests/test-order-agent.js
 ```
 
-## CSV Format
+### `test-menu-agent.js`
+Comprehensive integration test for the MenuRecipeAgent:
+- Tests menu generation and routing
+- Validates menu structure and content
+- Tests different menu request types (vegetarian, appetizers, desserts)
+- Uses the kitchen orchestrator flow for realistic testing
 
-Test cases are stored in CSV files with the following columns:
-
-```csv
-test_id,turn,input,expected
-order1,1,I want Butter Chicken,ask_quantity
-order1,2,2,Butter Chicken x2
-order2,1,I want Aloo Paratha,Aloo Paratha
+**Run the menu agent test:**
+```bash
+cd functions
+GOOGLE_GENAI_API_KEY=your_api_key node tests/test-menu-agent.js
 ```
 
-- `test_id`: Groups related conversation turns
-- `turn`: Turn number (1, 2, 3, etc.)
-- `input`: User input for this turn
-- `expected`: Keyword expected in the agent's response (case-insensitive)
+### `test-script.js`
+Simple integration test for basic order creation with customer name handling:
+- Tests a single conversation flow
+- Validates order creation and database storage
+- Good for quick smoke tests
+
+**Run the simple test:**
+```bash
+cd functions
+GOOGLE_GENAI_API_KEY=your_api_key node tests/test-script.js
+```
+
+## Running All Tests
+
+**Run all tests at once:**
+```bash
+cd functions
+npm test
+```
+
+**Run individual test suites:**
+```bash
+cd functions
+npm run test:simple      # Quick smoke test
+npm run test:order-agent # Comprehensive order testing
+npm run test:menu-agent  # Menu generation testing
+```
+
+## Test Data
+
+### `data/orderAgent.csv`
+Contains test scenarios for various order creation workflows:
+- Single-turn complete orders
+- Multi-turn slot filling
+- Sweet dishes (no spice required)
+- Multi-item orders
+- Confirmation handling
+- Edge cases
+
+## Environment Requirements
+
+1. **Firebase Emulators** running:
+   ```bash
+   firebase emulators:start
+   ```
+
+2. **Google AI API Key** set:
+   ```bash
+   export GOOGLE_GENAI_API_KEY=your_api_key_here
+   ```
+
+## Test Results
+
+The tests will provide detailed output showing:
+- ✅ Scenarios that passed
+- ❌ Scenarios that failed
+- 📊 Success rate percentage
+- 🔍 Detailed order creation verification
+- 📋 Order details (ID, customer, status, dishes)
+- 📋 Menu structure validation
+
+## Advantages of Standalone Testing
+
+- ✅ **No mocking required** - Tests actual services and database operations
+- ✅ **Real AI validation** - Tests actual AI agent responses and behavior
+- ✅ **Better debugging** - Direct console output with detailed logs
+- ✅ **No framework overhead** - Lightweight and fast execution
+- ✅ **Live integration testing** - End-to-end validation of complete workflows
+- ✅ **Real database persistence** - Verifies actual data storage and retrieval
+- ✅ **Production-like testing** - Uses same services as production environment
 
 ## Usage
 
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test file
-npm test orderManagerAgent.test.ts
-
-# Run with coverage
-npm run test:coverage
-
-# Run in watch mode
-npm run test:watch
-```
-
-### Creating New Test Cases
-
-1. **Add CSV data**: Create or update CSV files in `tests/data/`
-2. **Create test file**: Use the provided utilities in your test file
-
-```typescript
-import { describe, it, expect } from '@jest/globals';
-import { yourAgent } from '../src/agents/yourAgent';
-import { loadCsv } from './utils/loadCsv';
-import { runConversation } from './utils/runConversation';
-
-describe('yourAgent tests', () => {
-  const cases = loadCsv('yourAgent');
-
-  cases.forEach(conv => {
-    it(`should handle conversation ${conv.id}`, async () => {
-      const result = await runConversation(yourAgent, conv);
-      result.forEach((res, i) => {
-        expect(res.text.toLowerCase()).toContain(conv.steps[i].expected.toLowerCase());
-      });
-    });
-  });
-});
-```
-
-### Single-turn Tests
-
-For simple single-turn interactions:
-
-```typescript
-import { runSingleTurn } from './utils/runConversation';
-
-it('should handle simple request', async () => {
-  const result = await runSingleTurn(
-    yourAgent,
-    'input message',
-    'expected_keyword'
-  );
-
-  expect(result.success).toBe(true);
-});
-```
-
-## Utilities
-
-### `loadCsv(csvFileName: string): ConversationTest[]`
-
-Loads and parses a CSV file, grouping rows by `test_id`.
-
-### `runConversation(agent, conversation, userId?): Promise<ConversationResult[]>`
-
-Executes a multi-turn conversation against an agent, maintaining state across turns.
-
-### `runSingleTurn(agent, input, expected, userId?): Promise<ConversationResult>`
-
-Executes a single-turn interaction for simple request-response testing.
-
-## Environment Setup
-
-Make sure you have the required environment variables:
-
-```bash
-# Copy and configure environment file
-cp env.example .env
-# Add your GOOGLE_GENAI_API_KEY to .env
-```
-
-## Best Practices
-
-1. **Descriptive test IDs**: Use meaningful names like `order1`, `menu_veg`, etc.
-2. **Specific expectations**: Use specific keywords that uniquely identify successful responses
-3. **Reasonable timeouts**: AI calls may take time; use 30-60 second timeouts
-4. **Comprehensive coverage**: Test both success and edge cases
-5. **Regular updates**: Keep CSV files updated as agent behavior changes
-
-## Troubleshooting
-
-- **API Key Issues**: Ensure `GOOGLE_GENAI_API_KEY` is set in your `.env` file
-- **Timeout Errors**: Increase Jest timeout for slow AI responses
-- **CSV Parsing Issues**: Check CSV format and ensure proper quoting for special characters
-- **Import Errors**: Verify TypeScript paths and agent exports
-
-## Example Output
-
-```
-✓ should handle conversation order1 (4500ms)
-  Turn 1: Input: "I want Butter Chicken" | Expected: "ask_quantity" | Response: "How many portions of Butter Chicken would you like?" | Success: true
-  Turn 2: Input: "2" | Expected: "Butter Chicken x2" | Response: "Great! I've placed your order for 2 portions of Butter Chicken." | Success: true
-```
+These tests are perfect for:
+- End-to-end validation of complete restaurant workflows
+- AI agent behavior verification (OrderManagerAgent + MenuRecipeAgent)
+- Database integration testing with real Firestore operations
+- Regression testing after code changes
+- Menu generation and routing validation
+- Multi-turn conversation testing
+- Production-like integration testing

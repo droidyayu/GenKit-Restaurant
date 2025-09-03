@@ -37,8 +37,9 @@ export const createOrderInDatabase = async (order: SimpleOrder): Promise<boolean
   }
 
   try {
-    await db.collection("orders").doc(order.orderId).set(order);
-    console.log(`[ORDER_REPOSITORY] Order ${order.orderId} inserted into database for ${order.customerName}`);
+    // Store order in path: order/{userId}/{orderId} as per spec
+    await db.collection("order").doc(order.customerName).collection("orders").doc(order.orderId).set(order);
+    console.log(`[ORDER_REPOSITORY] Order ${order.orderId} inserted into database for user ${order.customerName}`);
     return true;
   } catch (error) {
     console.error("[ORDER_REPOSITORY] Failed to insert order:", error);
@@ -56,9 +57,8 @@ export const getOrdersForStatusCheck = async (userId: string, limit = 10): Promi
   }
 
   try {
-    // Get user's orders and filter client-side to avoid complex queries
-    const userOrdersQuery = db.collection("orders")
-      .where("customerName", "==", userId) // Filter by userId (stored as customerName)
+    // Get user's orders from the new path structure: order/{userId}/orders/{orderId}
+    const userOrdersQuery = db.collection("order").doc(userId).collection("orders")
       .orderBy("createdAt", "desc")
       .limit(limit * 2); // Get more to filter
 
@@ -86,7 +86,7 @@ export const getOrdersForStatusCheck = async (userId: string, limit = 10): Promi
 };
 
 // Mark orders as complete (DELIVERED)
-export const markOrdersAsComplete = async (orderIds: string[]): Promise<void> => {
+export const markOrdersAsComplete = async (userId: string, orderIds: string[]): Promise<void> => {
   const db = getDb();
 
   if (!db) {
@@ -96,14 +96,14 @@ export const markOrdersAsComplete = async (orderIds: string[]): Promise<void> =>
 
   try {
     const updatePromises = orderIds.map(orderId =>
-      db.collection("orders").doc(orderId).update({
+      db.collection("order").doc(userId).collection("orders").doc(orderId).update({
         status: "DELIVERED",
         completedAt: Date.now()
       })
     );
 
     await Promise.all(updatePromises);
-    console.log(`[ORDER_REPOSITORY] Marked ${orderIds.length} orders as DELIVERED`);
+    console.log(`[ORDER_REPOSITORY] Marked ${orderIds.length} orders as DELIVERED for user ${userId}`);
   } catch (error) {
     console.error("[ORDER_REPOSITORY] Error marking orders complete:", error);
     throw error;
@@ -111,39 +111,19 @@ export const markOrdersAsComplete = async (orderIds: string[]): Promise<void> =>
 };
 
 // Get recent orders for a specific user
-export const getRecentOrders = async (userId?: string, limit = 5): Promise<SimpleOrder[]> => {
+export const getRecentOrders = async (userId: string, limit = 5): Promise<SimpleOrder[]> => {
   const db = getDb();
   if (!db) return [];
 
   try {
-    let query = db.collection("orders").orderBy("createdAt", "desc");
+    const userOrdersQuery = db.collection("order").doc(userId).collection("orders")
+      .orderBy("createdAt", "desc")
+      .limit(limit);
 
-    // If userId is provided, filter by user
-    if (userId) {
-      query = query.where("customerName", "==", userId);
-    }
-
-    const snapshot = await query.limit(limit).get();
+    const snapshot = await userOrdersQuery.get();
     return snapshot.docs.map(doc => doc.data() as SimpleOrder);
   } catch (error) {
     console.error("[ORDER_REPOSITORY] Error fetching recent orders:", error);
     return [];
-  }
-};
-
-// Get order by ID
-export const getOrderById = async (orderId: string): Promise<SimpleOrder | null> => {
-  const db = getDb();
-  if (!db) return null;
-
-  try {
-    const doc = await db.collection("orders").doc(orderId).get();
-    if (doc.exists) {
-      return doc.data() as SimpleOrder;
-    }
-    return null;
-  } catch (error) {
-    console.error("[ORDER_REPOSITORY] Error fetching order by ID:", error);
-    return null;
   }
 };

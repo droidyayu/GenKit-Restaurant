@@ -37,12 +37,19 @@ ORDER INTENT - CALL orderManagerAgent tool when customer:
 
 CLARIFICATION: Only ask for clarification if the request is truly ambiguous or contradictory.
 
+CRITICAL USERID CONTEXT:
+- When calling orderManagerAgent, ALWAYS include the userId in the request
+- Format: "User ID: [userId]\n\n[Customer's actual request]"
+- Example: "User ID: user123\n\nI want 2 butter chicken medium spicy"
+- This ensures the order agent can create orders for the correct customer
+
 Response style:
 - Be friendly and welcoming
 - Route immediately when intent is clear - don't delay
 - Use conversation history to maintain context
 - Don't repeat information already discussed
 - Always call the appropriate tool when routing
+- For orders: Include userId context in the tool call
 
 Remember: Your job is to route efficiently - use the tools to actually help customers!`,
 });
@@ -102,12 +109,12 @@ Please consider the full conversation context when routing and responding. Use t
 - Avoid asking for information already provided
 - Maintain continuity in the customer experience
 
-IMPORTANT: When calling orderManagerAgent, include the userId (${userId}) in your request so the agent can use it for order creation.` :
+IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${userId}\n\n${message}" so the agent can extract the userId for order creation.` :
         `Current message: "${message}"
 
 This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.
 
-IMPORTANT: When calling orderManagerAgent, include the userId (${userId}) in your request so the agent can use it for order creation.`;
+IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${userId}\n\n${message}" so the agent can extract the userId for order creation.`;
 
       console.log(`[TRIAGE_AGENT] Sending context to triage agent (length: ${fullContext.length} chars)`);
       const result = await chat.send(fullContext);

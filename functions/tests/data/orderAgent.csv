@@ -1,11 +1,26 @@
 test_id,turn,input,expected
-order1,1,I want Butter Chicken,ask_quantity
-order1,2,2,Butter Chicken x2
-order2,1,I want Aloo Paratha,ask_quantity
-order2,2,2 pcs,Aloo Paratha x2
-order3,1,I want Gulab Jamun,Gulab Jamun
-order4,1,I'd like to order Palak Paneer with 3 portions,Palak Paneer x3
-order5,1,Can I get 4 pieces of Chicken Tikka,ask_spice
-order5,2,mild,Chicken Tikka x4
-single1,1,Show me the menu,menu
-single2,1,What's available today,dish
+single_complete_savory,1,User ID: test-user-123\n\nI want 2 Butter Chicken medium spicy,Butter Chicken x2 medium
+single_complete_sweet,1,User ID: test-user-456\n\nGive me 3 Gulab Jamun,Gulab Jamun x3
+multi_turn_complete,1,User ID: test-user-789\n\nI want Palak Paneer,ask_quantity
+multi_turn_complete,2,User ID: test-user-789\n\n2,ask_spice
+multi_turn_complete,3,User ID: test-user-789\n\nmedium,Palak Paneer x2 medium
+sweet_multi_turn,1,User ID: test-user-sweet\n\nI want Kheer,ask_quantity
+sweet_multi_turn,2,User ID: test-user-sweet\n\n4,Kheer x4
+multi_item_order,1,User ID: test-user-multi\n\nI want Butter Chicken and Naan for 2,ask_spice
+multi_item_order,2,User ID: test-user-multi\n\nhot,Butter Chicken x2 hot Naan x2
+confirmation_case,1,User ID: test-user-confirm\n\nI want 2 Aloo Paratha medium spicy,ask_confirmation
+confirmation_case,2,User ID: test-user-confirm\n\nyes,Aloo Paratha x2 medium
+short_confirmation,1,User ID: test-user-confirm\n\nI want 1 Chicken Biryani mild,ask_confirmation
+short_confirmation,2,User ID: test-user-confirm\n\nok,Chicken Biryani x1 mild
+vague_input,1,User ID: test-user-vague\n\nSomething spicy,ask_dish
+repeat_detail,1,User ID: test-user-redundant\n\nI want 2 Butter Chicken,ask_spice
+repeat_detail,2,User ID: test-user-redundant\n\nmedium spicy,Butter Chicken x2 medium
+repeat_detail,3,User ID: test-user-redundant\n\nActually make it 2 portions,Butter Chicken x2 medium
+edge_case_quantity,1,User ID: test-user-edge\n\nI want 5,ask_dish
+edge_case_spice,1,User ID: test-user-edge\n\nI want mild,ask_dish
+multi_sweet_order,1,User ID: test-user-mixed\n\nI want Gulab Jamun and Rasmalai for 2,Gulab Jamun x2 Rasmalai x2
+complex_multi_item,1,User ID: test-user-complex\n\nI want 3 Butter Chicken hot and 2 Naan,Butter Chicken x3 hot Naan x2
+confirmation_with_changes,1,User ID: test-user-changes\n\nI want 2 Chicken Tikka medium,ask_confirmation
+confirmation_with_changes,2,User ID: test-user-changes\n\nActually make it hot instead,ask_confirmation
+confirmation_with_changes,3,User ID: test-user-changes\n\nyes,Chicken Tikka x2 hot
+all_sweet_dishes,1,User ID: test-user-all\n\nI want Kheer Gulab Jamun and Rasmalai,Kheer Gulab Jamun Rasmalai
