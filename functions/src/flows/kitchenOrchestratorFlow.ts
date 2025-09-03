@@ -1,8 +1,50 @@
 import {ai, z} from "../genkit";
 import {getConversationHistory, addConversationMessage} from "../data/conversationHistory";
 import {orderManagerAgent} from "../agents/orderManagerAgent";
-import {chefAgent} from "../agents/chefAgent";
 import {menuRecipeAgent} from "../agents/menuRecipeAgent";
+
+// Define the triage agent that handles initial routing
+const triageAgent = ai.definePrompt({
+  name: 'triageAgent',
+  description: 'Triage Agent for Indian Restaurant - routes customer requests to menu and order specialists',
+  tools: [menuRecipeAgent, orderManagerAgent],
+  system: `You are an AI customer service agent for an Indian restaurant.
+
+Greet customers warmly and determine how you can help them. Use the available tools to transfer to the most appropriate specialist agent based on the customer's INTENT and needs:
+
+Available specialists:
+1. menuRecipeAgent - For menu exploration, dish suggestions, availability checking, and recipe information
+2. orderManagerAgent - For placing orders, collecting order details, and managing the ordering process
+
+Intent-based routing guidelines:
+
+MENU INTENT - Route to menuRecipeAgent when customer wants to:
+- Explore menu options and see what's available
+- Get dish suggestions and recommendations
+- Check ingredient availability and feasibility
+- Learn about menu items and recipes
+- Filter by dietary preferences (vegetarian, etc.)
+Examples: "What do you have?", "Show me the menu", "Suggest something good", "What's vegetarian?"
+
+ORDER INTENT - Route to orderManagerAgent when customer wants to:
+- Place an order for specific dishes
+- Specify quantities and portions
+- Choose spice levels and customizations
+- Complete order details and finalize
+- Make modifications to existing orders
+Examples: "I want to order", "Get me chicken tikka", "Two portions please", "Make it spicy"
+
+CLARIFICATION: If intent is unclear, ask a brief clarifying question before routing
+CONTEXT AWARENESS: Use conversation history to understand ongoing conversations and route appropriately
+
+Response style:
+- Be friendly, welcoming, and efficient
+- Use conversation history to maintain context and avoid asking for information already provided
+- Don't repeat information already discussed
+- Route immediately when intent is clear
+
+If you cannot help with available tools, politely explain your limitations.`,
+});
 
 export const kitchenOrchestratorFlow = ai.defineFlow(
   {
@@ -35,90 +77,36 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
         step: "user_input",
       });
 
-      // Format conversation history for context
-      const historyContext = history.length > 0 ?
-        `\n\nPrevious conversation context:\n${history
-          .slice(-10) // Last 10 messages
-          .map((msg: any) => `${msg.role}: ${msg.content}`)
-          .join("\n")}` :
-        "";
+      // Use triage agent to handle routing and get response
+      const chat = ai.chat(triageAgent);
 
-      // Use AI to determine which agent to route to
-      const routingPrompt = `You are a routing agent for an Indian restaurant.
-      Based on the user's message and conversation context, determine which specialized agent should handle their request.
+      // Create a structured context that includes both the current message and history
+      const fullContext = history.length > 0
+        ? `Current message: "${message}"
 
-Available agents:
-1. menuRecipeAgent - ONLY for menu requests, food options, "what's available", "show menu", "vegetarian options", "menu please"
-2. orderManagerAgent - for placing orders, "I want", "order", "buy", "get me", specific dish names like "palak paneer", "chicken tikka", OR completing order details like spice levels, quantities
-3. chefAgent - for cooking status, kitchen questions, "how long", "cooking time", delivery status, "where is my order", "ready yet", "delivery"
+Conversation history (last ${Math.min(history.length, 10)} messages):
+${history.slice(-10).map((msg: any, index: number) =>
+  `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ? ` [${msg.metadata.step}]` : ''}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ''}`
+).join('\n')}
 
-Context-aware routing rules:
-- PRIORITY 1: If message contains "order", "want", "get me", "buy" → route to orderManagerAgent
-- PRIORITY 2: If message mentions specific dish names → route to orderManagerAgent
-- PRIORITY 3: If the last assistant message asked about spice level, quantity, or order details → route to orderManagerAgent
-- PRIORITY 4: If user mentions spice levels (mild, medium, hot, extra hot, spicy, not spicy) → route to orderManagerAgent
-- PRIORITY 5: If user says "yes", "no", "confirmed", "ok", "sure", or gives short answers → route to orderManagerAgent
-- PRIORITY 6: If message is just a number (likely quantity) → route to orderManagerAgent
-- PRIORITY 7: If user is responding to order-related questions → route to orderManagerAgent
-- PRIORITY 8: Menu requests only: "show menu", "what's available", "menu please", "vegetarian options" → route to menuRecipeAgent
-- Otherwise, use the message content to determine the agent
+Please consider the full conversation context when routing and responding. Use this history to:
+- Determine if this is a menu exploration or order placement request
+- Remember previous menu suggestions or ongoing orders
+- Avoid asking for information already provided
+- Maintain continuity in the customer experience`
+        : `Current message: "${message}"
 
-User message: "${message}"
-${historyContext}
+This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.`;
 
-Respond with ONLY the agent name (menuRecipeAgent, orderManagerAgent, or chefAgent).`;
-
-      const routingResult = await ai.generate({
-        prompt: routingPrompt,
-      });
-
-      const selectedAgent = routingResult.text.trim().toLowerCase();
-
-      // Manual override for order requests to ensure proper routing
-      const messageLower = message.toLowerCase();
-      let finalAgent = selectedAgent;
-
-      if (messageLower.includes('order') ||
-          messageLower.includes('want') ||
-          messageLower.includes('get me') ||
-          messageLower.includes('buy') ||
-          messageLower.includes('palak paneer') ||
-          messageLower.includes('chicken tikka') ||
-          messageLower.includes('butter chicken') ||
-          messageLower.includes('chana masala') ||
-          messageLower.includes('gulab jamun') ||
-          messageLower.includes('naan')) {
-        finalAgent = 'ordermanageragent';
-      }
-
-      // Route to appropriate agent based on AI decision (with manual override)
-      let agentResponse: string;
-
-      if (finalAgent.includes("menurecipeagent") || finalAgent.includes("menu")) {
-        const chat = ai.chat(menuRecipeAgent);
-        const result = await chat.send(`${message}${historyContext}`);
-        agentResponse = result.text;
-      } else if (finalAgent.includes("ordermanageragent") || finalAgent.includes("order")) {
-        const chat = ai.chat(orderManagerAgent);
-        const result = await chat.send(`${message}${historyContext}`);
-        agentResponse = result.text;
-      } else if (finalAgent.includes("chefagent") || finalAgent.includes("chef")) {
-        const chat = ai.chat(chefAgent);
-        const result = await chat.send(`${message}${historyContext}`);
-        agentResponse = result.text;
-      } else {
-        // Default to menu agent if routing is unclear
-        const chat = ai.chat(menuRecipeAgent);
-        const result = await chat.send(`${message}${historyContext}`);
-        agentResponse = result.text;
-      }
+      const result = await chat.send(fullContext);
+      const agentResponse = result.text;
 
       // Add assistant response to conversation history
       await addConversationMessage(userId, "assistant", agentResponse, {
         timestamp: new Date().toISOString(),
         requestId,
         step: "agent_response",
-        agent: finalAgent,
+        agent: "triageAgent",
       });
 
       return {
