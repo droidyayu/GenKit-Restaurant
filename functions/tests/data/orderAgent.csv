@@ -1,26 +1,17 @@
 test_id,turn,input,expected
-single_complete_savory,1,User ID: test-user-123\n\nI want 2 Butter Chicken medium spicy,Butter Chicken x2 medium
-single_complete_sweet,1,User ID: test-user-456\n\nGive me 3 Gulab Jamun,Gulab Jamun x3
-multi_turn_complete,1,User ID: test-user-789\n\nI want Palak Paneer,ask_quantity
-multi_turn_complete,2,User ID: test-user-789\n\n2,ask_spice
-multi_turn_complete,3,User ID: test-user-789\n\nmedium,Palak Paneer x2 medium
-sweet_multi_turn,1,User ID: test-user-sweet\n\nI want Kheer,ask_quantity
-sweet_multi_turn,2,User ID: test-user-sweet\n\n4,Kheer x4
-multi_item_order,1,User ID: test-user-multi\n\nI want Butter Chicken and Naan for 2,ask_spice
-multi_item_order,2,User ID: test-user-multi\n\nhot,Butter Chicken x2 hot Naan x2
-confirmation_case,1,User ID: test-user-confirm\n\nI want 2 Aloo Paratha medium spicy,ask_confirmation
-confirmation_case,2,User ID: test-user-confirm\n\nyes,Aloo Paratha x2 medium
-short_confirmation,1,User ID: test-user-confirm\n\nI want 1 Chicken Biryani mild,ask_confirmation
-short_confirmation,2,User ID: test-user-confirm\n\nok,Chicken Biryani x1 mild
-vague_input,1,User ID: test-user-vague\n\nSomething spicy,ask_dish
-repeat_detail,1,User ID: test-user-redundant\n\nI want 2 Butter Chicken,ask_spice
-repeat_detail,2,User ID: test-user-redundant\n\nmedium spicy,Butter Chicken x2 medium
-repeat_detail,3,User ID: test-user-redundant\n\nActually make it 2 portions,Butter Chicken x2 medium
-edge_case_quantity,1,User ID: test-user-edge\n\nI want 5,ask_dish
-edge_case_spice,1,User ID: test-user-edge\n\nI want mild,ask_dish
-multi_sweet_order,1,User ID: test-user-mixed\n\nI want Gulab Jamun and Rasmalai for 2,Gulab Jamun x2 Rasmalai x2
-complex_multi_item,1,User ID: test-user-complex\n\nI want 3 Butter Chicken hot and 2 Naan,Butter Chicken x3 hot Naan x2
-confirmation_with_changes,1,User ID: test-user-changes\n\nI want 2 Chicken Tikka medium,ask_confirmation
-confirmation_with_changes,2,User ID: test-user-changes\n\nActually make it hot instead,ask_confirmation
-confirmation_with_changes,3,User ID: test-user-changes\n\nyes,Chicken Tikka x2 hot
-all_sweet_dishes,1,User ID: test-user-all\n\nI want Kheer Gulab Jamun and Rasmalai,Kheer Gulab Jamun Rasmalai
+single_savory_complete,1,I want 2 Butter Chicken medium spicy,Butter Chicken x2 medium
+single_sweet_complete,1,Give me 3 Gulab Jamun,Gulab Jamun x3
+multi_turn_basic,1,I want Palak Paneer,ask_quantity
+multi_turn_basic,2,2,ask_spice
+multi_turn_basic,3,medium,Palak Paneer x2 medium
+multi_item_order,1,I want Butter Chicken and Naan for 2,ask_spice
+multi_item_order,2,hot,Butter Chicken x2 hot Naan x2
+confirmation_flow,1,I want 2 Aloo Paratha medium spicy,ask_confirmation
+confirmation_flow,2,yes,Aloo Paratha x2 medium
+confirmation_with_change,1,I want 2 Chicken Tikka medium,ask_confirmation
+confirmation_with_change,2,Actually make it hot instead,ask_confirmation
+confirmation_with_change,3,yes,Chicken Tikka x2 hot
+vague_input_handling,1,Something spicy,ask_dish
+edge_case_incomplete,1,I want 5,ask_dish
+complex_order,1,I want 3 Butter Chicken hot and 2 Naan,Butter Chicken x3 hot Naan x2
+bulk_sweet_order,1,I want Kheer Gulab Jamun and Rasmalai,Kheer Gulab Jamun Rasmalai

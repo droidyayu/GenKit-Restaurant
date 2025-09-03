@@ -1,0 +1,29 @@
+test_id,turn,input,expected_agent,expected_keyword
+menu_vegan_simple,1,I am vegan,menuRecipeAgent,Vegetarian
+menu_surprise_me,1,Surprise me,menuRecipeAgent,Appetizers
+menu_specials_today,1,What's special today?,menuRecipeAgent,Appetizers
+menu_paneer_dish,1,I want something with paneer,menuRecipeAgent,paneer
+menu_south_indian,1,Show me South Indian dishes,menuRecipeAgent,Soups
+menu_show_menu,1,Show me the menu,menuRecipeAgent,Appetizers
+menu_dietary_gluten_free,1,I need gluten free options,menuRecipeAgent,Gluten-Free
+menu_chef_recommendations,1,Chef's recommendations,menuRecipeAgent,Appetizers
+menu_healthy_options,1,Healthy options,menuRecipeAgent,Vegetarian
+menu_spicy_recommendation,1,Recommend me something spicy,menuRecipeAgent,spicy
+order_simple_butter_chicken,1,I want 2 Butter Chicken medium spicy,orderManagerAgent,created an order
+order_simple_gulab_jamun,1,Give me 3 Gulab Jamun,orderManagerAgent,placed your order
+order_multi_turn_palak_paneer,1,I want Palak Paneer,orderManagerAgent,How many
+order_multi_turn_palak_paneer,2,2,orderManagerAgent,spice level
+order_multi_turn_palak_paneer,3,medium,orderManagerAgent,created your order
+order_multi_item_with_quantity,1,I want Butter Chicken and Naan for 2,orderManagerAgent,spice level
+order_multi_item_with_quantity,2,hot,orderManagerAgent,created your order
+mixed_menu_then_order,1,Show me the menu,menuRecipeAgent,Appetizers
+mixed_menu_then_order,2,I want the Butter Chicken,orderManagerAgent,How many
+mixed_menu_then_order,3,2,orderManagerAgent,spice level
+mixed_menu_then_order,4,mild,orderManagerAgent,created your order
+edge_vague_tasty,1,Something tasty,menuRecipeAgent,Appetizers
+edge_incomplete_quantity,1,I want 5,orderManagerAgent,What dish
+edge_repetition,1,What do you have?,menuRecipeAgent,Appetizers
+edge_repetition,2,What do you have?,menuRecipeAgent,Appetizers
+edge_ambiguous_eat,1,I'm hungry,menuRecipeAgent,Appetizers
+edge_complex_order,1,I want 3 Butter Chicken hot and 2 Naan,orderManagerAgent,created an order
+edge_bulk_sweet_order,1,I want Kheer Gulab Jamun and Rasmalai,orderManagerAgent,how many servings

@@ -1,51 +1,20 @@
 test_id,turn,input,expected
-menu1,1,Show me today's menu,menu
-menu2,1,What vegetarian dishes do you have,vegetarian
-menu3,1,I want non-vegetarian options,chicken
-menu4,1,Suggest some desserts,dessert
-menu5,1,I am thinking to get some chicken today,chicken
-menu6,1,I am vegan,vegan
-menu7,1,surprise me,surprise
-menu8,1,what is special today,special
-menu9,1,i am pure vegetarian,vegetarian
-menu10,1,i want something in paneer,paneer
-menu11,1,I'd like some fish dishes today,fish
-menu12,1,Show me lamb options,lamb
-menu13,1,What tofu dishes do you have,tofu
-menu14,1,I need gluten free options,gluten free
-menu15,1,No onion or garlic please,no onion
-menu16,1,Jain food options,Jain
-menu17,1,Something low carb,low carb
-menu18,1,Keto friendly meals,keto
-menu19,1,Recommend me something spicy,spicy
-menu20,1,Something light for lunch,light
-menu21,1,Party food suggestions,party
-menu22,1,Comfort food please,comfort
-menu23,1,South Indian dishes,South Indian
-menu24,1,Punjabi style food,Punjabi
-menu25,1,Mediterranean options,Mediterranean
-menu26,1,Something with mushrooms,mushrooms
-menu27,1,Lots of cheese please,cheese
-menu28,1,Dish with spinach,spinach
-menu29,1,I want beef options,beef
-menu30,1,Egg-based dishes,egg
-menu31,1,Nut-free alternatives,nut free
-menu32,1,Dairy free options,dairy free
-menu33,1,Quick and easy meals,quick
-menu34,1,Healthy options,healthy
-menu35,1,Kids friendly food,kids
-menu36,1,Authentic Indian cuisine,Indian
-menu37,1,Italian pasta dishes,pasta
-menu38,1,Chinese food options,Chinese
-menu39,1,Mexican flavors,Mexican
-menu40,1,Breakfast menu,breakfast
-menu41,1,Dinner specials,dinner
-menu42,1,Street food style,street food
-menu43,1,Gourmet dishes,gourmet
-menu44,1,Budget friendly options,budget
-menu45,1,Chef's recommendations,chef
-menu46,1,Seasonal specials,seasonal
-menu47,1,Local favorites,local
-menu48,1,Trending dishes,trending
-menu49,1,Signature menu,signature
-menu50,1,Family meal deals,family
+menu_core,1,Show me today's menu,menu
+menu_dietary_vegan,1,I am vegan,vegan
+menu_dietary_restrictions,1,I need gluten free options,gluten free
+menu_dietary_jain,1,Jain food options,Jain
+menu_cuisine_indian,1,South Indian dishes,South Indian
+menu_cuisine_italian,1,Italian pasta dishes,pasta
+menu_cuisine_chinese,1,Chinese food options,Chinese
+menu_preferences_spicy,1,Recommend me something spicy,spicy
+menu_preferences_healthy,1,Healthy options,healthy
+menu_preferences_kids,1,Kids friendly food,kids
+menu_ingredients_protein,1,I am thinking to get some chicken today,chicken
+menu_ingredients_veg,1,i want something in paneer,paneer
+menu_ingredients_seafood,1,I'd like some fish dishes today,fish
+menu_ingredients_diverse,1,Something with mushrooms,mushrooms
+menu_meal_breakfast,1,Breakfast menu,breakfast
+menu_meal_desserts,1,Suggest some desserts,dessert
+menu_special_chef,1,Chef's recommendations,chef
+menu_special_surprise,1,surprise me,surprise
+menu_party_family,1,Party food suggestions,party

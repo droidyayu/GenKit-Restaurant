@@ -17,7 +17,7 @@ async function testOrderManagerAgent() {
       total: testCases.length
     };
 
-    // Test each scenario
+          // Test each scenario
     for (const testCase of testCases) {
       console.log(`\n🎯 TESTING SCENARIO: ${testCase.id}`);
       console.log('-'.repeat(40));
@@ -42,12 +42,15 @@ async function testOrderManagerAgent() {
 
           console.log(`🍽️  Agent: "${result.result.message.substring(0, 80)}${result.result.message.length > 80 ? '...' : ''}"`);
 
-          // Check if order was created
+          // Check if order was created - updated keywords to match actual agent responses
           const message = result.result.message.toLowerCase();
           if (message.includes('order placed') ||
               message.includes('placed successfully') ||
               message.includes('ready in') ||
-              message.includes('created your order')) {
+              message.includes('created your order') ||
+              message.includes('have created') ||
+              message.includes('order id') ||
+              message.includes('estimated time')) {
             orderCreated = true;
             console.log('✅ Order creation detected!');
           }

@@ -14,7 +14,8 @@
     "dev:terminal": "tsx src/terminal.ts",
     "test:order-agent": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-order-agent.js",
     "test:menu-agent": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-menu-agent.js",
-    "test:simple": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-script.js",
+    "test:kitchen-orchestrator": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-kitchen-orchestrator-flow.js",
+    "test:simple": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-kitchen-orchestrator-flow.js",
     "test:all": "npm run test:simple && npm run test:order-agent && npm run test:menu-agent",
     "test": "npm run test:all"
   },
