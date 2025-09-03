@@ -83,7 +83,7 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
 
       // Use triage agent to handle routing and get response
       console.log(`[TRIAGE_AGENT] Starting triage agent for user ${userId}, request ${requestId}`);
-      console.log(`[TRIAGE_AGENT] Available tools: menuRecipeAgent, orderManagerAgent`);
+      console.log("[TRIAGE_AGENT] Available tools: menuRecipeAgent, orderManagerAgent");
       const chat = ai.chat(triageAgent);
 
       // Create a structured context that includes both the current message and history
@@ -109,7 +109,7 @@ This is the first message in the conversation. Welcome to our Indian restaurant!
       const result = await chat.send(fullContext);
       const agentResponse = result.text;
       console.log(`[TRIAGE_AGENT] Received response from triage agent (length: ${agentResponse.length} chars)`);
-      console.log(`[TRIAGE_AGENT] Response preview: ${agentResponse.substring(0, 100)}${agentResponse.length > 100 ? '...' : ''}`);
+      console.log(`[TRIAGE_AGENT] Response preview: ${agentResponse.substring(0, 100)}${agentResponse.length > 100 ? "..." : ""}`);
 
       // Add assistant response to conversation history
       await addConversationMessage(userId, "assistant", agentResponse, {
