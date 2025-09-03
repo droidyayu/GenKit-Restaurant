@@ -1,0 +1,5 @@
+test_id,turn,input,expected
+menu1,1,Show me today's menu,menu
+menu2,1,What vegetarian dishes do you have,vegetarian
+menu3,1,I want non-vegetarian options,chicken
+menu4,1,Suggest some desserts,dessert

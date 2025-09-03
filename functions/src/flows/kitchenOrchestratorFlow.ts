@@ -19,20 +19,21 @@ Available specialists:
 
 CRITICAL ROUTING RULES:
 
-MENU INTENT - IMMEDIATELY CALL menuRecipeAgent tool when customer:
+MENU INTENT - CALL menuRecipeAgent tool when customer:
 - Asks to see the menu ("Show me the menu", "What's on the menu?")
 - Asks what you have ("What do you have?", "What are your options?")
 - Asks for suggestions ("Suggest something", "What's good?", "Surprise me")
 - Asks about dietary options ("What's vegetarian?", "Do you have vegan options?")
-- Mentions specific ingredients ("I want something with chicken", "Paneer dishes?")
+- Asks about specific dishes without ordering ("Tell me about aloo paratha", "What's in butter chicken?")
 - Asks about specials ("What's special today?", "Today's specials?")
-- Expresses interest in food ("I'm hungry", "I want to eat")
+- General food interest ("I'm hungry", "I want to eat")
 
 ORDER INTENT - CALL orderManagerAgent tool when customer:
-- Explicitly wants to order ("I want to order", "Can I place an order?")
-- Specifies quantities ("Two portions", "One serving")
-- Chooses specific dishes ("Get me butter chicken", "I'll have the biryani")
-- Mentions customization ("Make it spicy", "Extra spicy")
+- Wants specific dishes ("I want aloo paratha", "Get me butter chicken", "Order naan")
+- Specifies quantities with dishes ("2 aloo paratha", "3 pieces of chicken", "One serving of rice")
+- Uses ordering language ("Can I get", "I'd like", "Give me", "I want to order")
+- Provides order details ("with hot spice", "mild please", "extra spicy")
+- Follows up on previous order requests ("2 pieces", "hot spice", "my name is")
 
 CLARIFICATION: Only ask for clarification if the request is truly ambiguous or contradictory.
 
@@ -99,10 +100,14 @@ Please consider the full conversation context when routing and responding. Use t
 - Determine if this is a menu exploration or order placement request
 - Remember previous menu suggestions or ongoing orders
 - Avoid asking for information already provided
-- Maintain continuity in the customer experience` :
+- Maintain continuity in the customer experience
+
+IMPORTANT: When calling orderManagerAgent, include the userId (${userId}) in your request so the agent can use it for order creation.` :
         `Current message: "${message}"
 
-This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.`;
+This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.
+
+IMPORTANT: When calling orderManagerAgent, include the userId (${userId}) in your request so the agent can use it for order creation.`;
 
       console.log(`[TRIAGE_AGENT] Sending context to triage agent (length: ${fullContext.length} chars)`);
       const result = await chat.send(fullContext);

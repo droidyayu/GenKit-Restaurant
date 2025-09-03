@@ -11,7 +11,10 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "dev": "genkit start -- npx tsx --watch src/index.ts",
-    "dev:terminal": "tsx src/terminal.ts"
+    "dev:terminal": "tsx src/terminal.ts",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "test:watch": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --watch",
+    "test:coverage": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --coverage"
   },
   "engines": {
     "node": "22"
@@ -30,18 +33,44 @@
     "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/pdf-parse": "^1.1.4",
     "@typescript-eslint/eslint-plugin": "^5.12.0",
     "@typescript-eslint/parser": "^5.12.0",
     "cross-env": "^7.0.3",
+    "csv-parse": "^5.5.6",
     "eslint": "^8.9.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
     "firebase-functions-test": "^3.1.0",
     "genkit-cli": "^1.18.0",
+    "jest": "^29.7.0",
     "rimraf": "^6.0.1",
+    "ts-jest": "^29.1.4",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testEnvironmentOptions": {
+      "nodeOptions": "--experimental-vm-modules"
+    },
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.ts"],
+    "roots": ["<rootDir>/tests", "<rootDir>/src"],
+    "testMatch": ["**/__tests__/**/*.test.ts", "**/?(*.)+(spec|test).ts"],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/**/index.ts"
+    ],
+    "moduleFileExtensions": ["ts", "js"],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "private": true
 }

@@ -1,0 +1,11 @@
+test_id,turn,input,expected
+order1,1,I want Butter Chicken,ask_quantity
+order1,2,2,Butter Chicken x2
+order2,1,I want Aloo Paratha,ask_quantity
+order2,2,2 pcs,Aloo Paratha x2
+order3,1,I want Gulab Jamun,Gulab Jamun
+order4,1,I'd like to order Palak Paneer with 3 portions,Palak Paneer x3
+order5,1,Can I get 4 pieces of Chicken Tikka,ask_spice
+order5,2,mild,Chicken Tikka x4
+single1,1,Show me the menu,menu
+single2,1,What's available today,dish
