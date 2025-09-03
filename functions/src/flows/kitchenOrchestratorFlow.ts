@@ -5,12 +5,13 @@ import {menuRecipeAgent} from "../agents/menuRecipeAgent";
 
 // Define the triage agent that handles initial routing
 const triageAgent = ai.definePrompt({
-  name: 'triageAgent',
-  description: 'Triage Agent for Indian Restaurant - routes customer requests to menu and order specialists',
+  name: "triageAgent",
+  description: "Triage Agent for Indian Restaurant - routes customer requests to menu and order specialists",
   tools: [menuRecipeAgent, orderManagerAgent],
   system: `You are an AI customer service agent for an Indian restaurant.
 
-Greet customers warmly and determine how you can help them. Use the available tools to transfer to the most appropriate specialist agent based on the customer's INTENT and needs:
+Greet customers warmly and determine how you can help them. 
+Use the available tools to transfer to the most appropriate specialist agent based on the customer's INTENT and needs:
 
 Available specialists:
 1. menuRecipeAgent - For menu exploration, dish suggestions, availability checking, and recipe information
@@ -81,20 +82,21 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
       const chat = ai.chat(triageAgent);
 
       // Create a structured context that includes both the current message and history
-      const fullContext = history.length > 0
-        ? `Current message: "${message}"
+      const fullContext = history.length > 0 ?
+        `Current message: "${message}"
 
 Conversation history (last ${Math.min(history.length, 10)} messages):
 ${history.slice(-10).map((msg: any, index: number) =>
-  `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ? ` [${msg.metadata.step}]` : ''}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ''}`
-).join('\n')}
+    `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ? 
+    ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
+  ).join("\n")}
 
 Please consider the full conversation context when routing and responding. Use this history to:
 - Determine if this is a menu exploration or order placement request
 - Remember previous menu suggestions or ongoing orders
 - Avoid asking for information already provided
-- Maintain continuity in the customer experience`
-        : `Current message: "${message}"
+- Maintain continuity in the customer experience` :
+        `Current message: "${message}"
 
 This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.`;
 
