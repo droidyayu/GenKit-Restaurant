@@ -320,6 +320,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
+
+    
     override fun onCleared() {
         super.onCleared()
         // ViewModel is being destroyed
