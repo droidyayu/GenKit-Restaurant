@@ -1,5 +1,5 @@
 import {ai, z} from "../genkit";
-import {getConversationHistory, addConversationMessage, ConversationMessage} from "../data/conversationHistory";
+import {getConversationHistory, addConversationMessage} from "../data/conversationHistory";
 import {orderManagerAgent} from "../agents/orderManagerAgent";
 import {chefAgent} from "../agents/chefAgent";
 import {waiterAgent} from "../agents/waiterAgent";
@@ -40,12 +40,13 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
       const historyContext = history.length > 0 ?
         `\n\nPrevious conversation context:\n${history
           .slice(-10) // Last 10 messages
-          .map((msg: ConversationMessage) => `${msg.role}: ${msg.content}`)
+          .map((msg: any) => `${msg.role}: ${msg.content}`)
           .join("\n")}` :
         "";
 
       // Use AI to determine which agent to route to
-      const routingPrompt = `You are a routing agent for an Indian restaurant. Based on the user's message, determine which specialized agent should handle their request.
+      const routingPrompt = `You are a routing agent for an Indian restaurant. 
+      Based on the user's message, determine which specialized agent should handle their request.
 
 Available agents:
 1. menuRecipeAgent - for menu requests, food options, "what's available", "show menu", "vegetarian options"
@@ -65,27 +66,27 @@ Respond with ONLY the agent name (menuRecipeAgent, orderManagerAgent, chefAgent,
 
       // Route to appropriate agent based on AI decision
       let agentResponse: string;
-      
+
       if (selectedAgent.includes("menurecipeagent") || selectedAgent.includes("menu")) {
         const chat = ai.chat(menuRecipeAgent);
-        const result = await chat.send(message);
+        const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
       } else if (selectedAgent.includes("ordermanageragent") || selectedAgent.includes("order")) {
         const chat = ai.chat(orderManagerAgent);
-        const result = await chat.send(message);
+        const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
       } else if (selectedAgent.includes("chefagent") || selectedAgent.includes("chef")) {
         const chat = ai.chat(chefAgent);
-        const result = await chat.send(message);
+        const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
       } else if (selectedAgent.includes("waiteragent") || selectedAgent.includes("waiter")) {
         const chat = ai.chat(waiterAgent);
-        const result = await chat.send(message);
+        const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
       } else {
         // Default to menu agent if routing is unclear
         const chat = ai.chat(menuRecipeAgent);
-        const result = await chat.send(message);
+        const result = await chat.send(`${message}${historyContext}`);
         agentResponse = result.text;
       }
 

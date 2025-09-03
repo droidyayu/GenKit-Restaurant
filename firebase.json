@@ -25,7 +25,7 @@
   },
   "emulators": {
     "functions": {
-      "port": 5002
+      "port": 5005
     },
     "firestore": {
       "port": 8080
@@ -36,6 +36,9 @@
     "ui": {
       "enabled": true
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "auth": {
+      "port": 9099
+    }
   }
 }
