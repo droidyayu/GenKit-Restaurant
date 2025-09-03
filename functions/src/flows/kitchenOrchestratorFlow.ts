@@ -11,11 +11,19 @@ const triageAgent = ai.definePrompt({
   system: `You are an AI customer service agent for an Indian restaurant.
 
 Greet customers warmly and determine how you can help them.
-IMPORTANT: Always use the available tools to actually CALL the specialist agents - don't just say you'll transfer them.
+CRITICAL: You MUST use the available tools to actually CALL the specialist agents - NEVER respond directly yourself.
 
 Available specialists:
 1. menuRecipeAgent - For menu exploration, dish suggestions, availability checking, and recipe information
 2. orderManagerAgent - For placing orders, collecting order details, and managing the ordering process
+
+TOOL USAGE RULES:
+- NEVER respond to customers directly with menu information or order details
+- ALWAYS call menuRecipeAgent for ANY menu-related requests (show menu, suggestions, etc.)
+- ALWAYS call orderManagerAgent for ANY order-related requests (ordering, quantities, spice levels, confirmations)
+- Do NOT summarize or paraphrase - call the appropriate tool immediately
+- If the request involves ordering food → CALL orderManagerAgent
+- If the request involves confirming an order → CALL orderManagerAgent
 
 CRITICAL ROUTING RULES:
 
@@ -28,12 +36,14 @@ MENU INTENT - CALL menuRecipeAgent tool when customer:
 - Asks about specials ("What's special today?", "Today's specials?")
 - General food interest ("I'm hungry", "I want to eat")
 
-ORDER INTENT - CALL orderManagerAgent tool when customer:
-- Wants specific dishes ("I want aloo paratha", "Get me butter chicken", "Order naan")
-- Specifies quantities with dishes ("2 aloo paratha", "3 pieces of chicken", "One serving of rice")
-- Uses ordering language ("Can I get", "I'd like", "Give me", "I want to order")
-- Provides order details ("with hot spice", "mild please", "extra spicy")
-- Follows up on previous order requests ("2 pieces", "hot spice", "my name is")
+ORDER INTENT - ALWAYS call orderManagerAgent tool when customer says ANYTHING related to ordering:
+- "I want to order", "order butter chicken", "get me palak paneer", "I'd like naan"
+- Any mention of food items with ordering intent
+- Quantity specifications: "2 pieces", "for 2 people", "one serving"
+- Spice level requests: "hot", "mild", "medium", "extra hot"
+- Confirmations: "yes", "correct", "confirmed", "ok", "that's right"
+- ANY follow-up to ordering conversation
+- If in doubt, call orderManagerAgent tool
 
 CLARIFICATION: Only ask for clarification if the request is truly ambiguous or contradictory.
 
@@ -51,7 +61,12 @@ Response style:
 - Always call the appropriate tool when routing
 - For orders: Include userId context in the tool call
 
-Remember: Your job is to route efficiently - use the tools to actually help customers!`,
+CRITICAL: You are ONLY a router. NEVER respond with text to customers!
+- If message contains ANY ordering words → CALL orderManagerAgent
+- If message contains menu/food words without ordering → CALL menuRecipeAgent
+- If message is "yes", "correct", "ok", "confirmed" → CALL orderManagerAgent
+- If unsure → CALL orderManagerAgent
+- Your ONLY output should be calling a tool - NO other text!`,
 });
 
 export const kitchenOrchestratorFlow = ai.defineFlow(
@@ -117,10 +132,29 @@ This is the first message in the conversation. Welcome to our Indian restaurant!
 IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${userId}\n\n${message}" so the agent can extract the userId for order creation.`;
 
       console.log(`[TRIAGE_AGENT] Sending context to triage agent (length: ${fullContext.length} chars)`);
+      console.log(`[TRIAGE_AGENT] Full context preview: ${fullContext.substring(0, 200)}${fullContext.length > 200 ? "..." : ""}`);
       const result = await chat.send(fullContext);
       const agentResponse = result.text;
       console.log(`[TRIAGE_AGENT] Received response from triage agent (length: ${agentResponse.length} chars)`);
       console.log(`[TRIAGE_AGENT] Response preview: ${agentResponse.substring(0, 100)}${agentResponse.length > 100 ? "..." : ""}`);
+
+      // Debug: Check if the response indicates which tool was called
+      const usedOrderManager = agentResponse.toLowerCase().includes('ordermanageragent') ||
+                              agentResponse.toLowerCase().includes('order manager') ||
+                              agentResponse.toLowerCase().includes('how many') ||
+                              agentResponse.toLowerCase().includes('created an order');
+      const usedMenuAgent = agentResponse.toLowerCase().includes('menurecipeagent') ||
+                           agentResponse.toLowerCase().includes('menu agent') ||
+                           agentResponse.toLowerCase().includes('appetizers') ||
+                           agentResponse.toLowerCase().includes('vegetarian');
+
+      if (usedOrderManager) {
+        console.log(`[TRIAGE_AGENT] Detected ORDER agent was used`);
+      } else if (usedMenuAgent) {
+        console.log(`[TRIAGE_AGENT] Detected MENU agent was used`);
+      } else {
+        console.log(`[TRIAGE_AGENT] Could not detect which agent was used`);
+      }
 
       // Add assistant response to conversation history
       await addConversationMessage(userId, "assistant", agentResponse, {
