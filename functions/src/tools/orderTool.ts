@@ -85,13 +85,17 @@ export const getOrderStatusTool = ai.defineTool(
     }),
   },
   async () => {
+    console.log("[GET_ORDER_STATUS_TOOL] Called");
+
     if (!currentOrder) {
+      console.log("[GET_ORDER_STATUS_TOOL] No active order found");
       return {
         status: "NO_ACTIVE_ORDER",
         message: "No active order found",
       };
     }
 
+    console.log(`[GET_ORDER_STATUS_TOOL] Returning status for order ${currentOrder.orderId}: ${currentOrder.status} (${getProgressPercentage(currentOrder.status)}% complete)`);
     return {
       orderId: currentOrder.orderId,
       status: currentOrder.status,
@@ -139,7 +143,10 @@ export const completeOrderTool = ai.defineTool(
     inputSchema: z.object({}),
   },
   async () => {
+    console.log("[COMPLETE_ORDER_TOOL] Called");
+
     if (!currentOrder) {
+      console.log("[COMPLETE_ORDER_TOOL] No active order to complete");
       return {
         success: false,
         error: "No active order to complete",
@@ -149,7 +156,7 @@ export const completeOrderTool = ai.defineTool(
     const completedOrder = {...currentOrder};
     currentOrder = null; // Clear the current order
 
-    console.log(`[ORDER COMPLETED] ${completedOrder.orderId} has been completed and cleared`);
+    console.log(`[COMPLETE_ORDER_TOOL] Order ${completedOrder.orderId} completed and cleared`);
 
     return {
       success: true,

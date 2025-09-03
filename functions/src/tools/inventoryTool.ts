@@ -47,6 +47,8 @@ export const inventoryTool = ai.defineTool(
     }),
   },
   async ({category}: { category?: string }) => {
+    console.log(`[INVENTORY_TOOL] Called with category: ${category || "all"}`);
+
     if (category) {
       const categories = DYNAMIC_INVENTORY.reduce((acc, item) => {
         if (!acc[item.category]) {
@@ -56,9 +58,12 @@ export const inventoryTool = ai.defineTool(
         return acc;
       }, {} as Record<string, any[]>);
 
-      return categories[category] || [];
+      const result = categories[category] || [];
+      console.log(`[INVENTORY_TOOL] Returning ${result.length} items for category '${category}'`);
+      return result;
     }
 
+    console.log(`[INVENTORY_TOOL] Returning all ${DYNAMIC_INVENTORY.length} inventory items`);
     return DYNAMIC_INVENTORY;
   }
 );
@@ -74,18 +79,22 @@ export const ingredientDetailsTool = ai.defineTool(
     }),
   },
   async ({ingredientName}: { ingredientName?: string }) => {
+    console.log(`[INGREDIENT_DETAILS_TOOL] Called with ingredientName: ${ingredientName || "all"}`);
+
     if (ingredientName) {
       const ingredient = DYNAMIC_INVENTORY.find((item) =>
         item.ingredient.toLowerCase() === ingredientName.toLowerCase()
       );
 
       if (!ingredient) {
+        console.log(`[INGREDIENT_DETAILS_TOOL] Ingredient '${ingredientName}' not found`);
         return {
           ingredient: ingredientName,
           available: false,
           error: "Ingredient not found",
         };
       }
+      console.log(`[INGREDIENT_DETAILS_TOOL] Found ingredient '${ingredientName}': ${ingredient.quantity}${ingredient.unit}, available: ${ingredient.available}`);
       return ingredient;
     }
 
@@ -97,6 +106,7 @@ export const ingredientDetailsTool = ai.defineTool(
       return acc;
     }, {} as Record<string, any[]>);
 
+    console.log(`[INGREDIENT_DETAILS_TOOL] Returning summary for ${DYNAMIC_INVENTORY.length} total ingredients`);
     return {
       totalIngredients: DYNAMIC_INVENTORY.length,
       categories,
