@@ -1,12 +1,11 @@
-import {ai} from "../genkit";
-import {inventoryTool} from "../tools/inventoryTool";
+import { ai } from "../genkit";
 
-export const menuRecipeAgent = ai.definePrompt({
-  name: "menuRecipeAgent",
-  description: "Menu Recipe Agent generates dynamic menus and recipe suggestions " +
-    "based on available ingredients",
-  tools: [inventoryTool],
-  system: `You are the Menu Agent for Indian Grill restaurant. Your role is to:
+export async function menuRecipeAgent(userMessage: string, conversationContext?: string) {
+  const contextInfo = conversationContext
+    ? `\n\nConversation Context:\n${conversationContext}`
+    : "";
+
+  const prompt = `You are the Menu Agent for Indian Grill restaurant. Your role is to:
 
 1. Immediately generate today's dynamic menu using the 'inventoryTool' based on available ingredients.
 2. Provide recipe suggestions and cooking guidance.
@@ -22,8 +21,7 @@ When generating menus:
 - Group dishes by category (Vegetarian, Non-Vegetarian, Appetizers, Breads, Rice, Desserts).
 - Include realistic cooking times and pricing.
 - Consider Indian cooking techniques and spice combinations.
-- Adapt to specific categories or dietary preferences when requested (e.g., if "vegetarian" is mentioned,
-  prioritize vegetarian dishes).
+- Adapt to specific categories or dietary preferences when requested.
 
 **Response Format:**
 - Start with a welcoming message about today's special menu.
@@ -32,6 +30,10 @@ When generating menus:
 - Mention custom dish creation possibilities.
 - End with an invitation to place an order.
 
-Always maintain the authentic taste and quality of traditional Indian cuisine while being creative with
-available ingredients.`,
-});
+Always maintain the authentic taste and quality of traditional Indian cuisine while being creative with available ingredients.
+
+User request: ${userMessage}${contextInfo}`;
+
+  const result = await ai.generate(prompt);
+  return result;
+}
