@@ -26,22 +26,18 @@ function printResponse(response: {message: string}) {
 }
 
 async function getGreeting(): Promise<string> {
-  return "Hi there! Welcome to Bollywood Grill! I'm your Kitchen Agent, and it's great to have you. Need help with our delicious menu, placing an order, checking on your cooking, or even delivery? I coordinate our specialized agents for all of those areas, so let me know what you need!";
+  return `Hi there! Welcome to Bollywood Grill! I'm your Kitchen Agent, and it's great to have you. 
+  Need help with our delicious menu, placing an order, checking on your cooking, or even delivery? 
+  I coordinate our specialized agents for all of those areas, so let me know what you need!`;
 }
 
 // Main loop calling kitchen orchestrator flow directly
 async function main() {
-  const userId = "cli-user";
-
   const greeting = await getGreeting();
   console.log();
-  printColored("chef", greeting, COLORS.CHEF);
   console.log(`\n${COLORS.AGENT}🎭 Kitchen Multi-Agent System Active:${COLORS.RESET}`);
-  console.log("   • Kitchen Orchestrator - AI-powered routing and coordination");
-  console.log("   • Menu & Recipe Agent - Dynamic menu generation");
-  console.log("   • Order Manager Agent - Order lifecycle management");
-  console.log("   • Chef Agent - Cooking execution and timing");
-  console.log("   • Waiter Agent - Customer communication and delivery");
+
+  printColored("chef", greeting, COLORS.CHEF);
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
