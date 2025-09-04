@@ -3,6 +3,7 @@ package com.genkit.restaurant.ui.compose
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import com.genkit.restaurant.data.model.SessionData
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -77,38 +78,15 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(Unit) {
             delay(SPLASH_DELAY)
 
-            val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val userId = sharedPreferences.getString(KEY_USER_ID, null)
-            val sessionId = sharedPreferences.getString(KEY_SESSION_ID, null)
-            val appName = sharedPreferences.getString(KEY_APP_NAME, null)
-
-            startDestination = if (isSessionValid(userId, sessionId, appName)) {
-                "chat"
-            } else {
-                "auth"
-            }
+            // Always start with auth screen - user manually starts chat
+            startDestination = "auth"
 
             isLoading = false
         }
 
         // Listen for auth state changes
         LaunchedEffect(firebaseAuth.currentUser) {
-            val user = firebaseAuth.currentUser
-            currentUser = user
-            if (user != null && startDestination == "auth") {
-                // User is authenticated, create session and go to chat
-                authViewModel.createSession(user.uid)
-            }
-        }
-
-        // Listen for auth view model state changes
-        val authState by authViewModel.uiState.collectAsState()
-        LaunchedEffect(authState) {
-            if (authState is AuthUiState.Success && startDestination == "auth") {
-                navController.navigate("chat") {
-                    popUpTo("auth") { inclusive = true }
-                }
-            }
+            currentUser = firebaseAuth.currentUser
         }
 
         if (isLoading) {
@@ -125,21 +103,46 @@ class MainActivity : ComponentActivity() {
                             AuthUI.getInstance().signOut(context).addOnCompleteListener {
                                 // Clear session data
                                 clearSessionData(context)
-                                navController.navigate("auth") {
-                                    popUpTo("chat") { inclusive = true }
+                            }
+                        },
+                        onStartChatClick = {
+                            // Create session data first, then navigate to ChatActivity
+                            android.util.Log.d("MainActivity", "Start Chat button clicked")
+                            try {
+                                val user = firebaseAuth.currentUser
+                                if (user != null) {
+                                    android.util.Log.d("MainActivity", "Creating session for user: ${user.uid}")
+
+                                    // Create session data
+                                    val sessionData = SessionData(
+                                        userId = user.uid,
+                                        sessionId = "session_${System.currentTimeMillis()}",
+                                        appName = "restaurant-chat"
+                                    )
+
+                                    // Save session data to SharedPreferences
+                                    val sharedPreferences = context.getSharedPreferences("restaurant_chat_prefs", Context.MODE_PRIVATE)
+                                    sharedPreferences.edit()
+                                        .putString("user_id", sessionData.userId)
+                                        .putString("session_id", sessionData.sessionId)
+                                        .putString("app_name", sessionData.appName)
+                                        .apply()
+
+                                    android.util.Log.d("MainActivity", "Session data saved, launching ChatActivity")
+
+                                    // Launch ChatActivity
+                                    val intent = Intent(context, com.genkit.restaurant.ui.ChatActivity::class.java)
+                                    context.startActivity(intent)
+                                    android.util.Log.d("MainActivity", "Started ChatActivity successfully")
+                                    // Don't finish MainActivity so user can return to auth screen
+                                } else {
+                                    android.util.Log.w("MainActivity", "No authenticated user found")
                                 }
+                            } catch (e: Exception) {
+                                android.util.Log.e("MainActivity", "Error starting ChatActivity", e)
                             }
                         }
                     )
-                }
-                composable("chat") {
-                    // Navigate to ChatActivity for full chat functionality
-                    LaunchedEffect(Unit) {
-                        val intent = Intent(context, com.genkit.restaurant.ui.ChatActivity::class.java)
-                        context.startActivity(intent)
-                        // Finish MainActivity to prevent going back
-                        (context as? android.app.Activity)?.finish()
-                    }
                 }
             }
         }
@@ -148,7 +151,8 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun AuthScreen(
         onSignInClick: () -> Unit,
-        onSignOutClick: () -> Unit
+        onSignOutClick: () -> Unit,
+        onStartChatClick: () -> Unit
     ) {
         val currentUser = firebaseAuth.currentUser
 
@@ -182,6 +186,18 @@ class MainActivity : ComponentActivity() {
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
+
+                    Button(
+                        onClick = onStartChatClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("Start Chat")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedButton(
                         onClick = onSignOutClick,
