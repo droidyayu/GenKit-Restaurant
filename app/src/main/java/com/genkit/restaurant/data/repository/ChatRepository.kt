@@ -212,13 +212,21 @@ class ChatRepository(private val context: Context) {
                 .await()
 
             val response = result.data as? Map<*, *>
-            val responseText = response?.get("message") as? String ?: "I'm sorry, I couldn't process your request."
+            val responseText = (response?.get("message") as? String)?.trim()?.takeIf { it.isNotEmpty() }
+                ?: (response?.get("text") as? String)?.trim()?.takeIf { it.isNotEmpty() }
+                ?: (response?.get("response") as? String)?.trim()?.takeIf { it.isNotEmpty() }
+                ?: "I'm sorry, I couldn't process your request. Please try again."
 
             Logger.logMessage("RECEIVED_FIREBASE", responseText)
 
+            // Extract agent name from response or use dynamic name
+            val agentName = response?.get("agentName") as? String
+                ?: response?.get("agent") as? String
+                ?: "Restaurant Assistant"
+
             val agentResponse = AgentResponse(
                 text = responseText,
-                agentName = "Kitchen Assistant"
+                agentName = agentName
             )
 
             Result.success(agentResponse)

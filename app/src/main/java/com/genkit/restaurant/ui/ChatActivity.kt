@@ -59,8 +59,11 @@ class ChatActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Logger.logLifecycle("ChatActivity", "onCreate", "Starting chat activity initialization")
-        
+
         setContentView(R.layout.activity_chat)
+
+        // Setup custom action bar with back button
+        setupActionBar()
 
         // Initialize Firebase Auth
         firebaseAuth = FirebaseAuth.getInstance()
@@ -145,7 +148,7 @@ class ChatActivity : AppCompatActivity() {
             Logger.logUiEvent("CANCEL_BUTTON_CLICKED", "ChatActivity")
             viewModel.cancelCurrentRequest()
         }
-        
+
         buttonNewOrder.setOnClickListener {
             Logger.logUiEvent("NEW_ORDER_BUTTON_CLICKED", "ChatActivity")
             startNewOrder()
@@ -368,7 +371,21 @@ class ChatActivity : AppCompatActivity() {
         editTextMessage.setText("")
         editTextMessage.hint = getString(R.string.type_message_homepage)
     }
-    
+
+    /**
+     * Setup custom action bar with back button
+     */
+    private fun setupActionBar() {
+        // Enable action bar and set custom view
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
+            setDisplayShowTitleEnabled(true)
+            title = "Indian Grill"
+        }
+    }
+
+
     /**
      * Navigate to MainActivity when session is invalid
      */
@@ -382,6 +399,18 @@ class ChatActivity : AppCompatActivity() {
     override fun onBackPressed() {
         // Navigate back to MainActivity when user presses back
         navigateToMainActivity()
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> {
+                // Handle action bar back button click
+                Logger.logUiEvent("ACTION_BAR_BACK_CLICKED", "ChatActivity")
+                navigateToMainActivity()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
     
     override fun onSaveInstanceState(outState: Bundle) {

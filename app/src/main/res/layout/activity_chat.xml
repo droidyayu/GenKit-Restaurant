@@ -145,10 +145,14 @@
         android:layout_weight="1"
         android:padding="16dp"
         android:clipToPadding="false"
-        android:scrollbars="none"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="true"
+        android:scrollbarFadeDuration="300"
         tools:listitem="@layout/item_message_user"
         android:contentDescription="@string/content_desc_chat_history"
-        android:importantForAccessibility="yes" />
+        android:importantForAccessibility="yes"
+        android:overScrollMode="always"
+        android:stackFromBottom="true" />
 
     <!-- Connection status -->
     <TextView
@@ -175,7 +179,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/background">
+        android:background="@color/background"
+        android:minHeight="72dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -186,20 +191,20 @@
             <EditText
                 android:id="@+id/editTextMessage"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:hint="@string/type_message_homepage"
                 android:inputType="textMultiLine|textCapSentences"
                 android:maxLines="4"
-                android:minHeight="48dp"
-                android:padding="16dp"
+                android:padding="12dp"
                 android:background="@drawable/edit_text_background"
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_muted"
                 android:contentDescription="@string/content_desc_message_input"
-                android:importantForAccessibility="yes" />
+                android:importantForAccessibility="yes"
+                android:gravity="center_vertical" />
 
             <ImageButton
                 android:id="@+id/buttonSend"

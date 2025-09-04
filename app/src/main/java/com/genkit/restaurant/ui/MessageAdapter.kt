@@ -112,18 +112,19 @@ class MessageAdapter(context: android.content.Context) : RecyclerView.Adapter<Re
         }
 
         private fun getAgentDisplayName(agentName: String?): String {
-            if (agentName.isNullOrBlank()) return ""
+            if (agentName.isNullOrBlank()) return "🏪 Kitchen"
 
             return when {
                 agentName.contains("Chef", ignoreCase = true) -> "👨‍🍳 Chef"
                 agentName.contains("Menu", ignoreCase = true) -> "📋 Menu Agent"
                 agentName.contains("Order", ignoreCase = true) -> "📝 Order Agent"
                 agentName.contains("Waiter", ignoreCase = true) -> "🧾 Waiter"
-                agentName.contains("Kitchen", ignoreCase = true) -> "🏪 Kitchen"
+                agentName.contains("Kitchen", ignoreCase = true) -> "🏪 Kitchen Assistant"
                 agentName.contains("Inventory", ignoreCase = true) -> "📦 Inventory"
                 agentName.contains("Delivery", ignoreCase = true) -> "🚚 Delivery"
                 agentName.contains("root", ignoreCase = true) -> "🤖 Assistant"
                 agentName.contains("Triage", ignoreCase = true) -> "🎯 Triage"
+                agentName.contains("Restaurant", ignoreCase = true) -> "🏪 $agentName"
                 else -> "🤖 $agentName"
             }
         }
