@@ -30,6 +30,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.genkit.restaurant.data.model.Message
 import com.genkit.restaurant.data.model.SessionData
@@ -69,12 +71,10 @@ fun ChatScreen(
         }
     }
     
-    // Status bar padding is handled by the 24.dp padding below
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 24.dp) // Add padding for status bar
+            .windowInsetsPadding(WindowInsets.statusBars) // Proper status bar padding
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
@@ -166,16 +166,16 @@ private fun EnhancedChatHeader(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp),
+            .shadow(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF1E1E1E)
         ),
-        shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -186,7 +186,7 @@ private fun EnhancedChatHeader(
                 // Restaurant logo/icon
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(40.dp)
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(Color(0xFFFF6B35), Color(0xFFE55100))
@@ -199,31 +199,31 @@ private fun EnhancedChatHeader(
                         imageVector = Icons.Default.Restaurant,
                         contentDescription = "Restaurant",
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
                         text = "Indian Grill",
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Status indicator dot
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
+                                .size(6.dp)
                                 .background(
                                     when (uiState) {
                                         is ChatUiState.Loading, is ChatUiState.Typing -> Color(0xFF4CAF50)
@@ -233,9 +233,9 @@ private fun EnhancedChatHeader(
                                     CircleShape
                                 )
                         )
-                        
-                        Spacer(modifier = Modifier.width(6.dp))
-                        
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
                         Text(
                             text = when (uiState) {
                                 is ChatUiState.Loading -> "Processing..."
@@ -263,7 +263,7 @@ private fun EnhancedChatHeader(
                     exit = scaleOut() + fadeOut()
                 ) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(16.dp),
                         color = Color(0xFFFF6B35),
                         strokeWidth = 2.dp
                     )
@@ -275,105 +275,105 @@ private fun EnhancedChatHeader(
 
 @Composable
 private fun EnhancedWelcomeScreen(onSuggestionClick: (String) -> Unit) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
     ) {
         // Welcome card - always visible
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(16.dp, RoundedCornerShape(24.dp)),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E1E1E)
-                ),
-                shape = RoundedCornerShape(24.dp)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .shadow(8.dp, RoundedCornerShape(16.dp)),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1E1E1E)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Animated chef icon
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(Color(0xFFFF6B35), Color(0xFFE55100))
-                                ),
-                                shape = CircleShape
+                // Animated chef icon
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(Color(0xFFFF6B35), Color(0xFFE55100))
                             ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Restaurant,
-                            contentDescription = "Chef",
-                            tint = Color.White,
-                            modifier = Modifier.size(40.dp)
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    Text(
-                        text = "👋 Welcome to GenKit Restaurant!",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "I'm your AI kitchen assistant. I can help you with:",
-                        fontSize = 16.sp,
-                        color = Color(0xFFB0B0B0),
-                        textAlign = TextAlign.Center,
-                        lineHeight = 22.sp
-                    )
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Quick action buttons
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.horizontalScroll(rememberScrollState())
-                    ) {
-                        SuggestionChip(
-                            onClick = { onSuggestionClick("Show me the menu") },
-                            label = { Text("Show me the menu", fontSize = 12.sp) },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = Color(0xFF2A2A2A),
-                                labelColor = Color.White
-                            )
-                        )
-
-                        SuggestionChip(
-                            onClick = { onSuggestionClick("I want to order something") },
-                            label = { Text("I want to order something", fontSize = 12.sp) },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = Color(0xFF2A2A2A),
-                                labelColor = Color.White
-                            )
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text(
-                        text = "Type your message below to get started! 👇",
-                        fontSize = 14.sp,
-                        color = Color(0xFF888888),
-                        textAlign = TextAlign.Center
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Restaurant,
+                        contentDescription = "Chef",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "👋 Welcome to GenKit Restaurant!",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "I'm your AI kitchen assistant. I can help you with:",
+                    fontSize = 14.sp,
+                    color = Color(0xFFB0B0B0),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+                    
+                // Quick action buttons
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SuggestionChip(
+                        onClick = { onSuggestionClick("Show me the menu") },
+                        label = { Text("Show me the menu", fontSize = 12.sp) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = Color(0xFF2A2A2A),
+                            labelColor = Color.White
+                        )
+                    )
+
+                    SuggestionChip(
+                        onClick = { onSuggestionClick("I want to order something") },
+                        label = { Text("I want to order something", fontSize = 12.sp) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = Color(0xFF2A2A2A),
+                            labelColor = Color.White
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Type your message below to get started! 👇",
+                    fontSize = 12.sp,
+                    color = Color(0xFF888888),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
+}
 
 @Composable
 private fun EnhancedMessageItem(message: Message) {
@@ -398,29 +398,30 @@ private fun EnhancedUserMessageItem(message: Message) {
         Card(
             modifier = Modifier
                 .widthIn(max = 280.dp)
-                .shadow(4.dp, RoundedCornerShape(20.dp)),
+                .shadow(2.dp, RoundedCornerShape(16.dp)),
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFFFF6B35)
             ),
             shape = RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = 20.dp,
-                bottomEnd = 6.dp
+                topStart = 16.dp,
+                topEnd = 16.dp,
+                bottomStart = 16.dp,
+                bottomEnd = 4.dp
             )
         ) {
             Text(
                 text = message.content.also {
                     android.util.Log.d("ChatScreen", "User message content: '$it'")
                 },
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(12.dp),
                 color = Color.White,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 14.sp
             )
         }
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
+
         // User avatar
         Box(
             modifier = Modifier
@@ -435,7 +436,7 @@ private fun EnhancedUserMessageItem(message: Message) {
                 imageVector = Icons.Default.Person,
                 contentDescription = "User",
                 tint = Color.White,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(16.dp)
             )
         }
     }
@@ -463,45 +464,46 @@ private fun EnhancedAgentMessageItem(message: Message) {
                 imageVector = Icons.Default.Restaurant,
                 contentDescription = "Chef",
                 tint = Color.White,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(16.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
+
         Column(
-            modifier = Modifier.weight(1f) // This makes the column take remaining space
+            modifier = Modifier.weight(1f)
         ) {
             // Agent name with enhanced styling
             Text(
                 text = message.agentName ?: "🏪 Restaurant",
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFFFF6B35),
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
-            
+
             Card(
                 modifier = Modifier
-                    .fillMaxWidth() // Full width instead of widthIn
-                    .shadow(4.dp, RoundedCornerShape(20.dp)),
+                    .fillMaxWidth()
+                    .shadow(2.dp, RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(
                     containerColor = Color(0xFF2A2A2A)
                 ),
                 shape = RoundedCornerShape(
-                    topStart = 6.dp,
-                    topEnd = 20.dp,
-                    bottomStart = 20.dp,
-                    bottomEnd = 20.dp
+                    topStart = 4.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp
                 )
             ) {
                 Text(
                     text = message.content.also {
                         android.util.Log.d("ChatScreen", "Agent message content: '$it', agent: ${message.agentName}")
                     },
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(12.dp),
                     color = TextPrimary,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 14.sp
                 )
             }
         }
@@ -520,7 +522,7 @@ private fun EnhancedChatInput(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp),
+            .shadow(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF1E1E1E)
         ),
@@ -529,7 +531,7 @@ private fun EnhancedChatInput(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(16.dp)
         ) {
             // Action buttons for different states
             AnimatedVisibility(
@@ -540,7 +542,7 @@ private fun EnhancedChatInput(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                        .padding(bottom = 16.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     when (uiState) {
@@ -595,7 +597,7 @@ private fun EnhancedChatInput(
                     onValueChange = onMessageTextChange,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = 12.dp),
+                        .padding(end = 8.dp),
                     placeholder = { 
                         Text(
                             "Ask me anything about our menu, place an order, or get kitchen updates...",
@@ -644,14 +646,14 @@ private fun TypingIndicator() {
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .shadow(4.dp, RoundedCornerShape(20.dp)),
+            .shadow(2.dp, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF2A2A2A)
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Chef avatar
@@ -673,13 +675,14 @@ private fun TypingIndicator() {
                     modifier = Modifier.size(12.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             Text(
                 text = "Kitchen is thinking...",
                 color = TextPrimary,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 14.sp
             )
             
             Spacer(modifier = Modifier.width(8.dp))
