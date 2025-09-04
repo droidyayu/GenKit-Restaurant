@@ -26,6 +26,21 @@
             tools:text="I can help you with your pizza order. What size would you like?"
             android:importantForAccessibility="yes" />
 
+        <!-- Agent name indicator -->
+        <TextView
+            android:id="@+id/textViewAgentName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:textStyle="italic"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="end"
+            android:visibility="gone"
+            tools:text="👨‍🍳 Chef Agent"
+            tools:visibility="visible"
+            android:importantForAccessibility="yes" />
+
     </LinearLayout>
 
 </LinearLayout>
