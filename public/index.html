@@ -237,6 +237,23 @@
       text-decoration: underline;
     }
 
+    /* Agent indicator styling - subtle display */
+    .agent-indicator {
+      font-size: 10px;
+      color: #666;
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px solid #e9ecef;
+      text-align: right;
+      font-weight: 500;
+      opacity: 0.7;
+      letter-spacing: 0.3px;
+    }
+
+    .agent-indicator:hover {
+      opacity: 1;
+    }
+
     /* For user messages, make links white */
     .message.user .message-bubble a {
       color: #e8f4fd;
@@ -606,7 +623,19 @@
           messageInput.focus();
     }
 
-    function addMessage(content, isUser = false) {
+    function getAgentDisplayName(agentName) {
+      const agentNames = {
+        'menuRecipeAgent': '👨‍🍳 Chef',
+        'orderManagerAgent': '📝 Order Manager',
+        'waiterAgent': '🧾 Waiter',
+        'kitchenOrchestratorFlow': '🏪 Restaurant',
+        'triageAgent': '🎯 Triage',
+        'unknown': '🤖 AI Assistant'
+      };
+      return agentNames[agentName] || agentName;
+    }
+
+    function addMessage(content, isUser = false, agentName = null) {
       const messages = document.getElementById('chatMessages');
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user' : 'kitchen'}`;
@@ -623,6 +652,14 @@
           bubble.textContent = content;
         } else {
           bubble.innerHTML = marked.parse(content);
+        }
+
+        // Add subtle agent indicator for kitchen messages
+        if (!isUser && agentName) {
+          const agentIndicator = document.createElement('div');
+          agentIndicator.className = 'agent-indicator';
+          agentIndicator.textContent = getAgentDisplayName(agentName);
+          bubble.appendChild(agentIndicator);
         }
 
           messageDiv.appendChild(avatar);
@@ -710,7 +747,8 @@
         console.log('Response data:', response.data);
 
           hideTypingIndicator();
-        addMessage(response.data.message || 'No response from kitchen', false);
+        const agentName = response.data.agent || 'unknown';
+        addMessage(response.data.message || 'No response from kitchen', false, agentName);
 
         } catch (error) {
           hideTypingIndicator();
