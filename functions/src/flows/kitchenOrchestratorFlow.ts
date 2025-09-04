@@ -7,12 +7,12 @@ import {waiterAgent} from "../agents/waiterAgent";
 // Define the triage agent that handles initial routing
 const triageAgent = ai.definePrompt({
   name: "triageAgent",
-  description: "Triage Agent for Indian Restaurant - routes customer requests to menu, order, and status specialists",
+  description: "Triage Agent for Indian Restaurant - routes to specialist agents",
   tools: [menuRecipeAgent, orderManagerAgent, waiterAgent],
   system: `You are an AI customer service agent for an Indian restaurant.
 
 Greet customers warmly and determine how you can help them.
-CRITICAL: You MUST use the available tools to actually CALL the specialist agents - NEVER respond directly yourself.
+CRITICAL: You MUST use the available specialist agents to handle customer requests - NEVER respond directly yourself.
 
 Available specialists:
 1. menuRecipeAgent - For menu exploration, dish suggestions, availability checking, and recipe information
@@ -20,44 +20,43 @@ Available specialists:
 3. waiterAgent - For order status inquiries, delivery updates, and customer service follow-ups
 
 TOOL USAGE RULES:
-- NEVER respond to customers directly with menu information or order details
-- ALWAYS call menuRecipeAgent for ANY menu-related requests (show menu, suggestions, etc.)
-- ALWAYS call orderManagerAgent for ANY order-related requests (ordering, quantities, spice levels, confirmations)
-- ALWAYS call waiterAgent for ANY status/delivery inquiries (order status, where's my food, how long, etc.)
-- Do NOT summarize or paraphrase - call the appropriate tool immediately
-- If the request involves ordering food → CALL orderManagerAgent
-- If the request involves confirming an order → CALL orderManagerAgent
-- If the request involves checking status → CALL waiterAgent
+- Use menuRecipeAgent for ANY menu-related requests (show menu, suggestions, dietary options, etc.)
+- Use orderManagerAgent for ANY order-related requests (ordering, quantities, spice levels, confirmations)
+- Use waiterAgent for ANY status/delivery inquiries (order status, where's my food, how long, etc.)
+- Do NOT summarize or paraphrase - use the appropriate specialist immediately
+- If the request involves ordering food → USE orderManagerAgent
+- If the request involves confirming an order → USE orderManagerAgent
+- If the request involves checking status → USE waiterAgent
+- If the request involves menu exploration → USE menuRecipeAgent
 
-CRITICAL ROUTING RULES:
+CRITICAL SPECIALIST ROUTING PATTERNS:
 
-MENU INTENT - CALL menuRecipeAgent tool when customer:
+🎯 MENU INTENT - Use menuRecipeAgent when customer:
 - Asks to see the menu ("Show me the menu", "What's on the menu?")
 - Asks what you have ("What do you have?", "What are your options?")
 - Asks for suggestions ("Suggest something", "What's good?", "Surprise me")
-- Asks about dietary options ("What's vegetarian?", "Do you have vegan options?")
+- Asks about dietary options ("What's vegetarian?", "Do you have vegan options?", "I am vegan")
 - Asks about specific dishes without ordering ("Tell me about aloo paratha", "What's in butter chicken?")
 - Asks about specials ("What's special today?", "Today's specials?")
 - General food interest ("I'm hungry", "I want to eat")
+- Dietary preferences ("I am vegan", "I need gluten-free", "vegetarian options")
 
-ORDER INTENT - ALWAYS call orderManagerAgent tool when customer says ANYTHING related to ordering:
+🛒 ORDER INTENT - Use orderManagerAgent when customer says ANYTHING related to ordering:
 - "I want to order", "order butter chicken", "get me palak paneer", "I'd like naan"
 - Any mention of food items with ordering intent
 - Quantity specifications: "2 pieces", "for 2 people", "one serving"
 - Spice level requests: "hot", "mild", "medium", "extra hot"
 - Confirmations: "yes", "correct", "confirmed", "ok", "that's right"
 - ANY follow-up to ordering conversation
-- If in doubt, call orderManagerAgent tool
+- If in doubt, use orderManagerAgent
 
-WAITER INTENT - ALWAYS call waiterAgent tool when customer asks about status or delivery:
+👨‍🍳 WAITER INTENT - Use waiterAgent when customer asks about status or delivery:
 - "Where's my order?", "How long will it take?", "Ready yet?"
 - "What's the status of my order?", "When will my food be here?"
 - "Is my order ready?", "How much longer?", "Delivery status"
 - "What's taking so long?", "I'm waiting for my food"
 - "Can you check on my order?", "Update on my order"
 - Any follow-up questions about existing orders (not placing new ones)
-
-CLARIFICATION: Only ask for clarification if the request is truly ambiguous or contradictory.
 
 CRITICAL USERID CONTEXT:
 - When calling orderManagerAgent, ALWAYS include the userId in the request
@@ -72,15 +71,15 @@ Response style:
 - Route immediately when intent is clear - don't delay
 - Use conversation history to maintain context
 - Don't repeat information already discussed
-- Always call the appropriate tool when routing
-- For orders: Include userId context in the tool call
+- Always use the appropriate specialist when routing
+- For orders: Include userId context in the agent call
 
-CRITICAL: You are ONLY a router. NEVER respond with text to customers!
-- If message contains ANY ordering words → CALL orderManagerAgent
-- If message contains menu/food words without ordering → CALL menuRecipeAgent
-- If message is "yes", "correct", "ok", "confirmed" → CALL orderManagerAgent
-- If unsure → CALL orderManagerAgent
-- Your ONLY output should be calling a tool - NO other text!`,
+CRITICAL: You are ONLY a router. Your ONLY output should be using specialist agents - NO direct text responses to customers!
+- If message contains ANY ordering words → USE orderManagerAgent
+- If message contains menu/food words without ordering → USE menuRecipeAgent
+- If message is "yes", "correct", "ok", "confirmed" → USE orderManagerAgent
+- If unsure → USE orderManagerAgent
+- Your ONLY output should be calling a specialist agent - NO other text!`,
 });
 
 export const kitchenOrchestratorFlow = ai.defineFlow(
@@ -117,19 +116,27 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
         step: "user_input",
       });
 
-      // Use triage agent to handle routing and get response
+            // Use triage agent to handle routing and get response
       console.log(`[TRIAGE_AGENT] Starting triage agent for user ${userId}, request ${requestId}`);
-      console.log("[TRIAGE_AGENT] Available tools: menuRecipeAgent, orderManagerAgent, waiterAgent");
+      console.log("[TRIAGE_AGENT] Available specialists: menuRecipeAgent, orderManagerAgent, waiterAgent");
       const chat = ai.chat(triageAgent);
 
       // Create a structured context that includes both the current message and history
+      // History is already sorted newest-first, so we reverse it for chronological order
+      const chronologicalHistory = history.slice(-10).reverse();
+      console.log(`[HISTORY] Retrieved ${history.length} total messages, using ${chronologicalHistory.length} in chronological order (oldest to newest)`);
+      if (chronologicalHistory.length > 0) {
+        console.log(`[HISTORY] First message: "${chronologicalHistory[0].content.substring(0, 50)}..." (${chronologicalHistory[0].timestamp})`);
+        console.log(`[HISTORY] Last message: "${chronologicalHistory[chronologicalHistory.length - 1].content.substring(0, 50)}..." (${chronologicalHistory[chronologicalHistory.length - 1].timestamp})`);
+      }
+
       const fullContext = history.length > 0 ?
         `Current message: "${message}"
 
-Conversation history (last ${Math.min(history.length, 10)} messages):
-${history.slice(-10).map((msg: any, index: number) =>
-    `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ?
-      ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
+Conversation history (chronological order - oldest to newest):
+${chronologicalHistory.map((msg: any, index: number) =>
+  `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ?
+    ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
   ).join("\n")}
 
 Please consider the full conversation context when routing and responding. Use this history to:
@@ -152,7 +159,7 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
       console.log(`[TRIAGE_AGENT] Received response from triage agent (length: ${agentResponse.length} chars)`);
       console.log(`[TRIAGE_AGENT] Response preview: ${agentResponse.substring(0, 100)}${agentResponse.length > 100 ? "..." : ""}`);
 
-      // Debug: Check if the response indicates which tool was called
+      // Debug: Check which agent was used
       const usedOrderManager = agentResponse.toLowerCase().includes('ordermanageragent') ||
                               agentResponse.toLowerCase().includes('order manager') ||
                               agentResponse.toLowerCase().includes('how many') ||
@@ -178,12 +185,18 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
         console.log(`[TRIAGE_AGENT] Could not detect which agent was used`);
       }
 
+      // Determine which agent was used for metadata
+      let specialistAgent = "unknown";
+      if (usedOrderManager) specialistAgent = "orderManagerAgent";
+      else if (usedMenuAgent) specialistAgent = "menuRecipeAgent";
+      else if (usedWaiterAgent) specialistAgent = "waiterAgent";
+
       // Add assistant response to conversation history
       await addConversationMessage(userId, "assistant", agentResponse, {
         timestamp: new Date().toISOString(),
         requestId,
         step: "agent_response",
-        agent: "triageAgent",
+        agent: specialistAgent,
       });
 
       return {

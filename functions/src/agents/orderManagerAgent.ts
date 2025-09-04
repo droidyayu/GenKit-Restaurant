@@ -1,4 +1,4 @@
-import {ai, z} from "../genkit";
+import {ai} from "../genkit";
 import {createOrderTool} from "../tools/orderTool";
 import {inventoryTool} from "../tools/inventoryTool";
 
@@ -93,26 +93,6 @@ ERROR HANDLING:
 - If tool call fails → Inform user and suggest retry`,
 });
 
-// Tool definition for calling the order manager agent
-export const orderManagerAgent = ai.defineTool(
-  {
-    name: "orderManagerAgent",
-    description: "Handle order creation, collect order details, and manage the ordering process",
-    inputSchema: z.object({
-      userId: z.string().describe("User ID of the customer"),
-      request: z.string().describe("The customer's order request"),
-    }),
-  },
-  async ({userId, request}) => {
-    const chat = ai.chat(orderManagerPrompt);
-    // Include userId as system context, not in the visible message
-    const systemContext = `SYSTEM: The user ID for this order is: ${userId}. Use this when calling createOrderTool.`;
-    const fullRequest = `${systemContext}\n\nUser request: ${request}`;
-    const result = await chat.send(fullRequest);
-    return {
-      success: true,
-      response: result.text,
-    };
-  }
-);
+// Export the prompt directly as the order manager agent
+export const orderManagerAgent = orderManagerPrompt;
 

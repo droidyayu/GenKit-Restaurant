@@ -1,4 +1,4 @@
-import {ai, z} from "../genkit";
+import {ai} from "../genkit";
 import {inventoryTool} from "../tools/inventoryTool";
 
 const menuRecipePrompt = ai.definePrompt({
@@ -50,21 +50,5 @@ Always maintain the authentic taste and quality of traditional Indian cuisine wh
 available ingredients.`,
 });
 
-// Tool definition for calling the menu agent
-export const menuRecipeAgent = ai.defineTool(
-  {
-    name: "menuRecipeAgent",
-    description: "Generate dynamic menus and provide recipe suggestions based on available ingredients",
-    inputSchema: z.object({
-      request: z.string().describe("The customer's menu request or context"),
-    }),
-  },
-  async ({request}) => {
-    const chat = ai.chat(menuRecipePrompt);
-    const result = await chat.send(request);
-    return {
-      success: true,
-      response: result.text,
-    };
-  }
-);
+// Export the prompt directly as the menu agent
+export const menuRecipeAgent = menuRecipePrompt;
