@@ -520,28 +520,13 @@
         firebaseConfig = config;
       } catch (error) {
         console.log('❌ Failed to load emulator config, using production config:', error);
-        firebaseConfig = {
-          apiKey: "YOUR_FIREBASE_API_KEY",
-          authDomain: "genkit-restaurant.firebaseapp.com",
-          projectId: "genkit-restaurant",
-          storageBucket: "genkit-restaurant.firebasestorage.app",
-          messagingSenderId: "341691918117",
-          appId: "1:341691918117:web:d4aa71d87acce62a34dccc",
-          measurementId: "G-G1D9Q34CWC"
-        };
+        // Load Firebase config from hosting environment
+        firebaseConfig = await fetch('/__/firebase/init.json').then(r => r.json());
       }
     } else {
-      // Production environment - use hardcoded config
-      console.log('🚀 Production environment detected, using production Firebase config');
-      firebaseConfig = {
-        apiKey: "YOUR_FIREBASE_API_KEY",
-        authDomain: "genkit-restaurant.firebaseapp.com",
-        projectId: "genkit-restaurant",
-        storageBucket: "genkit-restaurant.firebasestorage.app",
-        messagingSenderId: "341691918117",
-        appId: "1:341691918117:web:d4aa71d87acce62a34dccc",
-        measurementId: "G-G1D9Q34CWC"
-      };
+      // Production environment - load Firebase config from hosting
+      console.log('🚀 Production environment detected, loading Firebase config from hosting');
+      firebaseConfig = await fetch('/__/firebase/init.json').then(r => r.json());
     }
       
     const app = initializeApp(firebaseConfig);
