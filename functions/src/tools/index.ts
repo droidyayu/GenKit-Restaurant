@@ -1,16 +1,8 @@
-// Timer tools
-export {timerTool} from "./timerTool";
+// Core restaurant chatbot tools
+export {inventoryTool} from "./inventoryTool";
+export {createOrderTool, getOrderStatusTool} from "./orderTool";
 
-// Inventory tools
-export {inventoryTool, ingredientDetailsTool} from "./inventoryTool";
-
-// Order management tools
-export {
-  createOrderTool,
-  getOrderStatusTool,
-  updateOrderStatusTool,
-  completeOrderTool,
-} from "./orderTool";
-
-// Notification tools
-export {notificationTool} from "./notificationTool";
+// Optional tools (commented out - not used in main flow)
+// export {timerTool} from "./timerTool";
+// export {notificationTool} from "./notificationTool";
+// export {ingredientDetailsTool} from "./inventoryTool";

@@ -48,8 +48,8 @@ export const kitchenFlow = onCallGenkit({
   // app users can use your API. Read more at https://firebase.google.com/docs/app-check/cloud-functions
   // enforceAppCheck: true,
 
-  // Temporarily bypass authentication for testing
-  // TODO: Re-enable authentication once the Android auth flow is working
+  // Require users to be signed in (removed email verification for emulator/testing)
+  authPolicy: (user) => user !== null,
 
   // Grant access to the API key to this function:
   secrets: [apiKey],
