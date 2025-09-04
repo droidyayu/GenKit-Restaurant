@@ -106,15 +106,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         Logger.d(Logger.Tags.VIEWMODEL, "Extracted agent name: $agentName")
                         
                         // Create agent message
+                        val messageContent = agentResponse.text.trim()
+                        Logger.d(Logger.Tags.VIEWMODEL, "Creating agent message with content: ${messageContent.take(100)}")
+                        Logger.d(Logger.Tags.VIEWMODEL, "Agent name: $agentName")
+
                         val agentMessage = Message(
                             id = UUID.randomUUID().toString(),
-                            content = agentResponse.text,
+                            content = messageContent,
                             isFromUser = false,
                             agentName = agentName
                         )
-                        
+
                         addMessage(agentMessage)
-                        Logger.logMessage("AGENT_RESPONSE", agentResponse.text, agentName)
+                        Logger.logMessage("AGENT_RESPONSE", messageContent, agentName)
                         
                         _uiState.value = ChatUiState.Idle
                         Logger.d(Logger.Tags.VIEWMODEL, "UI state changed to Idle")
@@ -178,14 +182,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             agentName.contains("waiterAgent", ignoreCase = true) -> "🧾 Waiter"
             agentName.contains("kitchenOrchestratorFlow", ignoreCase = true) -> "🏪 Restaurant"
             agentName.contains("triageAgent", ignoreCase = true) -> "🎯 Triage"
-            agentName.contains("root", ignoreCase = true) -> "🤖 AI Assistant"
-            agentName.contains("Chef", ignoreCase = true) -> "👨‍🍳 Chef"
-            agentName.contains("Menu", ignoreCase = true) -> "📝 Order Manager"
-            agentName.contains("Order", ignoreCase = true) -> "🧾 Waiter"
-            agentName.contains("Inventory", ignoreCase = true) -> "🏪 Restaurant"
-            agentName.contains("Kitchen", ignoreCase = true) -> "🏪 Restaurant"
-            agentName.contains("Delivery", ignoreCase = true) -> "🏪 Restaurant"
-            agentName.contains("Assistant", ignoreCase = true) -> "🤖 AI Assistant"
             else -> "🏪 Restaurant" // Default to Restaurant for unknown agents
         }
     }

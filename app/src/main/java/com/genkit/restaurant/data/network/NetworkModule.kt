@@ -76,10 +76,19 @@ object NetworkModule {
             val originalRequest = chain.request()
             val requestBuilder = originalRequest.newBuilder()
                 .addHeader(ApiConfig.Headers.CONTENT_TYPE, ApiConfig.Headers.APPLICATION_JSON)
-                .addHeader(ApiConfig.Headers.API_KEY, ApiConfig.API_KEY_VALUE)
-            
-            Logger.d(Logger.Tags.NETWORK, "Added headers: Content-Type and API Key")
-            
+
+            // Only add API key for non-Firebase requests (Firebase Functions handle auth internally)
+            if (!originalRequest.url.toString().contains("firestore.googleapis.com") &&
+                !originalRequest.url.toString().contains("firebasedatabase.app")) {
+                requestBuilder.addHeader(ApiConfig.Headers.API_KEY, ApiConfig.API_KEY_VALUE)
+                Logger.d(Logger.Tags.NETWORK, "Added API Key for non-Firebase request")
+            } else {
+                Logger.d(Logger.Tags.NETWORK, "Skipped API Key for Firebase request")
+            }
+
+            Logger.d(Logger.Tags.NETWORK, "Request URL: ${originalRequest.url}")
+            Logger.d(Logger.Tags.NETWORK, "Request method: ${originalRequest.method}")
+
             chain.proceed(requestBuilder.build())
         }
     }

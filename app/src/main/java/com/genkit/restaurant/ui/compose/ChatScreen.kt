@@ -72,9 +72,12 @@ fun ChatScreen(
         }
     }
     
+    // Status bar padding is handled by the 24.dp padding below
+
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .padding(top = 24.dp) // Add padding for status bar
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
@@ -210,12 +213,16 @@ private fun EnhancedChatHeader(
                 
                 Spacer(modifier = Modifier.width(12.dp))
                 
-                Column {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
                         text = "Indian Grill",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        textAlign = TextAlign.Center
                     )
                     
                     Row(
@@ -451,7 +458,9 @@ private fun EnhancedUserMessageItem(message: Message) {
             )
         ) {
             ClaudeMarkdownText(
-                text = message.content,
+                text = message.content.also {
+                    android.util.Log.d("ChatScreen", "User message content: '$it'")
+                },
                 modifier = Modifier.padding(16.dp),
                 isUserMessage = true
             )
@@ -534,7 +543,9 @@ private fun EnhancedAgentMessageItem(message: Message) {
                 )
             ) {
                 ClaudeMarkdownText(
-                    text = message.content,
+                    text = message.content.also {
+                        android.util.Log.d("ChatScreen", "Agent message content: '$it', agent: ${message.agentName}")
+                    },
                     modifier = Modifier.padding(16.dp),
                     isUserMessage = false
                 )
@@ -831,11 +842,16 @@ private fun ClaudeMarkdownText(
     val codeBackgroundColor = if (isUserMessage) Color(0x33FFFFFF) else Color(0xFF2A2A2A)
     val linkColor = if (isUserMessage) Color(0xFFBBDEFB) else Primary
 
+    // Handle empty or null text gracefully
+    val displayText = text.takeIf { it.isNotBlank() } ?: "Message content unavailable"
+
     // Simple Markdown parsing and rendering
-    val annotatedString = remember(text, isUserMessage) {
+    android.util.Log.d("ClaudeMarkdownText", "Processing text: '$displayText', isUserMessage: $isUserMessage")
+
+    val annotatedString = remember(displayText, isUserMessage) {
         buildAnnotatedString {
             // Split text into lines for processing
-            val lines = text.lines()
+            val lines = displayText.lines()
 
             lines.forEachIndexed { lineIndex, line ->
                 when {
@@ -991,5 +1007,7 @@ private fun ClaudeMarkdownText(
             fontSize = 15.sp
         )
     )
+
+    android.util.Log.d("ClaudeMarkdownText", "Final annotated string length: ${annotatedString.length}")
 }
 
