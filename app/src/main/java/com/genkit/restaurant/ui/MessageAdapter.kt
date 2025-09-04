@@ -7,13 +7,15 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.genkit.restaurant.R
 import com.genkit.restaurant.data.model.Message
+import io.noties.markwon.Markwon
+import io.noties.markwon.linkify.LinkifyPlugin
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * RecyclerView adapter for displaying chat messages
  */
-class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessageAdapter(context: android.content.Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_USER = 1
@@ -22,6 +24,9 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val messages = mutableListOf<Message>()
     private val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+    private val markwon: Markwon = Markwon.builder(context)
+        .usePlugin(LinkifyPlugin.create())
+        .build()
 
     /**
      * Update the message list and notify adapter
@@ -91,9 +96,36 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
      */
     inner class AgentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val textViewMessage: TextView = itemView.findViewById(R.id.textViewMessage)
+        private val textViewAgentName: TextView = itemView.findViewById(R.id.textViewAgentName)
 
         fun bind(message: Message) {
-            textViewMessage.text = message.content
+            // Render markdown content
+            markwon.setMarkdown(textViewMessage, message.content)
+
+            // Show agent name if available
+            if (!message.agentName.isNullOrBlank()) {
+                textViewAgentName.text = getAgentDisplayName(message.agentName)
+                textViewAgentName.visibility = View.VISIBLE
+            } else {
+                textViewAgentName.visibility = View.GONE
+            }
+        }
+
+        private fun getAgentDisplayName(agentName: String?): String {
+            if (agentName.isNullOrBlank()) return ""
+
+            return when {
+                agentName.contains("Chef", ignoreCase = true) -> "👨‍🍳 Chef"
+                agentName.contains("Menu", ignoreCase = true) -> "📋 Menu Agent"
+                agentName.contains("Order", ignoreCase = true) -> "📝 Order Agent"
+                agentName.contains("Waiter", ignoreCase = true) -> "🧾 Waiter"
+                agentName.contains("Kitchen", ignoreCase = true) -> "🏪 Kitchen"
+                agentName.contains("Inventory", ignoreCase = true) -> "📦 Inventory"
+                agentName.contains("Delivery", ignoreCase = true) -> "🚚 Delivery"
+                agentName.contains("root", ignoreCase = true) -> "🤖 Assistant"
+                agentName.contains("Triage", ignoreCase = true) -> "🎯 Triage"
+                else -> "🤖 $agentName"
+            }
         }
     }
 }

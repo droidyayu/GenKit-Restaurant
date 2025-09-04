@@ -22,6 +22,7 @@ import com.genkit.restaurant.data.model.SessionData
 import com.genkit.restaurant.domain.viewmodel.ChatViewModel
 import com.genkit.restaurant.domain.viewmodel.ChatUiState
 import com.genkit.restaurant.util.Logger
+import com.google.firebase.auth.FirebaseAuth
 
 /**
  * Main chat activity for communicating with restaurant agents
@@ -30,6 +31,7 @@ class ChatActivity : AppCompatActivity() {
     
     private lateinit var viewModel: ChatViewModel
     private lateinit var messageAdapter: MessageAdapter
+    private lateinit var firebaseAuth: FirebaseAuth
     
     // UI components
     private lateinit var recyclerViewMessages: RecyclerView
@@ -59,7 +61,11 @@ class ChatActivity : AppCompatActivity() {
         Logger.logLifecycle("ChatActivity", "onCreate", "Starting chat activity initialization")
         
         setContentView(R.layout.activity_chat)
-        
+
+        // Initialize Firebase Auth
+        firebaseAuth = FirebaseAuth.getInstance()
+        Logger.d(Logger.Tags.UI, "FirebaseAuth initialized")
+
         // Initialize ViewModel
         viewModel = ViewModelProvider(this)[ChatViewModel::class.java]
         Logger.d(Logger.Tags.UI, "ChatViewModel initialized")
@@ -112,7 +118,7 @@ class ChatActivity : AppCompatActivity() {
      * Setup RecyclerView with adapter and layout manager
      */
     private fun setupRecyclerView() {
-        messageAdapter = MessageAdapter()
+        messageAdapter = MessageAdapter(this)
         recyclerViewMessages.apply {
             adapter = messageAdapter
             layoutManager = LinearLayoutManager(this@ChatActivity).apply {
@@ -327,7 +333,7 @@ class ChatActivity : AppCompatActivity() {
             viewModel.validateSession()
             
             // Show welcome message
-            showWelcomeMessage(userId)
+            showWelcomeMessage()
         } else {
             // No session data found - redirect to MainActivity
             navigateToMainActivity()
@@ -337,13 +343,17 @@ class ChatActivity : AppCompatActivity() {
     /**
      * Show a welcome message when chat starts
      */
-    private fun showWelcomeMessage(userId: String) {
-        textViewWelcomeUser.text = getString(R.string.welcome_user, userId)
-        
+    private fun showWelcomeMessage() {
+        // Get display name from Firebase Auth
+        val currentUser = firebaseAuth.currentUser
+        val displayName = currentUser?.displayName ?: currentUser?.email ?: "User"
+
+        textViewWelcomeUser.text = getString(R.string.welcome_user, displayName)
+
         // Update header with user info
-        textViewHeaderUser.text = "Chat with $userId"
+        textViewHeaderUser.text = "Chat with $displayName"
         textViewHeaderStatus.text = "Ready to help"
-        
+
         // Update input hint for homepage context
         editTextMessage.hint = getString(R.string.type_message_homepage)
     }
