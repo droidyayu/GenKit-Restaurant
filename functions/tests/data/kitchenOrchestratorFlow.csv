@@ -1,0 +1,23 @@
+test_id,turn,input,expected_agent,expected_keyword
+menu_vegan_routing,1,I am vegan,menuRecipeAgent,Vegetarian
+menu_specials_routing,1,What's special today?,menuRecipeAgent,Appetizers
+menu_paneer_routing,1,I want paneer dishes,menuRecipeAgent,paneer
+menu_show_menu_routing,1,Show me the menu,menuRecipeAgent,Appetizers
+menu_gluten_free_routing,1,Gluten free options,menuRecipeAgent,Gluten-Free
+order_simple_routing,1,I want 2 Butter Chicken medium,orderManagerAgent,created an order
+order_simple_sweet_routing,1,Give me 3 Gulab Jamun,orderManagerAgent,placed your order
+order_multi_turn_routing,1,I want Palak Paneer,orderManagerAgent,How many
+order_multi_turn_routing,2,2,orderManagerAgent,spice level
+order_multi_turn_routing,3,medium,orderManagerAgent,created your order
+order_multi_item_routing,1,I want Chicken and Naan for 2,orderManagerAgent,spice level
+order_multi_item_routing,2,hot,orderManagerAgent,created your order
+mixed_menu_to_order,1,Show me the menu,menuRecipeAgent,Appetizers
+mixed_menu_to_order,2,I want the Butter Chicken,orderManagerAgent,How many
+mixed_menu_to_order,3,2,orderManagerAgent,spice level
+mixed_menu_to_order,4,mild,orderManagerAgent,created your order
+edge_incomplete_routing,1,I want 5,orderManagerAgent,What dish
+critical_routing_test,1,Menu please,menuRecipeAgent,Appetizers
+critical_routing_test,2,I want 2 Chicken,orderManagerAgent,How many
+critical_routing_test,3,2,orderManagerAgent,spice level
+critical_routing_test,4,hot,orderManagerAgent,created your order
+critical_routing_test,5,Where is my order?,waiterAgent,status_update

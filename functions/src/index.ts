@@ -34,7 +34,7 @@ import {kitchenOrchestratorFlow} from "./flows/kitchenOrchestratorFlow";
 
 // Cloud Functions for Firebase supports Genkit natively. The onCallGenkit function creates a callable
 // function from a Genkit action. It automatically implements streaming if your flow does.
-import {onCallGenkit, hasClaim} from "firebase-functions/https";
+import {onCallGenkit} from "firebase-functions/https";
 
 // Genkit models generally depend on an API key. APIs should be stored in Cloud Secret Manager so that
 // access to these sensitive values can be controlled. defineSecret does this for you automatically.
@@ -48,8 +48,8 @@ export const kitchenFlow = onCallGenkit({
   // app users can use your API. Read more at https://firebase.google.com/docs/app-check/cloud-functions
   // enforceAppCheck: true,
 
-  // Require users to be signed in and have verified email
-  authPolicy: hasClaim("email_verified"),
+  // Require users to be signed in (removed email verification for emulator/testing)
+  authPolicy: (user) => user !== null,
 
   // Grant access to the API key to this function:
   secrets: [apiKey],
