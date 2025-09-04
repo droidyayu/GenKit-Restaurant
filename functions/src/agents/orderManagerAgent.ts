@@ -1,4 +1,4 @@
-import {ai} from "../genkit";
+import {ai, z} from "../genkit";
 import {createOrderTool} from "../tools/orderTool";
 import {inventoryTool} from "../tools/inventoryTool";
 
@@ -7,6 +7,12 @@ const orderManagerPrompt = ai.definePrompt({
   description: "Order Manager Agent handles order creation, validation, and management",
   tools: [createOrderTool, inventoryTool],
   system: `You are the OrderAgent. Collect complete order details and create orders efficiently.
+
+CRITICAL: USE CONVERSATION HISTORY TO MAINTAIN CONTEXT
+- Read the conversation history carefully to understand what dish was previously mentioned
+- If you asked "How many [dish] would you like?" in the previous message, treat numeric responses as quantity for that dish
+- If you asked for spice level of a specific dish, treat spice level responses as applying to that dish
+- Always connect responses to the context of the previous question
 
 AVAILABLE TOOLS (call directly when conditions are met):
 - createOrderTool → Creates order record in database (userId provided by system, returns orderId)
@@ -58,6 +64,10 @@ RESPONSE RULES:
 - Ask ONE question at a time (quantity OR spice level)
 - Never re-ask for information already provided
 - If details provided across turns, combine them intelligently
+- CRITICAL CONTEXT HANDLING: When you ask "How many [dish] would you like?", the next response should be interpreted as the quantity for that dish
+- CRITICAL CONTEXT HANDLING: When you ask for spice level of a dish, the next response should be interpreted as the spice level for that dish
+- If user provides quantity without dish context, ask which dish they want that quantity of
+- If user provides spice level without dish context, ask which dish they want that spice level for
 - Provide clear order summary with ORDER ID + ETA after successful order creation
 - Be friendly but efficient - no unnecessary conversation
 - CRITICAL: If you already asked for confirmation about the same order details, DO NOT ask again
@@ -84,13 +94,15 @@ ERROR HANDLING:
 });
 
 // Tool definition for calling the order manager agent
-export const orderManagerAgent = ai.defineTool({
-  name: "orderManagerAgent",
-  description: "Handle order creation, collect order details, and manage the ordering process",
-  inputSchema: ai.z.object({
-    userId: ai.z.string().describe("User ID of the customer"),
-    request: ai.z.string().describe("The customer's order request"),
-  }),
+export const orderManagerAgent = ai.defineTool(
+  {
+    name: "orderManagerAgent",
+    description: "Handle order creation, collect order details, and manage the ordering process",
+    inputSchema: z.object({
+      userId: z.string().describe("User ID of the customer"),
+      request: z.string().describe("The customer's order request"),
+    }),
+  },
   async ({userId, request}) => {
     const chat = ai.chat(orderManagerPrompt);
     // Include userId as system context, not in the visible message
@@ -101,6 +113,6 @@ export const orderManagerAgent = ai.defineTool({
       success: true,
       response: result.text,
     };
-  },
-});
+  }
+);
 
