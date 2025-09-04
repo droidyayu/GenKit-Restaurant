@@ -13,15 +13,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
         android:background="@color/background"
-        android:elevation="2dp">
+        android:elevation="1dp"
+        android:minHeight="56dp">
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical">
 
             <TextView
                 android:id="@+id/textViewHeaderUser"
@@ -30,7 +33,8 @@
                 android:text="Chat Session"
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:lineHeight="20sp" />
 
             <TextView
                 android:id="@+id/textViewHeaderStatus"
@@ -38,28 +42,32 @@
                 android:layout_height="wrap_content"
                 android:text="Ready to help"
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:layout_marginTop="2dp" />
+                android:textSize="13sp"
+                android:layout_marginTop="2dp"
+                android:lineHeight="16sp" />
 
         </LinearLayout>
 
         <Button
             android:id="@+id/buttonNewOrder"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="40dp"
             android:text="@string/new_order"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
+            android:textAllCaps="false"
             android:background="@drawable/button_outline"
-            android:paddingHorizontal="16dp"
-            android:minWidth="0dp" />
+            android:paddingHorizontal="12dp"
+            android:layout_gravity="center_vertical"
+            android:minWidth="0dp"
+            android:minHeight="40dp" />
 
         <ProgressBar
             android:id="@+id/progressBarHeader"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="12dp"
             android:visibility="gone"
             style="?android:attr/progressBarStyleSmall" />
 
@@ -84,21 +92,23 @@
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="32dp">
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="32dp">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginHorizontal="8dp"
                 app:cardBackgroundColor="@color/card_background"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="8dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="32dp">
+                    android:paddingHorizontal="24dp"
+                    android:paddingVertical="32dp">
 
                     <TextView
                         android:id="@+id/textViewWelcomeUser"
@@ -106,28 +116,31 @@
                         android:layout_height="wrap_content"
                         android:text="@string/welcome_user"
                         android:textColor="@color/text_primary"
-                        android:textSize="28sp"
+                        android:textSize="24sp"
                         android:textStyle="bold"
                         android:gravity="center"
-                        android:layout_marginBottom="8dp" />
+                        android:layout_marginBottom="12dp"
+                        android:lineHeight="28sp" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/welcome_subtitle"
                         android:textColor="@color/text_secondary"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:gravity="center"
-                        android:layout_marginBottom="16dp" />
+                        android:layout_marginBottom="20dp"
+                        android:lineHeight="20sp" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/what_to_order"
                         android:textColor="@color/text_secondary"
-                        android:textSize="16sp"
+                        android:textSize="15sp"
                         android:gravity="center"
-                        android:layout_marginBottom="24dp" />
+                        android:layout_marginBottom="8dp"
+                        android:lineHeight="18sp" />
 
                 </LinearLayout>
 
@@ -143,15 +156,18 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
         android:clipToPadding="false"
         android:scrollbars="vertical"
         android:fadeScrollbars="true"
         android:scrollbarFadeDuration="300"
+        android:scrollbarSize="4dp"
+        android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
         tools:listitem="@layout/item_message_user"
         android:contentDescription="@string/content_desc_chat_history"
         android:importantForAccessibility="yes"
-        android:overScrollMode="always"
+        android:overScrollMode="ifContentScrolls"
         android:stackFromBottom="true" />
 
     <!-- Connection status -->
@@ -159,11 +175,13 @@
         android:id="@+id/textViewStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:textSize="14sp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:textSize="13sp"
         android:textColor="@color/text_muted"
         android:gravity="center"
         android:visibility="gone"
+        android:background="@color/background"
         tools:text="Agent is typing..."
         tools:visibility="visible" />
 
@@ -178,7 +196,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
         android:background="@color/background"
         android:minHeight="72dp">
 
@@ -186,72 +205,91 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="bottom">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
 
             <EditText
                 android:id="@+id/editTextMessage"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="12dp"
                 android:hint="@string/type_message_homepage"
                 android:inputType="textMultiLine|textCapSentences"
                 android:maxLines="4"
-                android:padding="12dp"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
                 android:background="@drawable/edit_text_background"
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_muted"
                 android:contentDescription="@string/content_desc_message_input"
                 android:importantForAccessibility="yes"
-                android:gravity="center_vertical" />
+                android:gravity="center_vertical"
+                android:lineHeight="20sp" />
 
             <ImageButton
                 android:id="@+id/buttonSend"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
+                android:layout_marginStart="4dp"
                 android:background="@drawable/button_send"
                 android:src="@drawable/ic_send"
                 android:scaleType="center"
                 android:contentDescription="@string/content_desc_send_button"
-                android:importantForAccessibility="yes" />
+                android:importantForAccessibility="yes"
+                android:layout_gravity="bottom" />
 
         </LinearLayout>
 
-        <!-- Cancel button (shown when loading) -->
-        <Button
-            android:id="@+id/buttonCancel"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:text="@string/cancel"
-            android:textColor="@color/error"
-            android:background="@drawable/button_cancel"
-            android:visibility="gone"
-            android:minWidth="0dp"
-            android:paddingHorizontal="24dp" />
-
-        <Button
-            android:id="@+id/buttonRetry"
-            android:layout_width="wrap_content"
+        <!-- Action buttons (shown when loading) -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:text="@string/retry"
-            android:textAllCaps="false"
-            android:visibility="gone"
-            android:backgroundTint="@color/warning" />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/buttonCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/cancel"
+                android:textColor="@color/error"
+                android:textSize="14sp"
+                android:background="@drawable/button_cancel"
+                android:visibility="gone"
+                android:minWidth="80dp"
+                android:paddingHorizontal="16dp"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/buttonRetry"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:text="@string/retry"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:background="@drawable/button_outline"
+                android:visibility="gone"
+                android:minWidth="80dp"
+                android:paddingHorizontal="16dp"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
     <!-- Loading indicator for messages -->
     <ProgressBar
         android:id="@+id/progressBarLoading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_gravity="center"
-        android:layout_margin="16dp"
+        android:layout_marginVertical="16dp"
+        android:layout_marginHorizontal="8dp"
         android:visibility="gone"
         style="?android:attr/progressBarStyle" />
 

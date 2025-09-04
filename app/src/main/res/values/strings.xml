@@ -13,7 +13,7 @@
     <string name="chat_title">Indian Grill</string>
     <string name="new_order">New Order</string>
     <string name="send">Send</string>
-    <string name="type_message_homepage">Ask me anything... e.g., I want to order a paneer butter masala</string>
+    <string name="type_message_homepage">What in menu?</string>
     <string name="type_message_chat">Respond to the agent, refine the order, or type \'Looks good\'...</string>
     <string name="loading">Loading...</string>
     <string name="preparing">Preparing...</string>
