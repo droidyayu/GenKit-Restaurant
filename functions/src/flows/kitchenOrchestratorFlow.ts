@@ -95,6 +95,7 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
       userId: z.string(),
       timestamp: z.string(),
       requestId: z.string().optional(),
+      agent: z.string().optional(),
       error: z.string().optional(),
       details: z.string().optional(),
     }),
@@ -206,6 +207,7 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
         userId,
         timestamp: new Date().toISOString(),
         requestId,
+        agent: specialistAgent,
       };
     } catch (error) {
       console.error("[FLOW_ERROR] Error in kitchenOrchestratorFlow:", error);
@@ -238,6 +240,7 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
         timestamp: new Date().toISOString(),
         requestId,
         userId,
+        agent: "kitchenOrchestratorFlow",
       };
     }
   },
