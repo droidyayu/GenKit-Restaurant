@@ -1,50 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base colors -->
-    <color name="black">#FF000000</color>
+    <color name="black">#FF0A0A0A</color>
     <color name="white">#FFFFFFFF</color>
-    
-    <!-- Dark theme colors matching frontend -->
-    <color name="neutral_800">#FF262626</color> <!-- bg-neutral-800 -->
-    <color name="neutral_900">#FF171717</color> <!-- bg-neutral-900 -->
-    <color name="neutral_700">#FF404040</color> <!-- border-neutral-700 -->
-    <color name="neutral_600">#FF525252</color> <!-- hover states -->
-    <color name="neutral_100">#FFF5F5F5</color> <!-- text-neutral-100 -->
-    <color name="neutral_300">#FFD4D4D8</color> <!-- text-neutral-300 -->
-    <color name="neutral_400">#FFA3A3A3</color> <!-- text-neutral-400 -->
-    
-    <!-- Primary colors -->
-    <color name="primary">#FF3B82F6</color> <!-- Blue primary -->
-    <color name="primary_variant">#FF1D4ED8</color> <!-- Darker blue -->
-    <color name="secondary">#FF8B5CF6</color> <!-- Purple secondary -->
-    
+
+    <!-- Claude-inspired neutral palette -->
+    <color name="neutral_900">#FF0F0F0F</color> <!-- Deepest background -->
+    <color name="neutral_800">#FF1A1A1A</color> <!-- Main background -->
+    <color name="neutral_700">#FF2A2A2A</color> <!-- Surface elevation -->
+    <color name="neutral_600">#FF404040</color> <!-- Borders and dividers -->
+    <color name="neutral_500">#FF606060</color> <!-- Medium gray -->
+    <color name="neutral_400">#FF909090</color> <!-- Muted text -->
+    <color name="neutral_300">#FFB8B8B8</color> <!-- Secondary text -->
+    <color name="neutral_200">#FFD8D8D8</color> <!-- Light text -->
+    <color name="neutral_100">#FFF2F2F2</color> <!-- Primary text -->
+
+    <!-- Restaurant orange theme colors -->
+    <color name="primary">#FFFF6B35</color> <!-- Restaurant orange -->
+    <color name="primary_variant">#FFE55100</color> <!-- Deeper orange -->
+    <color name="secondary">#FFFF9800</color> <!-- Warm amber accent -->
+    <color name="accent">#FFFFC107</color> <!-- Golden accent -->
+
     <!-- Background colors -->
-    <color name="background">#FF262626</color> <!-- neutral-800 -->
-    <color name="surface">#FF171717</color> <!-- neutral-900 -->
-    <color name="card_background">#80171717</color> <!-- neutral-900/50 -->
-    
+    <color name="background">#FF1A1A1A</color> <!-- Main background -->
+    <color name="surface">#FF0F0F0F</color> <!-- Elevated surfaces -->
+    <color name="card_background">#800F0F0F</color> <!-- Semi-transparent cards -->
+
     <!-- Message colors -->
-    <color name="user_message">#FF404040</color> <!-- neutral-700 -->
-    <color name="agent_message">#FF171717</color> <!-- neutral-900 -->
-    <color name="agent_message_background">#FF1E293B</color> <!-- Slightly blue-tinted dark background for agent messages -->
-    <color name="text_primary">#FFF5F5F5</color> <!-- neutral-100 -->
-    <color name="text_secondary">#FFD4D4D8</color> <!-- neutral-300 -->
-    <color name="text_muted">#FFA3A3A3</color> <!-- neutral-400 -->
-    
-    <!-- Status colors -->
-    <color name="success">#FF10B981</color> <!-- Green -->
-    <color name="error">#FFEF4444</color> <!-- Red -->
-    <color name="warning">#FFF59E0B</color> <!-- Amber -->
-    <color name="info">#FF3B82F6</color> <!-- Blue -->
-    
+    <color name="user_message">#FF2A2A2A</color> <!-- User message background -->
+    <color name="agent_message">#FF1A1A1A</color> <!-- Agent message background -->
+    <color name="agent_message_background">#FF1F1F1F</color> <!-- Claude-style message bg -->
+    <color name="text_primary">#FFF2F2F2</color> <!-- Primary text -->
+    <color name="text_secondary">#FFB8B8B8</color> <!-- Secondary text -->
+    <color name="text_muted">#FF909090</color> <!-- Muted text -->
+
+    <!-- Status colors with restaurant theme -->
+    <color name="success">#FF4CAF50</color> <!-- Green success -->
+    <color name="error">#FFF44336</color> <!-- Red error -->
+    <color name="warning">#FFFF9800</color> <!-- Orange warning -->
+    <color name="info">#FF2196F3</color> <!-- Blue info -->
+
     <!-- Input colors -->
-    <color name="input_background">#FF404040</color> <!-- neutral-700 -->
-    <color name="input_border">#FF525252</color> <!-- neutral-600 -->
-    
+    <color name="input_background">#FF2A2A2A</color> <!-- Input background -->
+    <color name="input_border">#FF404040</color> <!-- Input border -->
+
     <!-- Agent colors -->
-    <color name="agent_name">#FF3B82F6</color> <!-- Primary blue for agent names -->
-    
+    <color name="agent_name">#FFFF6B35</color> <!-- Restaurant orange for agents -->
+
+    <!-- Restaurant accent colors -->
+    <color name="restaurant_orange_light">#FFFF8A65</color>
+    <color name="restaurant_orange_dark">#FFD84315</color>
+    <color name="warm_amber_light">#FFFFB74D</color>
+    <color name="warm_amber_dark">#FFF57C00</color>
+
     <!-- Accessibility colors -->
-    <color name="focus_highlight">#FF3B82F6</color>
-    <color name="disabled">#FF6B7280</color>
+    <color name="focus_highlight">#FFFF6B35</color>
+    <color name="disabled">#FF757575</color>
+
+    <!-- Syntax highlighting colors (Restaurant theme) -->
+    <color name="syntax_keyword">#FFFF6B35</color> <!-- Orange keywords -->
+    <color name="syntax_string">#FF4CAF50</color> <!-- Green strings -->
+    <color name="syntax_comment">#FF9E9E9E</color> <!-- Gray comments -->
+    <color name="syntax_function">#FFFF8A65</color> <!-- Light orange functions -->
+    <color name="syntax_variable">#FFD8D8D8</color> <!-- Light variables -->
 </resources>
