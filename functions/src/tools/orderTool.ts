@@ -3,9 +3,8 @@ import {
   SimpleOrder,
   createOrderInDatabase,
   getOrdersForStatusCheck,
-  markOrdersAsComplete
+  markOrdersAsComplete,
 } from "../data/orderRepository";
-
 
 
 export const createOrderTool = ai.defineTool(
@@ -84,11 +83,11 @@ export const getOrderStatusTool = ai.defineTool(
       }
 
       // Mark all fetched orders as complete
-      const orderIds = ordersToProcess.map(order => order.orderId);
+      const orderIds = ordersToProcess.map((order) => order.orderId);
       await markOrdersAsComplete(userId, orderIds);
 
       // Prepare response with updated status
-      const processedOrders = ordersToProcess.map(order => ({
+      const processedOrders = ordersToProcess.map((order) => ({
         orderId: order.orderId,
         customerName: order.customerName,
         status: "DELIVERED" as const, // Updated status
@@ -107,7 +106,6 @@ export const getOrderStatusTool = ai.defineTool(
         orders: processedOrders,
         totalOrders: processedOrders.length,
       };
-
     } catch (error) {
       console.error("[GET_ORDER_STATUS_TOOL] Error:", error);
       return {
