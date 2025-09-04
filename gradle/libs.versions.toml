@@ -1,7 +1,7 @@
 [versions]
 # Android
 agp = "8.2.0"
-kotlin = "1.9.10"
+kotlin = "1.9.22"
 compileSdk = "36"
 minSdk = "26"
 targetSdk = "36"
@@ -19,7 +19,7 @@ lifecycle = "2.7.0"
 
 # Compose
 composeBom = "2024.02.00"
-composeCompiler = "1.5.3"
+composeCompiler = "1.5.8"
 navigation = "2.7.6"
 
 # Networking

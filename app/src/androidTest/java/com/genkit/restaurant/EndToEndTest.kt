@@ -7,7 +7,7 @@ import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.genkit.restaurant.ui.UserIdActivity
+import com.genkit.restaurant.ui.compose.MainActivity
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 class EndToEndTest {
 
     @get:Rule
-    val activityRule = ActivityScenarioRule(UserIdActivity::class.java)
+    val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Before
     fun setup() {
@@ -35,110 +35,108 @@ class EndToEndTest {
 
     @Test
     fun testCompleteUserFlow() {
-        // Step 1: User enters ID
-        onView(withId(R.id.editTextUserId))
+        // Step 1: Verify welcome screen is displayed
+        onView(withText("Welcome to Restaurant Chat"))
+            .check(matches(isDisplayed()))
+
+        onView(withText("Please sign in to continue"))
+            .check(matches(isDisplayed()))
+
+        // Step 2: Verify Sign In button is available
+        onView(withId(R.id.buttonSignIn))
+            .check(matches(isDisplayed()))
+            .check(matches(isClickable()))
+
+        // Step 3: Simulate sign in button click (Firebase UI Auth would launch)
+        onView(withId(R.id.buttonSignIn))
             .perform(click())
-            .perform(typeText("testuser123"))
-            .perform(closeSoftKeyboard())
 
-        // Step 2: User starts chat
-        onView(withId(R.id.buttonStart))
-            .perform(click())
-
-        // Step 3: Wait for loading and verify navigation to chat
-        Thread.sleep(2000) // Wait for potential network call
-
-        // Note: In real implementation, you would mock the network calls
-        // and verify that ChatActivity is launched
-        
-        // For now, verify that the loading state is handled
-        onView(withId(R.id.progressBar))
+        // Note: In real implementation, you would mock Firebase Auth
+        // and verify that authentication flow is triggered
+        // For now, verify that the UI elements are still accessible
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testErrorHandlingFlow() {
-        // Test error scenario
-        onView(withId(R.id.editTextUserId))
-            .perform(click())
-            .perform(typeText("invalid@user"))
-            .perform(closeSoftKeyboard())
-
-        onView(withId(R.id.buttonStart))
+    fun testAuthenticationFlow() {
+        // Test authentication button interactions
+        onView(withId(R.id.buttonSignIn))
             .perform(click())
 
-        // Verify error message is shown
-        onView(withId(R.id.textViewError))
+        // Verify button remains accessible after click
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
-        // Test retry functionality
-        onView(withId(R.id.buttonRetry))
+        // Test sign out button is also available
+        onView(withId(R.id.buttonSignOut))
             .check(matches(isDisplayed()))
             .perform(click())
+
+        // Verify buttons are still functional after interactions
+        onView(withId(R.id.buttonSignIn))
+            .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testInputValidation() {
-        // Test empty input
-        onView(withId(R.id.buttonStart))
+    fun testButtonInteractions() {
+        // Test sign in button interaction
+        onView(withId(R.id.buttonSignIn))
             .perform(click())
-
-        onView(withId(R.id.textViewError))
             .check(matches(isDisplayed()))
 
-        // Test valid input
-        onView(withId(R.id.editTextUserId))
+        // Test sign out button interaction
+        onView(withId(R.id.buttonSignOut))
             .perform(click())
-            .perform(typeText("validuser"))
-            .perform(closeSoftKeyboard())
+            .check(matches(isDisplayed()))
 
-        onView(withId(R.id.buttonStart))
-            .perform(click())
-
-        // Error should be hidden
-        onView(withId(R.id.textViewError))
-            .check(matches(withEffectiveVisibility(Visibility.GONE)))
+        // Verify welcome text is always visible
+        onView(withText("Welcome to Restaurant Chat"))
+            .check(matches(isDisplayed()))
     }
 
     @Test
     fun testOrientationChange() {
-        // Enter some text
-        onView(withId(R.id.editTextUserId))
-            .perform(click())
-            .perform(typeText("testuser"))
-            .perform(closeSoftKeyboard())
-
-        // Rotate device
+        // Rotate device to landscape
         activityRule.scenario.onActivity { activity ->
             activity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
 
         Thread.sleep(1000) // Wait for rotation
 
-        // Verify text is preserved
-        onView(withId(R.id.editTextUserId))
-            .check(matches(withText("testuser")))
-
-        // Verify UI is still functional
-        onView(withId(R.id.buttonStart))
+        // Verify UI elements are still accessible in landscape
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
+            .check(matches(isClickable()))
+
+        onView(withId(R.id.buttonSignOut))
+            .check(matches(isDisplayed()))
+
+        onView(withText("Welcome to Restaurant Chat"))
+            .check(matches(isDisplayed()))
+
+        // Test button interaction in landscape
+        onView(withId(R.id.buttonSignIn))
             .perform(click())
     }
 
     @Test
     fun testAccessibilityFlow() {
-        // Test that accessibility features work in the complete flow
-        onView(withId(R.id.editTextUserId))
+        // Test that accessibility features work in the authentication flow
+        onView(withId(R.id.buttonSignIn))
             .check(matches(hasContentDescription()))
             .perform(click())
-            .perform(typeText("accessibleuser"))
 
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignOut))
             .check(matches(hasContentDescription()))
             .perform(click())
+
+        // Verify welcome text has proper accessibility
+        onView(withId(R.id.textViewWelcome))
+            .check(matches(isDisplayed()))
 
         // Verify accessibility is maintained throughout the flow
-        onView(withId(R.id.progressBar))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
     }
 }

@@ -7,64 +7,50 @@
     android:gravity="center">
 
     <TextView
+        android:id="@+id/textViewWelcome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome to Restaurant Chat"
-        android:textSize="24sp"
+        android:text="Welcome to Restaurant Chat\nPlease sign in to continue"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginBottom="32dp"
-        android:gravity="center" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Enter your User ID to start chatting"
-        android:textSize="16sp"
-        android:layout_marginBottom="16dp"
-        android:gravity="center" />
-
-    <EditText
-        android:id="@+id/editTextUserId"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="User ID"
-        android:textColorHint="@color/black"
-        android:inputType="textNoSuggestions"
-        android:layout_marginBottom="16dp"
-        android:textColor="@color/black"
-        android:padding="12dp"
-        android:background="@android:drawable/edit_text"
-        android:contentDescription="Enter your user ID to start chatting"
-        android:importantForAccessibility="yes" />
+        android:gravity="center"
+        android:lineSpacingExtra="8dp" />
 
     <TextView
         android:id="@+id/textViewError"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@android:color/holo_red_dark"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="24dp"
         android:visibility="gone"
         android:gravity="center" />
 
     <Button
-        android:id="@+id/buttonStart"
+        android:id="@+id/buttonSignIn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Chat"
+        android:text="Sign in with Google"
         android:layout_marginBottom="16dp"
         android:padding="12dp"
-        android:contentDescription="Start chat session with the restaurant system"
+        android:backgroundTint="@android:color/white"
+        android:textColor="@android:color/black"
+        android:drawableLeft="@android:drawable/ic_input_add"
+        android:drawableTint="@android:color/black"
+        android:contentDescription="Sign in with Google to start chatting"
         android:importantForAccessibility="yes" />
 
     <Button
-        android:id="@+id/buttonRetry"
+        android:id="@+id/buttonSignOut"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Retry"
+        android:text="Sign Out"
         android:layout_marginBottom="16dp"
         android:padding="12dp"
         android:visibility="gone"
-        android:backgroundTint="@android:color/holo_orange_dark" />
+        android:backgroundTint="@android:color/holo_red_dark"
+        android:contentDescription="Sign out of your account"
+        android:importantForAccessibility="yes" />
 
     <ProgressBar
         android:id="@+id/progressBar"

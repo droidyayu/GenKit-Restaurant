@@ -27,18 +27,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
-        <!-- Legacy Activities (can be removed after migration) -->
-        <activity
-            android:name=".ui.MainActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.UserIdActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Chat Activity for message display and input -->
         <activity
             android:name=".ui.ChatActivity"
             android:exported="false"

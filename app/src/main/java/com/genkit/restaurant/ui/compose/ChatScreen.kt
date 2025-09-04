@@ -35,7 +35,7 @@ import com.genkit.restaurant.domain.viewmodel.ChatUiState
 
 @Composable
 fun ChatScreen(
-    onNavigateToUserId: () -> Unit,
+    onNavigateToAuth: () -> Unit,
     viewModel: ChatViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -46,7 +46,7 @@ fun ChatScreen(
     
     // Load session data on startup
     LaunchedEffect(Unit) {
-        loadSessionData(context, viewModel, onNavigateToUserId)
+        loadSessionData(context, viewModel, onNavigateToAuth)
     }
     
     // Auto-scroll to bottom when new messages arrive
@@ -61,7 +61,7 @@ fun ChatScreen(
         val currentState = uiState
         if (currentState is ChatUiState.SessionExpired) {
             clearSessionData(context)
-            onNavigateToUserId()
+            onNavigateToAuth()
         }
     }
     

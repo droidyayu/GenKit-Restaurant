@@ -277,7 +277,7 @@ class ChatActivity : AppCompatActivity() {
                 
                 // Redirect after 2 seconds
                 textViewStatus.postDelayed({
-                    navigateToUserIdActivity()
+                    navigateToMainActivity()
                 }, 2000)
             }
         }
@@ -329,8 +329,8 @@ class ChatActivity : AppCompatActivity() {
             // Show welcome message
             showWelcomeMessage(userId)
         } else {
-            // No session data found - redirect to UserIdActivity
-            navigateToUserIdActivity()
+            // No session data found - redirect to MainActivity
+            navigateToMainActivity()
         }
     }
     
@@ -360,20 +360,18 @@ class ChatActivity : AppCompatActivity() {
     }
     
     /**
-     * Navigate to UserIdActivity when session is invalid
+     * Navigate to MainActivity when session is invalid
      */
-    private fun navigateToUserIdActivity() {
-        val intent = Intent(this, UserIdActivity::class.java)
+    private fun navigateToMainActivity() {
+        val intent = Intent(this, com.genkit.restaurant.ui.compose.MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
     
     override fun onBackPressed() {
-        // Clear session data when user goes back
-        val sharedPreferences = getSharedPreferences("restaurant_chat_prefs", MODE_PRIVATE)
-        sharedPreferences.edit().clear().apply()
-        super.onBackPressed()
+        // Navigate back to MainActivity when user presses back
+        navigateToMainActivity()
     }
     
     override fun onSaveInstanceState(outState: Bundle) {
