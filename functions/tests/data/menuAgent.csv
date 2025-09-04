@@ -1,20 +1,17 @@
 test_id,turn,input,expected
 menu_core,1,Show me today's menu,menu
 menu_dietary_vegan,1,I am vegan,vegan
-menu_dietary_restrictions,1,I need gluten free options,gluten free
+menu_dietary_gluten_free,1,I need gluten free options,gluten free
 menu_dietary_jain,1,Jain food options,Jain
-menu_cuisine_indian,1,South Indian dishes,South Indian
-menu_cuisine_italian,1,Italian pasta dishes,pasta
-menu_cuisine_chinese,1,Chinese food options,Chinese
-menu_preferences_spicy,1,Recommend me something spicy,spicy
-menu_preferences_healthy,1,Healthy options,healthy
-menu_preferences_kids,1,Kids friendly food,kids
-menu_ingredients_protein,1,I am thinking to get some chicken today,chicken
-menu_ingredients_veg,1,i want something in paneer,paneer
-menu_ingredients_seafood,1,I'd like some fish dishes today,fish
-menu_ingredients_diverse,1,Something with mushrooms,mushrooms
-menu_meal_breakfast,1,Breakfast menu,breakfast
-menu_meal_desserts,1,Suggest some desserts,dessert
-menu_special_chef,1,Chef's recommendations,chef
-menu_special_surprise,1,surprise me,surprise
-menu_party_family,1,Party food suggestions,party
+menu_cuisine_non_indian,1,I want Italian pasta,Italian
+menu_spicy_recommendation,1,Recommend me something very spicy,spicy
+menu_healthy_options,1,Healthy low-calorie options,healthy
+menu_kids_friendly,1,Kids friendly food options,kids
+menu_protein_chicken,1,I want chicken dishes today,chicken
+menu_veg_paneer,1,I want paneer dishes,paneer
+menu_seafood_fish,1,Fish dishes please,fish
+menu_breakfast,1,Breakfast menu,breakfast
+menu_desserts,1,Suggest some desserts,dessert
+menu_chef_special,1,Chef's special recommendations,chef
+menu_surprise_me,1,Surprise me with something tasty,surprise
+menu_party_large,1,Food for party of 15,party
