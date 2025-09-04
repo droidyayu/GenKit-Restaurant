@@ -27,3 +27,16 @@ edge_repetition,2,What do you have?,menuRecipeAgent,Appetizers
 edge_ambiguous_eat,1,I'm hungry,menuRecipeAgent,Appetizers
 edge_complex_order,1,I want 3 Butter Chicken hot and 2 Naan,orderManagerAgent,created an order
 edge_bulk_sweet_order,1,I want Kheer Gulab Jamun and Rasmalai,orderManagerAgent,how many servings
+waiter_status_check_basic,1,Where is my order?,waiterAgent,status_update
+waiter_status_check_detailed,1,What's the status of my order?,waiterAgent,status_update
+waiter_delivery_time_inquiry,1,How long will it take?,waiterAgent,eta_provided
+waiter_ready_check,1,Is my food ready yet?,waiterAgent,readiness_check
+waiter_waiting_impatient,1,What's taking so long?,waiterAgent,progress_update
+waiter_delivery_followup,1,When will my food be here?,waiterAgent,delivery_eta
+waiter_order_progress,1,Can you check on my order?,waiterAgent,progress_update
+waiter_status_after_delay,1,I'm still waiting for my food,waiterAgent,delayed_status
+waiter_multiple_orders_status,1,How are my orders doing?,waiterAgent,multiple_status
+waiter_recent_order_status,1,What's happening with my latest order?,waiterAgent,latest_status
+waiter_delivery_location,1,Where is the delivery?,waiterAgent,delivery_location
+waiter_estimated_arrival,1,When can I expect my order?,waiterAgent,arrival_time
+waiter_cooking_progress,1,How is the cooking going?,waiterAgent,cooking_status

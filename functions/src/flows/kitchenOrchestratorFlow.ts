@@ -2,12 +2,13 @@ import {ai, z} from "../genkit";
 import {getConversationHistory, addConversationMessage} from "../data/conversationHistory";
 import {orderManagerAgent} from "../agents/orderManagerAgent";
 import {menuRecipeAgent} from "../agents/menuRecipeAgent";
+import {waiterAgent} from "../agents/waiterAgent";
 
 // Define the triage agent that handles initial routing
 const triageAgent = ai.definePrompt({
   name: "triageAgent",
-  description: "Triage Agent for Indian Restaurant - routes customer requests to menu and order specialists",
-  tools: [menuRecipeAgent, orderManagerAgent],
+  description: "Triage Agent for Indian Restaurant - routes customer requests to menu, order, and status specialists",
+  tools: [menuRecipeAgent, orderManagerAgent, waiterAgent],
   system: `You are an AI customer service agent for an Indian restaurant.
 
 Greet customers warmly and determine how you can help them.
@@ -16,14 +17,17 @@ CRITICAL: You MUST use the available tools to actually CALL the specialist agent
 Available specialists:
 1. menuRecipeAgent - For menu exploration, dish suggestions, availability checking, and recipe information
 2. orderManagerAgent - For placing orders, collecting order details, and managing the ordering process
+3. waiterAgent - For order status inquiries, delivery updates, and customer service follow-ups
 
 TOOL USAGE RULES:
 - NEVER respond to customers directly with menu information or order details
 - ALWAYS call menuRecipeAgent for ANY menu-related requests (show menu, suggestions, etc.)
 - ALWAYS call orderManagerAgent for ANY order-related requests (ordering, quantities, spice levels, confirmations)
+- ALWAYS call waiterAgent for ANY status/delivery inquiries (order status, where's my food, how long, etc.)
 - Do NOT summarize or paraphrase - call the appropriate tool immediately
 - If the request involves ordering food → CALL orderManagerAgent
 - If the request involves confirming an order → CALL orderManagerAgent
+- If the request involves checking status → CALL waiterAgent
 
 CRITICAL ROUTING RULES:
 
@@ -45,13 +49,23 @@ ORDER INTENT - ALWAYS call orderManagerAgent tool when customer says ANYTHING re
 - ANY follow-up to ordering conversation
 - If in doubt, call orderManagerAgent tool
 
+WAITER INTENT - ALWAYS call waiterAgent tool when customer asks about status or delivery:
+- "Where's my order?", "How long will it take?", "Ready yet?"
+- "What's the status of my order?", "When will my food be here?"
+- "Is my order ready?", "How much longer?", "Delivery status"
+- "What's taking so long?", "I'm waiting for my food"
+- "Can you check on my order?", "Update on my order"
+- Any follow-up questions about existing orders (not placing new ones)
+
 CLARIFICATION: Only ask for clarification if the request is truly ambiguous or contradictory.
 
 CRITICAL USERID CONTEXT:
 - When calling orderManagerAgent, ALWAYS include the userId in the request
+- When calling waiterAgent, ALWAYS include the userId in the request
 - Format: "User ID: [userId]\n\n[Customer's actual request]"
 - Example: "User ID: user123\n\nI want 2 butter chicken medium spicy"
-- This ensures the order agent can create orders for the correct customer
+- Example: "User ID: user123\n\nWhere's my order?"
+- This ensures agents can access the correct customer data
 
 Response style:
 - Be friendly and welcoming
@@ -105,7 +119,7 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
 
       // Use triage agent to handle routing and get response
       console.log(`[TRIAGE_AGENT] Starting triage agent for user ${userId}, request ${requestId}`);
-      console.log("[TRIAGE_AGENT] Available tools: menuRecipeAgent, orderManagerAgent");
+      console.log("[TRIAGE_AGENT] Available tools: menuRecipeAgent, orderManagerAgent, waiterAgent");
       const chat = ai.chat(triageAgent);
 
       // Create a structured context that includes both the current message and history
@@ -147,11 +161,19 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
                            agentResponse.toLowerCase().includes('menu agent') ||
                            agentResponse.toLowerCase().includes('appetizers') ||
                            agentResponse.toLowerCase().includes('vegetarian');
+      const usedWaiterAgent = agentResponse.toLowerCase().includes('waiteragent') ||
+                             agentResponse.toLowerCase().includes('waiter agent') ||
+                             agentResponse.toLowerCase().includes('order status') ||
+                             agentResponse.toLowerCase().includes('ready in') ||
+                             agentResponse.toLowerCase().includes('on its way') ||
+                             agentResponse.toLowerCase().includes('delivered');
 
       if (usedOrderManager) {
         console.log(`[TRIAGE_AGENT] Detected ORDER agent was used`);
       } else if (usedMenuAgent) {
         console.log(`[TRIAGE_AGENT] Detected MENU agent was used`);
+      } else if (usedWaiterAgent) {
+        console.log(`[TRIAGE_AGENT] Detected WAITER agent was used`);
       } else {
         console.log(`[TRIAGE_AGENT] Could not detect which agent was used`);
       }
