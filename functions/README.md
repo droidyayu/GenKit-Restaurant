@@ -4,7 +4,7 @@ A sophisticated restaurant kitchen simulation built with **Genkit SDK** and **Fi
 
 ## 🏗️ System Architecture
 
-The system is built around **4 specialized agents** that work together through **1 main flow** and **4 utility tools**:
+The system is built around **3 specialized agents** that work together through **1 main flow** and **4 utility tools**:
 
 ```
 User Request → Kitchen Orchestrator Flow → Route to Appropriate Agent
@@ -14,8 +14,7 @@ User Request → Kitchen Orchestrator Flow → Route to Appropriate Agent
     ├─────────────────────────────────────────────────────────┤
     │ • Menu Recipe Agent (Dynamic Menu Generation)          │
     │ • Order Manager Agent (Order Lifecycle)                │
-    │ • Chef Agent (Cooking Execution)                       │
-    │ • Waiter Agent (Customer Communication)                │
+    │ • Waiter Agent (Order Status & Customer Service)       │
     └─────────────────────────────────────────────────────────┘
                 ↓
     ┌─────────────────────────────────────────────────────────┐
@@ -57,19 +56,12 @@ User Request → Kitchen Orchestrator Flow → Route to Appropriate Agent
 - **Capabilities**: Order validation, ingredient checking, order creation
 - **Implementation**: Async function using `ai.generate` for order validation
 
-### 4. Chef Agent
-- **Purpose**: Executes cooking tasks
-- **Input**: `{ orderId, dishName, userId, specialInstructions? }`
-- **Process**: Manages cooking process with accelerated timing
-- **Capabilities**: Ingredient validation, cooking execution, status updates
-- **Implementation**: Async function with AI-powered cooking validation
-
-### 5. Waiter Agent
-- **Purpose**: Customer communication and delivery
-- **Input**: `{ userId, orderId?, action, message? }`
-- **Process**: Handles customer interactions and order delivery
-- **Capabilities**: Status checks, order delivery, dessert upsell
-- **Implementation**: Async function with direct delivery simulation
+### 4. Waiter Agent
+- **Purpose**: Customer communication, order status, and delivery coordination
+- **Input**: `{ userId, request }`
+- **Process**: Handles status inquiries, delivery coordination, and customer service
+- **Capabilities**: Order status checks, delivery updates, dessert upsell, customer communication
+- **Implementation**: AI-powered agent using `ai.definePrompt` with `getOrderStatusTool` integration
 
 ## 🛠️ Main Flow
 
@@ -84,8 +76,9 @@ User Request → Kitchen Orchestrator Flow → Route to Appropriate Agent
 
 The system uses a **hybrid approach**:
 - **Kitchen Orchestrator Flow**: Main `ai.defineFlow` with AI-powered intent recognition
-- **Other Agents**: Simple async functions that use `ai.generate` internally
-- **Benefits**: Simplified architecture, easier maintenance, consistent AI interactions
+- **Menu Recipe Agent & Order Manager Agent**: `ai.defineTool` implementations for specialized functions
+- **Waiter Agent**: `ai.definePrompt` + `ai.defineTool` for AI-powered customer service
+- **Benefits**: Modular design, consistent AI interactions, specialized agent capabilities
 
 ## 🔧 Tools
 
@@ -167,20 +160,20 @@ User: "Show me the menu"
 ### 2. Place an Order
 ```
 User: "I want to order Palak Paneer"
-→ Orchestrator → Order Manager Agent → Chef Agent
-→ Creates order → Starts cooking → Updates status
+→ Orchestrator → Order Manager Agent → Order Tool
+→ Creates order → Updates status → Confirms order placement
 ```
 
 ### 3. Check Order Status
 ```
 User: "Where is my order?"
 → Orchestrator → Waiter Agent → Order Tool
-→ Returns: Current cooking progress and estimated completion
+→ Returns: Current order status and estimated delivery time
 ```
 
-### 4. Automatic Delivery
+### 4. Delivery Updates
 ```
-Chef Agent → Marks order ready → Waiter Agent → Delivery Flow
+Order Manager Agent → Creates order → Waiter Agent → Status updates
 → Notification Tool → Customer updated → Dessert upsell
 ```
 
@@ -201,9 +194,9 @@ Kitchen Orchestrator Flow
 ┌─────────────────────────────────────────────────┐
 │              ROUTING LOGIC                     │
 ├─────────────────────────────────────────────────┤
-│ • AskMenu → Menu Recipe Agent                 │
-│ • PlaceOrder → Order Manager Agent             │
-│ • CheckStatus → Waiter Agent                   │
+│ • Menu Requests → Menu Recipe Agent            │
+│ • Order Requests → Order Manager Agent         │
+│ • Status/Delivery → Waiter Agent               │
 │ • Fallback → Helpful suggestions               │
 └─────────────────────────────────────────────────┘
     ↓
@@ -216,20 +209,51 @@ Response to User
 
 ## 🧪 Testing
 
-The system includes comprehensive testing:
+The system includes comprehensive integration tests for all agents:
+
+### Available Test Suites
+
+#### 1. Order Agent Tests (`test-order-agent.js`)
+Tests complete order creation workflows, multi-turn conversations, and database operations.
+
+#### 2. Menu Agent Tests (`test-menu-agent.js`)
+Tests menu generation, routing, and different menu request types.
+
+#### 3. Waiter Agent Tests (`test-waiter-agent.js`)
+Tests order status inquiries, delivery updates, and customer service scenarios.
+
+#### 4. Kitchen Orchestrator Flow Tests (`test-kitchen-orchestrator-flow.js`)
+Tests the main orchestration flow and agent routing.
+
+### Running Tests
 
 ```bash
-# Test complete kitchen system
-npm run terminal
+# Test all agents
+npm test
+
+# Test individual agents
+npm run test:order-agent    # Order creation workflows
+npm run test:menu-agent     # Menu generation
+npm run test:waiter-agent   # Status and delivery
+npm run test:kitchen-flow   # Main orchestration
 
 # Test via Firebase emulator
 npm run serve
+
+# Interactive terminal testing
+npm run terminal
 
 # Test via HTTP requests
 curl -X POST "http://127.0.0.1:5001/demo-project/us-central1/kitchenFlow" \
   -H "Content-Type: application/json" \
   -d '{"data": {"message": "Show me the menu"}}'
 ```
+
+### Test Data
+- `tests/data/orderAgent.csv` - Order creation scenarios
+- `tests/data/menuAgent.csv` - Menu request scenarios
+- `tests/data/waiterAgent.csv` - Status inquiry scenarios
+- `tests/data/kitchenOrchestratorFlow.csv` - Full flow scenarios
 
 ## 🔧 Configuration
 
@@ -246,7 +270,6 @@ firebase functions:config:set google.genai_api_key="YOUR_API_KEY"
 
 ### Customization
 - **Recipe Templates**: Modify recipe templates in `menuRecipeAgent.ts` for new dishes
-- **Cooking Times**: Adjust timing in `chefAgent.ts`
 - **Agent Behavior**: Customize prompts and logic in agent files
 
 ## 🚀 Future Enhancements
@@ -266,7 +289,7 @@ functions/
 │   ├── agents/           # Agent services
 │   │   ├── menuRecipeAgent.ts
 │   │   ├── orderManagerAgent.ts
-│   │   ├── chefAgent.ts
+│   │   ├── waiterAgent.ts
 │   │   └── index.ts
 │   ├── flows/            # Main orchestration flow
 │   │   ├── kitchenOrchestratorFlow.ts
@@ -277,13 +300,28 @@ functions/
 │   │   ├── notificationTool.ts
 │   │   ├── orderTool.ts
 │   │   └── index.ts
-│   ├── genkit.ts         # Genkit configuration and kitchenFlow export
+│   ├── data/             # Data models and repositories
+│   │   ├── conversationHistory.ts
+│   │   └── orderRepository.ts
+│   ├── genkit.ts         # Genkit configuration
 │   ├── index.ts          # Firebase Functions entry point
 │   └── terminal.ts       # Interactive terminal interface
+├── tests/                # Integration tests
+│   ├── data/             # Test data files
+│   │   ├── orderAgent.csv
+│   │   ├── menuAgent.csv
+│   │   ├── waiterAgent.csv
+│   │   └── kitchenOrchestratorFlow.csv
+│   ├── utils/            # Test utilities
+│   │   └── common.js
+│   ├── test-order-agent.js
+│   ├── test-menu-agent.js
+│   ├── test-waiter-agent.js
+│   ├── test-kitchen-orchestrator-flow.js
+│   └── README.md
 ├── package.json          # Dependencies and scripts
 ├── tsconfig.json         # TypeScript configuration
 ├── deploy.sh             # Deployment script
-├── MIGRATION_README.md   # Migration documentation
 └── README.md             # This file
 ```
 

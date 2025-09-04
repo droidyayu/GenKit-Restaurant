@@ -151,6 +151,118 @@
       line-height: 1.4;
     }
 
+    /* Markdown styling for chat messages */
+    .message-bubble h1,
+    .message-bubble h2,
+    .message-bubble h3,
+    .message-bubble h4,
+    .message-bubble h5,
+    .message-bubble h6 {
+      margin: 8px 0 4px 0;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .message-bubble h1 { font-size: 18px; }
+    .message-bubble h2 { font-size: 16px; }
+    .message-bubble h3 { font-size: 15px; }
+    .message-bubble h4,
+    .message-bubble h5,
+    .message-bubble h6 { font-size: 14px; }
+
+    .message-bubble p {
+      margin: 8px 0;
+      line-height: 1.4;
+    }
+
+    .message-bubble ul,
+    .message-bubble ol {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .message-bubble li {
+      margin: 4px 0;
+      line-height: 1.4;
+    }
+
+    .message-bubble code {
+      background: #f6f8fa;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 14px;
+      color: #d73a49;
+    }
+
+    .message-bubble pre {
+      background: #f6f8fa;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 8px 0;
+      border: 1px solid #e1e4e8;
+    }
+
+    .message-bubble pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    .message-bubble blockquote {
+      border-left: 3px solid #dfe2e5;
+      padding-left: 12px;
+      margin: 8px 0;
+      color: #6a737d;
+      font-style: italic;
+    }
+
+    .message-bubble strong,
+    .message-bubble b {
+      font-weight: 600;
+    }
+
+    .message-bubble em,
+    .message-bubble i {
+      font-style: italic;
+    }
+
+    .message-bubble a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+
+    .message-bubble a:hover {
+      text-decoration: underline;
+    }
+
+    /* Agent indicator styling - subtle display */
+    .agent-indicator {
+      font-size: 10px;
+      color: #666;
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px solid #e9ecef;
+      text-align: right;
+      font-weight: 500;
+      opacity: 0.7;
+      letter-spacing: 0.3px;
+    }
+
+    .agent-indicator:hover {
+      opacity: 1;
+    }
+
+    /* For user messages, make links white */
+    .message.user .message-bubble a {
+      color: #e8f4fd;
+    }
+
+    .message.user .message-bubble a:hover {
+      color: #ffffff;
+    }
+
     .message.user .message-bubble {
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
@@ -375,6 +487,7 @@
       </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
     <script type="module">
     // Firebase imports
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
@@ -510,18 +623,44 @@
           messageInput.focus();
     }
 
-    function addMessage(content, isUser = false) {
+    function getAgentDisplayName(agentName) {
+      const agentNames = {
+        'menuRecipeAgent': '👨‍🍳 Chef',
+        'orderManagerAgent': '📝 Order Manager',
+        'waiterAgent': '🧾 Waiter',
+        'kitchenOrchestratorFlow': '🏪 Restaurant',
+        'triageAgent': '🎯 Triage',
+        'unknown': '🤖 AI Assistant'
+      };
+      return agentNames[agentName] || agentName;
+    }
+
+    function addMessage(content, isUser = false, agentName = null) {
       const messages = document.getElementById('chatMessages');
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user' : 'kitchen'}`;
-        
+
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
         avatar.textContent = isUser ? '👤' : '🍽️';
-        
+
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble';
+
+        // Render markdown for kitchen messages, keep plain text for user messages
+        if (isUser) {
           bubble.textContent = content;
+        } else {
+          bubble.innerHTML = marked.parse(content);
+        }
+
+        // Add subtle agent indicator for kitchen messages
+        if (!isUser && agentName) {
+          const agentIndicator = document.createElement('div');
+          agentIndicator.className = 'agent-indicator';
+          agentIndicator.textContent = getAgentDisplayName(agentName);
+          bubble.appendChild(agentIndicator);
+        }
 
           messageDiv.appendChild(avatar);
           messageDiv.appendChild(bubble);
@@ -600,18 +739,21 @@
         try {
         console.log('Calling kitchenFlow function...');
         const kitchenFlow = httpsCallable(functionsInstance, 'kitchenFlow');
-          const response = await kitchenFlow({ 
+          const response = await kitchenFlow({
           userId: user.uid,
-            message: message 
+            message: message
           });
         console.log('KitchenFlow response:', response);
-          
+        console.log('Response data:', response.data);
+
           hideTypingIndicator();
-        addMessage(response.data.message || 'No response from kitchen', false);
-          
+        const agentName = response.data.agent || 'unknown';
+        addMessage(response.data.message || 'No response from kitchen', false, agentName);
+
         } catch (error) {
           hideTypingIndicator();
         console.error('Function call error:', error);
+        console.error('Error details:', error.code, error.details);
           addMessage(`Sorry, I encountered an error: ${error.message}`, false);
       }
     });

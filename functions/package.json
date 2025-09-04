@@ -11,7 +11,13 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "dev": "genkit start -- npx tsx --watch src/index.ts",
-    "dev:terminal": "tsx src/terminal.ts"
+    "dev:terminal": "tsx src/terminal.ts",
+    "test:order-agent": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-order-agent.js",
+    "test:menu-agent": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-menu-agent.js",
+    "test:kitchen-orchestrator": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-kitchen-orchestrator-flow.js",
+    "test:simple": "GOOGLE_GENAI_API_KEY=$GOOGLE_GENAI_API_KEY node tests/test-kitchen-orchestrator-flow.js",
+    "test:all": "npm run test:simple && npm run test:order-agent && npm run test:menu-agent",
+    "test": "npm run test:all"
   },
   "engines": {
     "node": "22"
@@ -33,11 +39,10 @@
     "@types/pdf-parse": "^1.1.4",
     "@typescript-eslint/eslint-plugin": "^5.12.0",
     "@typescript-eslint/parser": "^5.12.0",
-    "cross-env": "^7.0.3",
+    "csv-parse": "^5.5.6",
     "eslint": "^8.9.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
-    "firebase-functions-test": "^3.1.0",
     "genkit-cli": "^1.18.0",
     "rimraf": "^6.0.1",
     "tsx": "^4.20.5",

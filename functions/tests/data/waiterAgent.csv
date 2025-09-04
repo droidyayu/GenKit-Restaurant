@@ -1,0 +1,11 @@
+test_id,turn,input,expected
+status_basic_where,1,Where is my order?,status_update
+eta_how_long,1,How long will it take?,eta_provided
+ready_check_impatient,1,Is my food ready yet?,readiness_check
+waiting_taking_long,1,What's taking so long?,progress_update
+delivery_when_here,1,When will my food be here?,delivery_eta
+progress_check_order,1,Can you check on my order?,progress_update
+multiple_orders_status,1,How are my orders doing?,multiple_status
+latest_order_status,1,What's happening with my latest order?,latest_status
+delivery_location_where,1,Where is the delivery?,delivery_location
+cooking_progress_how,1,How is the cooking going?,cooking_status

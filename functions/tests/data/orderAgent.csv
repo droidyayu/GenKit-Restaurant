@@ -1,0 +1,16 @@
+test_id,turn,input,expected
+single_savory_complete,1,I want 2 Butter Chicken medium spicy,Butter Chicken x2 medium
+single_sweet_complete,1,Give me 3 Gulab Jamun,Gulab Jamun x3
+multi_turn_quantity_spice,1,I want Palak Paneer,ask_quantity
+multi_turn_quantity_spice,2,2,ask_spice
+multi_turn_quantity_spice,3,medium,Palak Paneer x2 medium
+multi_item_with_spice,1,I want Butter Chicken and Naan for 2,ask_spice
+multi_item_with_spice,2,hot,Butter Chicken x2 hot Naan x2
+confirmation_yes,1,I want 2 Aloo Paratha medium spicy,ask_confirmation
+confirmation_yes,2,yes,Aloo Paratha x2 medium
+confirmation_change,1,I want 2 Chicken Tikka medium,ask_confirmation
+confirmation_change,2,Actually make it hot instead,ask_confirmation
+confirmation_change,3,yes,Chicken Tikka x2 hot
+vague_spicy_request,1,Something very spicy,ask_dish
+incomplete_quantity_only,1,I want 5,ask_dish
+bulk_sweet_no_spice,1,I want Kheer Gulab Jamun and Rasmalai,Kheer Gulab Jamun Rasmalai
