@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "341691918117-hgnlts5s66qc5ljql5n8h9bkk1jhrm52.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.genkit.restaurant",
+            "certificate_hash": "41bf7dcbc397a9048f7d94467a6b6244d0365185"
+          }
+        },
+        {
           "client_id": "341691918117-11qesjh8mgsrhtvud59hcieuuq1gifu4.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -27,7 +35,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "341691918117-11qesjh8mgsrhtvud59hccc",
+              "client_id": "341691918117-11qesjh8mgsrhtvud59hcieuuq1gifu4.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

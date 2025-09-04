@@ -11,95 +11,79 @@ import com.genkit.restaurant.data.repository.ChatRepository
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel for user ID input functionality
+ * ViewModel for authentication functionality
  * Handles session creation and UI state management
  */
-class UserIdViewModel(application: Application) : AndroidViewModel(application) {
-    
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
+
     private val chatRepository = ChatRepository(application.applicationContext)
-    
-    private val _uiState = MutableStateFlow<UserIdUiState>(UserIdUiState.Idle)
-    val uiState: StateFlow<UserIdUiState> = _uiState.asStateFlow()
-    
+
+    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
     /**
-     * Creates a session for the given user ID
-     * @param userId The user ID to create session for
+     * Creates a session for the authenticated Firebase user
+     * @param firebaseUserId The Firebase user ID to create session for
      */
-    fun createSession(userId: String) {
-        if (!validateUserId(userId)) {
+    fun createSession(firebaseUserId: String) {
+        if (!validateFirebaseUserId(firebaseUserId)) {
             return
         }
-        
-        _uiState.value = UserIdUiState.Loading
-        
+
+        _uiState.value = AuthUiState.Loading
+
         viewModelScope.launch {
             try {
-                val result = chatRepository.createSession(userId)
-                
+                val result = chatRepository.createSession(firebaseUserId)
+
                 if (result.isSuccess) {
                     val sessionData = result.getOrNull()
                     if (sessionData != null) {
-                        _uiState.value = UserIdUiState.Success(sessionData)
+                        _uiState.value = AuthUiState.Success(sessionData)
                     } else {
-                        _uiState.value = UserIdUiState.Error("Failed to create session")
+                        _uiState.value = AuthUiState.Error("Failed to create session")
                     }
                 } else {
                     val exception = result.exceptionOrNull()
-                    _uiState.value = UserIdUiState.Error(
+                    _uiState.value = AuthUiState.Error(
                         exception?.message ?: "Something went wrong, please try again"
                     )
                 }
             } catch (e: Exception) {
-                _uiState.value = UserIdUiState.Error(
+                _uiState.value = AuthUiState.Error(
                     "Network error. Please check your connection and try again"
                 )
             }
         }
     }
-    
+
     /**
-     * Validates the user ID input
-     * @param userId The user ID to validate
+     * Validates the Firebase user ID
+     * @param firebaseUserId The Firebase user ID to validate
      * @return true if valid, false otherwise
      */
-    private fun validateUserId(userId: String): Boolean {
-        val trimmedUserId = userId.trim()
-        
+    private fun validateFirebaseUserId(firebaseUserId: String): Boolean {
         when {
-            trimmedUserId.isEmpty() -> {
-                _uiState.value = UserIdUiState.Error("Please enter a user ID")
+            firebaseUserId.isEmpty() -> {
+                _uiState.value = AuthUiState.Error("Invalid user authentication")
                 return false
             }
-            !trimmedUserId.matches(Regex("^[a-zA-Z0-9]+$")) -> {
-                _uiState.value = UserIdUiState.Error("User ID can only contain letters and numbers")
-                return false
-            }
-            trimmedUserId.length < 2 -> {
-                _uiState.value = UserIdUiState.Error("User ID must be at least 2 characters long")
+            firebaseUserId.length < 10 -> {
+                _uiState.value = AuthUiState.Error("Invalid user authentication")
                 return false
             }
             else -> return true
         }
     }
-    
+
     /**
      * Resets the UI state to idle
      */
     fun resetState() {
-        _uiState.value = UserIdUiState.Idle
+        _uiState.value = AuthUiState.Idle
     }
-    
-    /**
-     * Retries the last failed session creation
-     */
-    fun retry() {
-        val currentState = _uiState.value
-        if (currentState is UserIdUiState.Error) {
-            // Get the last attempted user ID from some storage or ask user to re-enter
-            _uiState.value = UserIdUiState.Idle
-        }
-    }
-    
+
+
     /**
      * Cancels any ongoing network requests
      * Called when activity is paused to prevent memory leaks
@@ -109,26 +93,26 @@ class UserIdViewModel(application: Application) : AndroidViewModel(application) 
         // ViewModelScope automatically cancels when ViewModel is cleared,
         // but we can also cancel manually when activity is paused
         val currentState = _uiState.value
-        if (currentState is UserIdUiState.Loading) {
-            _uiState.value = UserIdUiState.Idle
+        if (currentState is AuthUiState.Loading) {
+            _uiState.value = AuthUiState.Idle
         }
     }
-    
+
     /**
      * Refreshes session validation
      * Called when activity is resumed to check if session is still valid
      */
     fun refreshSessionValidation() {
         // Check if we need to validate anything on resume
-        // For UserIdActivity, we typically don't have a session yet,
+        // For AuthActivity, we typically don't have a session yet,
         // so this is mainly for consistency with ChatViewModel
         val currentState = _uiState.value
-        if (currentState is UserIdUiState.Error) {
+        if (currentState is AuthUiState.Error) {
             // Clear transient errors on resume
-            _uiState.value = UserIdUiState.Idle
+            _uiState.value = AuthUiState.Idle
         }
     }
-    
+
     override fun onCleared() {
         super.onCleared()
         // ViewModel is being destroyed
@@ -138,11 +122,11 @@ class UserIdViewModel(application: Application) : AndroidViewModel(application) 
 }
 
 /**
- * Sealed class representing different UI states for user ID input
+ * Sealed class representing different UI states for authentication
  */
-sealed class UserIdUiState {
-    object Idle : UserIdUiState()
-    object Loading : UserIdUiState()
-    data class Success(val sessionData: SessionData) : UserIdUiState()
-    data class Error(val message: String) : UserIdUiState()
+sealed class AuthUiState {
+    object Idle : AuthUiState()
+    object Loading : AuthUiState()
+    data class Success(val sessionData: SessionData) : AuthUiState()
+    data class Error(val message: String) : AuthUiState()
 }

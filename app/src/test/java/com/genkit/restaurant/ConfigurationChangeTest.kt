@@ -15,22 +15,22 @@ class ConfigurationChangeTest {
         // Test saving and restoring activity state
         val outState = Bundle()
         
-        // Simulate UserIdActivity state saving
-        outState.putString("state_user_id_input", "testUser123")
+        // Simulate authentication state saving
+        outState.putString("state_auth_status", "authenticated")
         outState.putString("state_error_message", "Network error")
         outState.putBoolean("state_show_retry", true)
-        
-        // Simulate ChatActivity state saving
+
+        // Simulate chat state saving
         outState.putString("state_message_input", "Hello, I want to order")
         outState.putInt("state_scroll_position", 5)
         outState.putString("state_status_message", "Agent is typing...")
         outState.putBoolean("state_status_visible", true)
-        
+
         // Simulate MainActivity state saving
         outState.putBoolean("state_has_navigated", true)
         
         // Verify all state was saved
-        assertEquals("testUser123", outState.getString("state_user_id_input"))
+        assertEquals("authenticated", outState.getString("state_auth_status"))
         assertEquals("Network error", outState.getString("state_error_message"))
         assertTrue(outState.getBoolean("state_show_retry"))
         

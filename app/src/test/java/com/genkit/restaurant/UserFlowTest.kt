@@ -4,7 +4,7 @@ import com.genkit.restaurant.data.model.Message
 import com.genkit.restaurant.data.model.SessionData
 import com.genkit.restaurant.data.repository.ChatRepository
 import com.genkit.restaurant.domain.viewmodel.ChatViewModel
-import com.genkit.restaurant.domain.viewmodel.UserIdViewModel
+import com.genkit.restaurant.domain.viewmodel.AuthViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -15,6 +15,7 @@ import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.any
+import android.app.Application
 
 /**
  * Test complete user flow from user ID input to chat functionality
@@ -25,14 +26,17 @@ class UserFlowTest {
     @Mock
     private lateinit var mockRepository: ChatRepository
 
-    private lateinit var userIdViewModel: UserIdViewModel
+    @Mock
+    private lateinit var mockApplication: Application
+
+    private lateinit var authViewModel: AuthViewModel
     private lateinit var chatViewModel: ChatViewModel
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        userIdViewModel = UserIdViewModel()
-        chatViewModel = ChatViewModel()
+        authViewModel = AuthViewModel(mockApplication)
+        chatViewModel = ChatViewModel(mockApplication)
     }
 
     @Test
@@ -48,7 +52,7 @@ class UserFlowTest {
         whenever(mockRepository.sendMessage(sessionData, testMessage)).thenReturn(Result.success(agentResponse))
 
         // When - User enters ID and creates session
-        userIdViewModel.createSession(userId)
+        authViewModel.createSession(userId)
 
         // Then - Session should be created successfully
         // Note: In real implementation, we would observe LiveData
@@ -73,10 +77,10 @@ class UserFlowTest {
             .thenReturn(Result.success(SessionData(userId, "session123", "restaurant-chat")))
 
         // When - First attempt fails
-        userIdViewModel.createSession(userId)
+        authViewModel.createSession(userId)
 
         // When - User retries
-        userIdViewModel.createSession(userId)
+        authViewModel.createSession(userId)
 
         // Then - Both attempts should be made
         verify(mockRepository, org.mockito.kotlin.times(2)).createSession(userId)

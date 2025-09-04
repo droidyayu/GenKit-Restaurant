@@ -196,30 +196,31 @@ class ChatRepository(private val context: Context) {
     private suspend fun sendMessageViaFirebase(message: String): Result<AgentResponse> = withContext(Dispatchers.IO) {
         return@withContext try {
             Logger.d(Logger.Tags.REPOSITORY, "Sending message via Firebase Functions: ${message.take(50)}...")
-            
-            // Use a simple user ID for testing (authentication bypassed)
-            val userId = "demo_user_${System.currentTimeMillis()}"
-            
+
+            // Get the current authenticated user
+            val currentUser = firebaseAuth.currentUser
+            val userId = currentUser?.uid ?: "guest_user_${System.currentTimeMillis()}"
+
             val data = mapOf(
                 "userId" to userId,
                 "message" to message
             )
-            
+
             val result = firebaseFunctions
                 .getHttpsCallable("kitchenFlow")
                 .call(data)
                 .await()
-            
+
             val response = result.data as? Map<*, *>
             val responseText = response?.get("message") as? String ?: "I'm sorry, I couldn't process your request."
-            
+
             Logger.logMessage("RECEIVED_FIREBASE", responseText)
-            
+
             val agentResponse = AgentResponse(
                 text = responseText,
                 agentName = "Kitchen Assistant"
             )
-            
+
             Result.success(agentResponse)
         } catch (e: Exception) {
             Logger.logApiError("sendMessageViaFirebase", e, "Firebase Functions call failed")
