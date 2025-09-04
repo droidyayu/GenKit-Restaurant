@@ -7,8 +7,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.*
 import androidx.test.espresso.matcher.ViewMatchers.*
-import com.genkit.restaurant.ui.UserIdActivity
-import com.genkit.restaurant.ui.ChatActivity
+import com.genkit.restaurant.ui.compose.MainActivity
 import com.genkit.restaurant.R
 import org.junit.Rule
 import org.junit.Test
@@ -22,16 +21,16 @@ import org.junit.Assert.*
 class ScreenSizeTest {
 
     @get:Rule
-    val userIdActivityRule = ActivityScenarioRule(UserIdActivity::class.java)
+    val mainActivityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
-    fun testUserIdActivityLayoutOnSmallScreen() {
+    fun testMainActivityLayoutOnSmallScreen() {
         // Test that all UI elements are visible and properly sized on small screens
-        onView(withId(R.id.editTextUserId))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
-            .check(matches(hasMinimumChildCount(0)))
+            .check(matches(isClickable()))
 
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignOut))
             .check(matches(isDisplayed()))
             .check(matches(isClickable()))
 
@@ -40,9 +39,9 @@ class ScreenSizeTest {
     }
 
     @Test
-    fun testUserIdActivityInLandscapeMode() {
+    fun testMainActivityInLandscapeMode() {
         // Rotate to landscape
-        userIdActivityRule.scenario.onActivity { activity ->
+        mainActivityRule.scenario.onActivity { activity ->
             activity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
 
@@ -50,18 +49,17 @@ class ScreenSizeTest {
         Thread.sleep(1000)
 
         // Test that UI elements are still accessible in landscape
-        onView(withId(R.id.editTextUserId))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignOut))
             .check(matches(isDisplayed()))
 
-        // Test that keyboard doesn't cover important UI elements
-        onView(withId(R.id.editTextUserId))
+        // Test button interactions in landscape
+        onView(withId(R.id.buttonSignIn))
             .perform(click())
-            .perform(typeText("testuser"))
 
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
     }
 
@@ -75,7 +73,7 @@ class ScreenSizeTest {
         onView(withText("Welcome to Restaurant Chat"))
             .check(matches(isDisplayed()))
 
-        onView(withText("Enter your User ID to start chatting"))
+        onView(withText("Please sign in to continue"))
             .check(matches(isDisplayed()))
 
         // Test with large text setting (simulated)
@@ -86,36 +84,31 @@ class ScreenSizeTest {
     @Test
     fun testTouchTargetSizes() {
         // Test that touch targets are at least 48dp (accessibility requirement)
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
-            .check(matches(hasMinimumChildCount(0)))
+            .check(matches(isClickable()))
 
-        onView(withId(R.id.editTextUserId))
+        onView(withId(R.id.buttonSignOut))
             .check(matches(isDisplayed()))
-            .check(matches(hasMinimumChildCount(0)))
+            .check(matches(isClickable()))
 
         // Test that buttons are easily tappable
-        onView(withId(R.id.buttonStart))
-            .perform(click()) // Should not crash even without valid input
+        onView(withId(R.id.buttonSignIn))
+            .perform(click()) // Should not crash
     }
 
     @Test
-    fun testKeyboardInteraction() {
-        // Test keyboard behavior with text inputs
-        onView(withId(R.id.editTextUserId))
+    fun testButtonInteraction() {
+        // Test button interaction behavior
+        onView(withId(R.id.buttonSignIn))
             .perform(click())
-            .perform(typeText("testuser123"))
 
-        // Verify text was entered
-        onView(withId(R.id.editTextUserId))
-            .check(matches(withText("testuser123")))
+        // Verify button interaction works
+        onView(withId(R.id.buttonSignIn))
+            .check(matches(isDisplayed()))
 
-        // Test that keyboard can be dismissed
-        onView(withId(R.id.editTextUserId))
-            .perform(closeSoftKeyboard())
-
-        // Test that UI is still accessible after keyboard dismissal
-        onView(withId(R.id.buttonStart))
+        // Test that UI is still accessible after interaction
+        onView(withId(R.id.buttonSignOut))
             .check(matches(isDisplayed()))
     }
 
@@ -129,7 +122,7 @@ class ScreenSizeTest {
             .perform(swipeUp())
 
         // Verify important elements are still accessible
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
         // Scroll back to top
@@ -149,13 +142,13 @@ class ScreenSizeTest {
         onView(withText("Welcome to Restaurant Chat"))
             .check(matches(isDisplayed()))
 
-        onView(withId(R.id.editTextUserId))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
-        // Test that focus indicators are visible
-        onView(withId(R.id.editTextUserId))
+        // Test that buttons are accessible
+        onView(withId(R.id.buttonSignIn))
             .perform(click())
-            .check(matches(hasFocus()))
+            .check(matches(isDisplayed()))
     }
 
     @Test
@@ -165,10 +158,10 @@ class ScreenSizeTest {
         val density = context.resources.displayMetrics.density
 
         // Verify that UI elements scale properly
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
-        onView(withId(R.id.editTextUserId))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
         // Test that touch targets are appropriate for the density
@@ -180,10 +173,10 @@ class ScreenSizeTest {
         // Test Right-to-Left language support
         // In real implementation, you would change locale to RTL language
         
-        onView(withId(R.id.editTextUserId))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
-        onView(withId(R.id.buttonStart))
+        onView(withId(R.id.buttonSignIn))
             .check(matches(isDisplayed()))
 
         // Verify that layout direction is handled correctly

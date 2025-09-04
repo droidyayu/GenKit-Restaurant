@@ -183,7 +183,7 @@ If you encounter any issues or have questions:
 
 ## 🗺️ Roadmap
 
-- [ ] Enhanced chat features (file sharing, voice messages)
+- [ ] Enhanced chat features (file sharing)
 - [ ] Push notifications
 - [ ] Dark mode support
 - [ ] Multi-language support

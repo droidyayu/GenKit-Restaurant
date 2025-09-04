@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    // Add Firebase plugins
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -35,7 +38,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
@@ -70,7 +73,8 @@ dependencies {
     
     // JSON parsing
     implementation(libs.gson)
-    
+
+
     // RecyclerView (for legacy support if needed)
     implementation(libs.androidx.recyclerview)
     
@@ -82,6 +86,15 @@ dependencies {
     
     // Compose Debug Tools
     debugImplementation(libs.bundles.compose.debug)
+    
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.0.0"))
+    implementation("com.google.firebase:firebase-functions-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.firebaseui:firebase-ui-auth:8.0.2")
     
     // Testing
     testImplementation(libs.bundles.testing)

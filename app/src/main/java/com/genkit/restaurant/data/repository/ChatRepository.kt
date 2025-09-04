@@ -13,6 +13,11 @@ import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import java.io.BufferedReader
 import java.util.UUID
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.ktx.functions
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
 
 /**
  * Repository for handling chat-related data operations and API communication
@@ -21,6 +26,12 @@ class ChatRepository(private val context: Context) {
     
     private val apiService: ApiService = NetworkModule.apiService
     private val sseApiService: ApiService = NetworkModule.sseApiService
+    
+    // Firebase Functions integration
+    private val firebaseFunctions: FirebaseFunctions = Firebase.functions
+    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    
+
     
     companion object {
         private const val APP_NAME = "restaurant-chat-android"
@@ -90,58 +101,64 @@ class ChatRepository(private val context: Context) {
             return@withContext Result.failure(error)
         }
         
-        return@withContext executeWithRetry(MAX_RETRY_ATTEMPTS) {
-            val sendMessageRequest = SendMessageRequest(
-                appName = sessionData.appName,
-                userId = sessionData.userId,
-                sessionId = sessionData.sessionId,
-                newMessage = NewMessage(
-                    parts = listOf(MessagePart(text = message)),
-                    role = "user"
-                ),
-                streaming = false
-            )
-            
-            Logger.d(Logger.Tags.REPOSITORY, "Message request payload: $sendMessageRequest")
-            val startTime = System.currentTimeMillis()
-            
-            // Use SSE-specific service with extended timeout
-            Logger.d(Logger.Tags.API, "Sending SSE request...")
-            val response = sseApiService.sendMessage(sendMessageRequest)
-            val duration = System.currentTimeMillis() - startTime
-            
-            Logger.d(Logger.Tags.API, "SSE request completed in ${duration}ms")
-            Logger.d(Logger.Tags.API, "Response code: ${response.code()}")
-            Logger.d(Logger.Tags.API, "Response headers: ${response.headers()}")
-            
-            if (response.isSuccessful) {
-                response.body()?.let { responseBody ->
-                    Logger.d(Logger.Tags.REPOSITORY, "Parsing SSE response...")
-                    val agentResponse = parseSSEResponse(responseBody)
-                    
-                    if (agentResponse.text.isNotEmpty()) {
-                        Logger.logMessage("RECEIVED", agentResponse.text)
-                        Logger.logPerformance("sendMessage", duration, "Success")
-                        Result.success(agentResponse)
-                    } else {
-                        val error = Exception("Empty response from server")
-                        Logger.logApiError("sendMessage", error, "Empty agent response after parsing")
-                        Result.failure(error)
-                    }
-                } ?: run {
-                    val error = Exception("No response body received")
-                    Logger.logApiError("sendMessage", error, "Response body is null")
-                    Result.failure(error)
-                }
-            } else {
-                val errorMessage = ErrorHandler.getHttpErrorMessage(response.code())
-                val error = Exception(errorMessage)
-                Logger.logPerformance("sendMessage", duration, "Failed with HTTP ${response.code()}")
-                Result.failure(error)
-            }
-        }
+        // Use Firebase Functions like the web version (no API key needed)
+        Logger.d(Logger.Tags.REPOSITORY, "Using Firebase Functions (like web version)")
+        return@withContext sendMessageViaFirebase(message)
     }
     
+    
+    /**
+     * Sends a message using Firebase Functions (like the web version)
+     * @param message The message text to send
+     * @return Result containing agent response on success or error message on failure
+     */
+    suspend fun sendMessageViaFirebase(message: String): Result<AgentResponse> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            Logger.d(Logger.Tags.REPOSITORY, "Sending message via Firebase Functions: ${message.take(50)}...")
+
+            // Get the current authenticated user
+            val currentUser = firebaseAuth.currentUser
+            if (currentUser == null) {
+                Logger.w(Logger.Tags.REPOSITORY, "No authenticated user for Firebase Functions")
+                return@withContext Result.failure(Exception("User not authenticated"))
+            }
+
+            val data = mapOf(
+                "userId" to currentUser.uid,
+                "message" to message
+            )
+
+            Logger.d(Logger.Tags.REPOSITORY, "Calling Firebase Function: kitchenFlow")
+            val result = firebaseFunctions
+                .getHttpsCallable("kitchenFlow")
+                .call(data)
+                .await()
+
+            val response = result.data as? Map<*, *>
+            Logger.d(Logger.Tags.REPOSITORY, "Firebase response received")
+
+            // Extract response like web version does
+            val responseText = response?.get("message") as? String
+                ?: response?.get("text") as? String
+                ?: "I'm sorry, I couldn't process your request. Please try again."
+
+            val agentName = response?.get("agent") as? String ?: "unknown"
+
+            Logger.logMessage("RECEIVED_FIREBASE", responseText)
+            Logger.d(Logger.Tags.REPOSITORY, "Agent: $agentName")
+
+            val agentResponse = AgentResponse(
+                text = responseText,
+                agentName = agentName
+            )
+
+            Result.success(agentResponse)
+        } catch (e: Exception) {
+            Logger.logApiError("sendMessageViaFirebase", e, "Firebase Functions call failed")
+            Result.failure(e)
+        }
+    }
+
     /**
      * Checks if the backend is healthy and reachable
      * @return Result indicating if backend is healthy
@@ -201,7 +218,7 @@ class ChatRepository(private val context: Context) {
      * @param operation The operation to execute
      * @return Result of the operation
      */
-    private suspend fun <T> executeWithRetry(
+    suspend fun <T> executeWithRetry(
         maxAttempts: Int,
         operation: suspend () -> Result<T>
     ): Result<T> {
@@ -250,7 +267,7 @@ class ChatRepository(private val context: Context) {
      * @param responseBody The response body containing SSE data
      * @return Parsed agent response with agent name and text
      */
-    private fun parseSSEResponse(responseBody: ResponseBody): AgentResponse {
+    fun parseSSEResponse(responseBody: ResponseBody): AgentResponse {
         return try {
             Logger.d(Logger.Tags.API, "Starting SSE response parsing...")
             Logger.d(Logger.Tags.API, "Response content type: ${responseBody.contentType()}")
@@ -386,4 +403,5 @@ class ChatRepository(private val context: Context) {
             throw Exception("Failed to parse server response: ${e.message}")
         }
     }
+
 }
