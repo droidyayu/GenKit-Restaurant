@@ -36,9 +36,6 @@ import com.genkit.restaurant.data.model.SessionData
 import com.genkit.restaurant.domain.viewmodel.ChatViewModel
 import com.genkit.restaurant.domain.viewmodel.ChatUiState
 import com.genkit.restaurant.ui.theme.*
-import androidx.compose.ui.text.*
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextDecoration
 
 @Composable
 fun ChatScreen(
@@ -92,11 +89,7 @@ fun ChatScreen(
         ) {
             // Enhanced Header
             EnhancedChatHeader(
-                uiState = uiState,
-                onNewOrder = {
-                    viewModel.clearMessages()
-                    messageText = ""
-                }
+                uiState = uiState
             )
             
             // Messages area with enhanced design
@@ -106,7 +99,7 @@ fun ChatScreen(
                     .fillMaxWidth()
             ) {
                 if (messages.isEmpty()) {
-                    EnhancedWelcomeScreen()
+                    EnhancedWelcomeScreen(onSuggestionClick = { messageText = it })
                 } else {
                     LazyColumn(
                         state = listState,
@@ -168,8 +161,7 @@ fun ChatScreen(
 
 @Composable
 private fun EnhancedChatHeader(
-    uiState: ChatUiState,
-    onNewOrder: () -> Unit
+    uiState: ChatUiState
 ) {
     Card(
         modifier = Modifier
@@ -264,28 +256,6 @@ private fun EnhancedChatHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // New Order button with enhanced design
-                Button(
-                    onClick = onNewOrder,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF6B35)
-                    ),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "New Order",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                
                 // Loading indicator
                 AnimatedVisibility(
                     visible = uiState is ChatUiState.Loading,
@@ -304,7 +274,7 @@ private fun EnhancedChatHeader(
 }
 
 @Composable
-private fun EnhancedWelcomeScreen() {
+private fun EnhancedWelcomeScreen(onSuggestionClick: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -374,7 +344,7 @@ private fun EnhancedWelcomeScreen() {
                         modifier = Modifier.horizontalScroll(rememberScrollState())
                     ) {
                         SuggestionChip(
-                            onClick = { /* Handle suggestion */ },
+                            onClick = { onSuggestionClick("Show me the menu") },
                             label = { Text("Show me the menu", fontSize = 12.sp) },
                             colors = SuggestionChipDefaults.suggestionChipColors(
                                 containerColor = Color(0xFF2A2A2A),
@@ -383,26 +353,8 @@ private fun EnhancedWelcomeScreen() {
                         )
 
                         SuggestionChip(
-                            onClick = { /* Handle suggestion */ },
+                            onClick = { onSuggestionClick("I want to order something") },
                             label = { Text("I want to order something", fontSize = 12.sp) },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = Color(0xFF2A2A2A),
-                                labelColor = Color.White
-                            )
-                        )
-
-                        SuggestionChip(
-                            onClick = { /* Handle suggestion */ },
-                            label = { Text("What are your hours?", fontSize = 12.sp) },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = Color(0xFF2A2A2A),
-                                labelColor = Color.White
-                            )
-                        )
-
-                        SuggestionChip(
-                            onClick = { /* Handle suggestion */ },
-                            label = { Text("Tell me about your specialties", fontSize = 12.sp) },
                             colors = SuggestionChipDefaults.suggestionChipColors(
                                 containerColor = Color(0xFF2A2A2A),
                                 labelColor = Color.White
@@ -457,12 +409,13 @@ private fun EnhancedUserMessageItem(message: Message) {
                 bottomEnd = 6.dp
             )
         ) {
-            ClaudeMarkdownText(
+            Text(
                 text = message.content.also {
                     android.util.Log.d("ChatScreen", "User message content: '$it'")
                 },
                 modifier = Modifier.padding(16.dp),
-                isUserMessage = true
+                color = Color.White,
+                style = MaterialTheme.typography.bodyLarge
             )
         }
         
@@ -542,12 +495,13 @@ private fun EnhancedAgentMessageItem(message: Message) {
                     bottomEnd = 20.dp
                 )
             ) {
-                ClaudeMarkdownText(
+                Text(
                     text = message.content.also {
                         android.util.Log.d("ChatScreen", "Agent message content: '$it', agent: ${message.agentName}")
                     },
                     modifier = Modifier.padding(16.dp),
-                    isUserMessage = false
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
         }
@@ -674,18 +628,11 @@ private fun EnhancedChatInput(
                         defaultElevation = if (messageText.isNotBlank()) 6.dp else 2.dp
                     )
                 ) {
-                    AnimatedContent(
-                        targetState = messageText.isNotBlank(),
-                        transitionSpec = {
-                            scaleIn() + fadeIn() togetherWith scaleOut() + fadeOut()
-                        }
-                    ) { hasText ->
-                        Icon(
-                            imageVector = if (hasText) Icons.Default.Send else Icons.Default.Mic,
-                            contentDescription = if (hasText) "Send message" else "Voice input",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Send message",
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
@@ -729,9 +676,10 @@ private fun TypingIndicator() {
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            ClaudeMarkdownText(
+            Text(
                 text = "Kitchen is thinking...",
-                isUserMessage = false
+                color = TextPrimary,
+                style = MaterialTheme.typography.bodyLarge
             )
             
             Spacer(modifier = Modifier.width(8.dp))
@@ -789,9 +737,10 @@ private fun ErrorMessage(message: String) {
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            ClaudeMarkdownText(
+            Text(
                 text = message,
-                isUserMessage = false
+                color = TextPrimary,
+                style = MaterialTheme.typography.bodyLarge
             )
         }
     }
@@ -827,187 +776,4 @@ private fun clearSessionData(context: Context) {
     sharedPreferences.edit().clear().apply()
 }
 
-/**
- * Claude-inspired Markdown text component with syntax highlighting
- */
-@Composable
-private fun ClaudeMarkdownText(
-    text: String,
-    modifier: Modifier = Modifier,
-    isUserMessage: Boolean = false
-) {
-
-    // Claude-inspired color scheme
-    val baseTextColor = if (isUserMessage) Color.White else TextPrimary
-    val codeBackgroundColor = if (isUserMessage) Color(0x33FFFFFF) else Color(0xFF2A2A2A)
-    val linkColor = if (isUserMessage) Color(0xFFBBDEFB) else Primary
-
-    // Handle empty or null text gracefully
-    val displayText = text.takeIf { it.isNotBlank() } ?: "Message content unavailable"
-
-    // Simple Markdown parsing and rendering
-    android.util.Log.d("ClaudeMarkdownText", "Processing text: '$displayText', isUserMessage: $isUserMessage")
-
-    val annotatedString = remember(displayText, isUserMessage) {
-        buildAnnotatedString {
-            // Split text into lines for processing
-            val lines = displayText.lines()
-
-            lines.forEachIndexed { lineIndex, line ->
-                when {
-                    // Code blocks (```language or ```)
-                    line.trim().startsWith("```") -> {
-                        // Handle code block start/end
-                        withStyle(
-                            style = SpanStyle(
-                                color = SyntaxKeyword,
-                                background = codeBackgroundColor,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 13.sp
-                            )
-                        ) {
-                            append(line)
-                        }
-                    }
-                    // Inline code (`code`)
-                    line.contains("`") -> {
-                        var currentIndex = 0
-                        val regex = "`([^`]*)`".toRegex()
-                        regex.findAll(line).forEach { match ->
-                            // Add text before code
-                            append(line.substring(currentIndex, match.range.first))
-
-                            // Add code with styling
-                            withStyle(
-                                style = SpanStyle(
-                                    color = SyntaxKeyword,
-                                    background = codeBackgroundColor,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 13.sp
-                                )
-                            ) {
-                                append(match.groupValues[1])
-                            }
-
-                            currentIndex = match.range.last + 1
-                        }
-
-                        // Add remaining text
-                        if (currentIndex < line.length) {
-                            append(line.substring(currentIndex))
-                        }
-                    }
-                    // Bold text (**text** or __text__)
-                    line.contains("**") || line.contains("__") -> {
-                        var currentIndex = 0
-                        val boldRegex = "(\\*\\*|__)(.*?)\\1".toRegex()
-                        boldRegex.findAll(line).forEach { match ->
-                            append(line.substring(currentIndex, match.range.first))
-
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                append(match.groupValues[2])
-                            }
-
-                            currentIndex = match.range.last + 1
-                        }
-
-                        if (currentIndex < line.length) {
-                            append(line.substring(currentIndex))
-                        }
-                    }
-                    // Italic text (*text* or _text_)
-                    line.contains("*") && !line.contains("**") -> {
-                        var currentIndex = 0
-                        val italicRegex = "(\\*)(.*?)\\1".toRegex()
-                        italicRegex.findAll(line).forEach { match ->
-                            append(line.substring(currentIndex, match.range.first))
-
-                            withStyle(style = SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)) {
-                                append(match.groupValues[2])
-                            }
-
-                            currentIndex = match.range.last + 1
-                        }
-
-                        if (currentIndex < line.length) {
-                            append(line.substring(currentIndex))
-                        }
-                    }
-                    // Headers (# ## ###)
-                    line.trim().startsWith("#") -> {
-                        val level = line.takeWhile { it == '#' }.length
-                        val headerText = line.substring(level).trim()
-                        val fontSize = when (level) {
-                            1 -> 20.sp
-                            2 -> 18.sp
-                            3 -> 16.sp
-                            else -> 15.sp
-                        }
-
-                        withStyle(
-                            style = SpanStyle(
-                                fontSize = fontSize,
-                                fontWeight = FontWeight.Bold,
-                                color = baseTextColor
-                            )
-                        ) {
-                            append(headerText)
-                        }
-                    }
-                    // Links [text](url)
-                    line.contains("](") -> {
-                        var currentIndex = 0
-                        val linkRegex = "\\[([^\\]]+)\\]\\(([^)]+)\\)".toRegex()
-                        linkRegex.findAll(line).forEach { match ->
-                            append(line.substring(currentIndex, match.range.first))
-
-                            withStyle(
-                                style = SpanStyle(
-                                    color = linkColor,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            ) {
-                                append(match.groupValues[1])
-                            }
-
-                            currentIndex = match.range.last + 1
-                        }
-
-                        if (currentIndex < line.length) {
-                            append(line.substring(currentIndex))
-                        }
-                    }
-                    // Lists (- or * or numbers)
-                    line.trim().matches(Regex("^[-*]\\s+.*|^\\d+\\.\\s+.*")) -> {
-                        withStyle(style = SpanStyle(color = baseTextColor)) {
-                            append(line)
-                        }
-                    }
-                    // Regular text
-                    else -> {
-                        withStyle(style = SpanStyle(color = baseTextColor)) {
-                            append(line)
-                        }
-                    }
-                }
-
-                // Add line break (except for last line)
-                if (lineIndex < lines.size - 1) {
-                    append("\n")
-                }
-            }
-        }
-    }
-
-    Text(
-        text = annotatedString,
-        modifier = modifier,
-        style = TextStyle(
-            lineHeight = 20.sp,
-            fontSize = 15.sp
-        )
-    )
-
-    android.util.Log.d("ClaudeMarkdownText", "Final annotated string length: ${annotatedString.length}")
-}
 

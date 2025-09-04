@@ -148,16 +148,6 @@ class AccessibilityTest {
             .check(matches(isDisplayed()))
     }
 
-    @Test
-    fun testVoiceInput() {
-        // Test that buttons are accessible for voice interaction
-        onView(withId(R.id.buttonSignIn))
-            .perform(click())
-
-        // Verify button interaction works
-        onView(withId(R.id.buttonSignIn))
-            .check(matches(isDisplayed()))
-    }
 
     @Test
     fun testAccessibilityServices() {
