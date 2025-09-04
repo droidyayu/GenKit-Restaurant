@@ -66,8 +66,8 @@ export const getOrdersForStatusCheck = async (userId: string, limit = 10): Promi
 
     // Filter incomplete orders (not DELIVERED)
     const incompleteOrders = snapshot.docs
-      .map(doc => doc.data() as SimpleOrder)
-      .filter(order => order.status !== "DELIVERED")
+      .map((doc) => doc.data() as SimpleOrder)
+      .filter((order) => order.status !== "DELIVERED")
       .slice(0, limit);
 
     // If no incomplete orders, return last N orders for this user
@@ -75,7 +75,7 @@ export const getOrdersForStatusCheck = async (userId: string, limit = 10): Promi
       console.log(`[ORDER_REPOSITORY] No incomplete orders for user ${userId}, returning last orders`);
       return snapshot.docs
         .slice(0, Math.min(limit, 5))
-        .map(doc => doc.data() as SimpleOrder);
+        .map((doc) => doc.data() as SimpleOrder);
     }
 
     return incompleteOrders;
@@ -95,10 +95,10 @@ export const markOrdersAsComplete = async (userId: string, orderIds: string[]): 
   }
 
   try {
-    const updatePromises = orderIds.map(orderId =>
+    const updatePromises = orderIds.map((orderId) =>
       db.collection("order").doc(userId).collection("orders").doc(orderId).update({
         status: "DELIVERED",
-        completedAt: Date.now()
+        completedAt: Date.now(),
       })
     );
 
@@ -121,7 +121,7 @@ export const getRecentOrders = async (userId: string, limit = 5): Promise<Simple
       .limit(limit);
 
     const snapshot = await userOrdersQuery.get();
-    return snapshot.docs.map(doc => doc.data() as SimpleOrder);
+    return snapshot.docs.map((doc) => doc.data() as SimpleOrder);
   } catch (error) {
     console.error("[ORDER_REPOSITORY] Error fetching recent orders:", error);
     return [];

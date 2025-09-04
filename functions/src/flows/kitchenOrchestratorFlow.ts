@@ -116,7 +116,7 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
         step: "user_input",
       });
 
-            // Use triage agent to handle routing and get response
+      // Use triage agent to handle routing and get response
       console.log(`[TRIAGE_AGENT] Starting triage agent for user ${userId}, request ${requestId}`);
       console.log("[TRIAGE_AGENT] Available specialists: menuRecipeAgent, orderManagerAgent, waiterAgent");
       const chat = ai.chat(triageAgent);
@@ -127,7 +127,8 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
       console.log(`[HISTORY] Retrieved ${history.length} total messages, using ${chronologicalHistory.length} in chronological order (oldest to newest)`);
       if (chronologicalHistory.length > 0) {
         console.log(`[HISTORY] First message: "${chronologicalHistory[0].content.substring(0, 50)}..." (${chronologicalHistory[0].timestamp})`);
-        console.log(`[HISTORY] Last message: "${chronologicalHistory[chronologicalHistory.length - 1].content.substring(0, 50)}..." (${chronologicalHistory[chronologicalHistory.length - 1].timestamp})`);
+        console.log(`[HISTORY] Last message: "${chronologicalHistory[chronologicalHistory.length - 1].content.substring(0, 50)}..." 
+          (${chronologicalHistory[chronologicalHistory.length - 1].timestamp})`);
       }
 
       const fullContext = history.length > 0 ?
@@ -135,8 +136,8 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
 
 Conversation history (chronological order - oldest to newest):
 ${chronologicalHistory.map((msg: any, index: number) =>
-  `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ?
-    ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
+    `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ?
+      ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
   ).join("\n")}
 
 Please consider the full conversation context when routing and responding. Use this history to:
@@ -160,29 +161,29 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
       console.log(`[TRIAGE_AGENT] Response preview: ${agentResponse.substring(0, 100)}${agentResponse.length > 100 ? "..." : ""}`);
 
       // Debug: Check which agent was used
-      const usedOrderManager = agentResponse.toLowerCase().includes('ordermanageragent') ||
-                              agentResponse.toLowerCase().includes('order manager') ||
-                              agentResponse.toLowerCase().includes('how many') ||
-                              agentResponse.toLowerCase().includes('created an order');
-      const usedMenuAgent = agentResponse.toLowerCase().includes('menurecipeagent') ||
-                           agentResponse.toLowerCase().includes('menu agent') ||
-                           agentResponse.toLowerCase().includes('appetizers') ||
-                           agentResponse.toLowerCase().includes('vegetarian');
-      const usedWaiterAgent = agentResponse.toLowerCase().includes('waiteragent') ||
-                             agentResponse.toLowerCase().includes('waiter agent') ||
-                             agentResponse.toLowerCase().includes('order status') ||
-                             agentResponse.toLowerCase().includes('ready in') ||
-                             agentResponse.toLowerCase().includes('on its way') ||
-                             agentResponse.toLowerCase().includes('delivered');
+      const usedOrderManager = agentResponse.toLowerCase().includes("ordermanageragent") ||
+                              agentResponse.toLowerCase().includes("order manager") ||
+                              agentResponse.toLowerCase().includes("how many") ||
+                              agentResponse.toLowerCase().includes("created an order");
+      const usedMenuAgent = agentResponse.toLowerCase().includes("menurecipeagent") ||
+                           agentResponse.toLowerCase().includes("menu agent") ||
+                           agentResponse.toLowerCase().includes("appetizers") ||
+                           agentResponse.toLowerCase().includes("vegetarian");
+      const usedWaiterAgent = agentResponse.toLowerCase().includes("waiteragent") ||
+                             agentResponse.toLowerCase().includes("waiter agent") ||
+                             agentResponse.toLowerCase().includes("order status") ||
+                             agentResponse.toLowerCase().includes("ready in") ||
+                             agentResponse.toLowerCase().includes("on its way") ||
+                             agentResponse.toLowerCase().includes("delivered");
 
       if (usedOrderManager) {
-        console.log(`[TRIAGE_AGENT] Detected ORDER agent was used`);
+        console.log("[TRIAGE_AGENT] Detected ORDER agent was used");
       } else if (usedMenuAgent) {
-        console.log(`[TRIAGE_AGENT] Detected MENU agent was used`);
+        console.log("[TRIAGE_AGENT] Detected MENU agent was used");
       } else if (usedWaiterAgent) {
-        console.log(`[TRIAGE_AGENT] Detected WAITER agent was used`);
+        console.log("[TRIAGE_AGENT] Detected WAITER agent was used");
       } else {
-        console.log(`[TRIAGE_AGENT] Could not detect which agent was used`);
+        console.log("[TRIAGE_AGENT] Could not detect which agent was used");
       }
 
       // Determine which agent was used for metadata
