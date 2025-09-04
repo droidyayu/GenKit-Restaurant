@@ -1,4 +1,4 @@
-import {ai, z} from "../genkit";
+import {ai} from "../genkit";
 import {getOrderStatusTool} from "../tools/orderTool";
 import {notificationTool} from "../tools/notificationTool";
 
@@ -50,25 +50,5 @@ Communication style:
 CRITICAL: Always call getOrderStatusTool first when providing status updates to ensure accuracy.`,
 });
 
-// Tool definition for calling the waiter agent
-export const waiterAgent = ai.defineTool(
-  {
-    name: "waiterAgent",
-    description: "Handle order status inquiries, delivery updates, and customer service follow-ups",
-    inputSchema: z.object({
-      userId: z.string().describe("User ID of the customer"),
-      request: z.string().describe("The customer's status inquiry or delivery request"),
-    }),
-  },
-  async ({userId, request}) => {
-    const chat = ai.chat(waiterPrompt);
-    // Include userId as system context, not in the visible message
-    const systemContext = `SYSTEM: The user ID for this inquiry is: ${userId}. Use this when calling getOrderStatusTool.`;
-    const fullRequest = `${systemContext}\n\nUser request: ${request}`;
-    const result = await chat.send(fullRequest);
-    return {
-      success: true,
-      response: result.text,
-    };
-  }
-);
+// Export the prompt directly as the waiter agent
+export const waiterAgent = waiterPrompt;

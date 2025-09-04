@@ -173,15 +173,18 @@ async function testConversationTurn(step, userId) {
 
 /**
  * Run all test conversations
+ * @param {number} limit - Maximum number of test scenarios to run (0 = all)
  */
-async function runKitchenOrchestratorTests() {
+async function runKitchenOrchestratorTests(limit = 5) {
   console.log('🚀 STARTING KITCHEN ORCHESTRATOR FLOW TESTS\n');
   console.log('=' .repeat(80));
 
   try {
     // Load test cases from CSV using adapted loader
-    const testCases = loadKitchenOrchestratorCsv('kitchenOrchestratorFlow');
-    console.log(`📋 Loaded ${testCases.length} test scenarios from CSV\n`);
+    const allTestCases = loadKitchenOrchestratorCsv('kitchenOrchestratorFlow');
+    const testCases = limit > 0 ? allTestCases.slice(0, limit) : allTestCases;
+    console.log(`📋 Loaded ${allTestCases.length} test scenarios from CSV`);
+    console.log(`🎯 Running ${testCases.length} test scenarios (limit: ${limit > 0 ? limit : 'all'})\n`);
 
     const results = {
       passed: 0,
@@ -249,5 +252,9 @@ async function runKitchenOrchestratorTests() {
 // Setup graceful shutdown using common function
 setupGracefulShutdown();
 
+// Get limit from command line argument (default: 5)
+const limitArg = process.argv[2];
+const limit = limitArg ? parseInt(limitArg) : 5;
+
 // Run the tests
-runKitchenOrchestratorTests();
+runKitchenOrchestratorTests(limit);
