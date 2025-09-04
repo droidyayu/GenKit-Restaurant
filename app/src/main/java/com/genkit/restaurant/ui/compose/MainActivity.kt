@@ -30,6 +30,7 @@ import com.genkit.restaurant.domain.viewmodel.AuthViewModel
 import com.genkit.restaurant.domain.viewmodel.AuthUiState
 import com.genkit.restaurant.data.repository.ChatRepository
 import kotlinx.coroutines.delay
+import com.genkit.restaurant.ui.compose.ChatScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -106,7 +107,7 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         onStartChatClick = {
-                            // Create session data first, then navigate to ChatActivity
+                            // Create session data first, then navigate to ChatScreen
                             android.util.Log.d("MainActivity", "Start Chat button clicked")
                             try {
                                 val user = firebaseAuth.currentUser
@@ -128,21 +129,27 @@ class MainActivity : ComponentActivity() {
                                         .putString("app_name", sessionData.appName)
                                         .apply()
 
-                                    android.util.Log.d("MainActivity", "Session data saved, launching ChatActivity")
+                                    android.util.Log.d("MainActivity", "Session data saved, navigating to ChatScreen")
 
-                                    // Launch ChatActivity
-                                    val intent = Intent(context, com.genkit.restaurant.ui.ChatActivity::class.java)
-                                    context.startActivity(intent)
-                                    android.util.Log.d("MainActivity", "Started ChatActivity successfully")
-                                    // Don't finish MainActivity so user can return to auth screen
+                                    // Navigate to ChatScreen using Compose navigation
+                                    navController.navigate("chat")
+                                    android.util.Log.d("MainActivity", "Navigated to ChatScreen successfully")
                                 } else {
                                     android.util.Log.w("MainActivity", "No authenticated user found")
                                 }
                             } catch (e: Exception) {
-                                android.util.Log.e("MainActivity", "Error starting ChatActivity", e)
+                                android.util.Log.e("MainActivity", "Error navigating to ChatScreen", e)
                             }
                         }
                     )
+                }
+
+                composable("chat") {
+                    ChatScreen(onNavigateToAuth = {
+                        navController.navigate("auth") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    })
                 }
             }
         }

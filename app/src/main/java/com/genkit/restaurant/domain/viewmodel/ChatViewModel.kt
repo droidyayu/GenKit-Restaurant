@@ -173,14 +173,20 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun cleanAgentName(agentName: String): String {
         return when {
-            agentName.contains("Chef", ignoreCase = true) -> "ChefAgent"
-            agentName.contains("Menu", ignoreCase = true) -> "MenuAgent"
-            agentName.contains("Order", ignoreCase = true) -> "OrderAgent"
-            agentName.contains("Inventory", ignoreCase = true) -> "InventoryAgent"
-            agentName.contains("Kitchen", ignoreCase = true) -> "KitchenWorkflow"
-            agentName.contains("Delivery", ignoreCase = true) -> "DeliveryAgent"
-            agentName.contains("root", ignoreCase = true) -> "Assistant"
-            else -> agentName
+            agentName.contains("menuRecipeAgent", ignoreCase = true) -> "👨‍🍳 Chef"
+            agentName.contains("orderManagerAgent", ignoreCase = true) -> "📝 Order Manager"
+            agentName.contains("waiterAgent", ignoreCase = true) -> "🧾 Waiter"
+            agentName.contains("kitchenOrchestratorFlow", ignoreCase = true) -> "🏪 Restaurant"
+            agentName.contains("triageAgent", ignoreCase = true) -> "🎯 Triage"
+            agentName.contains("root", ignoreCase = true) -> "🤖 AI Assistant"
+            agentName.contains("Chef", ignoreCase = true) -> "👨‍🍳 Chef"
+            agentName.contains("Menu", ignoreCase = true) -> "📝 Order Manager"
+            agentName.contains("Order", ignoreCase = true) -> "🧾 Waiter"
+            agentName.contains("Inventory", ignoreCase = true) -> "🏪 Restaurant"
+            agentName.contains("Kitchen", ignoreCase = true) -> "🏪 Restaurant"
+            agentName.contains("Delivery", ignoreCase = true) -> "🏪 Restaurant"
+            agentName.contains("Assistant", ignoreCase = true) -> "🤖 AI Assistant"
+            else -> "🏪 Restaurant" // Default to Restaurant for unknown agents
         }
     }
 

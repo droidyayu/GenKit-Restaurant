@@ -77,6 +77,12 @@ dependencies {
     // Markdown rendering
     implementation("io.noties.markwon:core:4.6.2")
     implementation("io.noties.markwon:linkify:4.6.2")
+    implementation("io.noties.markwon:ext-tables:4.6.2")
+    implementation("io.noties.markwon:ext-tasklist:4.6.2")
+    implementation("io.noties.markwon:ext-strikethrough:4.6.2")
+    implementation("io.noties.markwon:html:4.6.2")
+
+    // Custom Markdown implementation using Markwon with Compose
 
     // RecyclerView (for legacy support if needed)
     implementation(libs.androidx.recyclerview)

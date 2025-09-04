@@ -29,11 +29,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ui.ChatActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="stateUnspecified" />
 
     </application>
 
