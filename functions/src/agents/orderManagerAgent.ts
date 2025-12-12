@@ -27,7 +27,7 @@ This agent intelligently collects order information through conversation, extrac
     outputSchema: z.string().describe("Order confirmation response with order ID and ETA, or questions to collect missing order details"),
   },
   async ({message}) => {
-    const chat = ai.chat({
+    const response = await ai.generate({
       system: `You are the OrderAgent. Collect complete order details and create orders efficiently.
 
 CRITICAL: USE CONVERSATION HISTORY TO MAINTAIN CONTEXT
@@ -113,11 +113,11 @@ ERROR HANDLING:
 - If dish unclear → Ask for clarification
 - If quantity unclear → Ask for specific number
 - If tool call fails → Inform user and suggest retry`,
+      prompt: message,
       tools: [createOrderTool, inventoryTool],
     });
 
-    const {text} = await chat.send(message);
-    return text;
+    return response.text;
   },
 );
 

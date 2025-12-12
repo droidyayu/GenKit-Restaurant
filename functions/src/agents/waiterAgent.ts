@@ -26,7 +26,7 @@ This agent always calls getOrderStatusTool first to get accurate order informati
     outputSchema: z.string().describe("Order status update with current status, ETA, and next steps, or friendly customer service response"),
   },
   async ({message}) => {
-    const chat = ai.chat({
+    const response = await ai.generate({
       system: `You are the Waiter/Delivery agent for Indian Grill specializing in order status and delivery coordination.
 
 Available tools:
@@ -69,10 +69,10 @@ Communication style:
 - Ask if they need anything else after delivery
 
 CRITICAL: Always call getOrderStatusTool first when providing status updates to ensure accuracy.`,
+      prompt: message,
       tools: [getOrderStatusTool, notificationTool],
     });
 
-    const {text} = await chat.send(message);
-    return text;
+    return response.text;
   },
 );

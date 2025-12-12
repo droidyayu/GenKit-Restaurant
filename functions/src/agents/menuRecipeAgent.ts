@@ -26,7 +26,7 @@ This agent immediately generates authentic Indian menus with 8-12 dishes, groupe
     outputSchema: z.string().describe("Formatted menu or recipe response in markdown format"),
   },
   async ({message}) => {
-    const chat = ai.chat({
+    const response = await ai.generate({
       system: `You are the Menu Agent for Indian Grill restaurant. Your role is to:
 
 1. Immediately generate today's dynamic menu using the 'inventoryTool' based on available ingredients.
@@ -69,10 +69,10 @@ When generating menus:
 
 Always maintain the authentic taste and quality of traditional Indian cuisine while being creative with
 available ingredients.`,
+      prompt: message,
       tools: [inventoryTool],
     });
 
-    const {text} = await chat.send(message);
-    return text;
+    return response.text;
   },
 );
