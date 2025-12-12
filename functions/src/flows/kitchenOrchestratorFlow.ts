@@ -1,33 +1,33 @@
 import {ai, z} from "../genkit";
-import {getConversationHistory, addConversationMessage} from "../data/conversationHistory";
+import {firestoreSessionStore} from "../data/sessionStore";
 import {orderManagerAgent} from "../agents/orderManagerAgent";
 import {menuRecipeAgent} from "../agents/menuRecipeAgent";
 import {waiterAgent} from "../agents/waiterAgent";
 
-// Define the triage agent that handles initial routing
-const triageAgent = ai.definePrompt({
-  name: "triageAgent",
-  description: "Triage Agent for Indian Restaurant - routes to specialist agents",
-  tools: [menuRecipeAgent, orderManagerAgent, waiterAgent],
-  system: `You are an AI customer service agent for an Indian restaurant.
+// System instructions for routing directly with tools (no intermediate prompt)
+const triageSystemPrompt = `You are an AI customer service agent for an Indian restaurant.
 
 Greet customers warmly and determine how you can help them.
-CRITICAL: You MUST use the available specialist agents to handle customer requests - NEVER respond directly yourself.
 
 Available specialists:
 1. menuRecipeAgent - For menu exploration, dish suggestions, availability checking, and recipe information
 2. orderManagerAgent - For placing orders, collecting order details, and managing the ordering process
 3. waiterAgent - For order status inquiries, delivery updates, and customer service follow-ups
 
+ROUTING RULES:
+- For greetings and general conversation (e.g., "hello", "how are you?", "thanks") → RESPOND DIRECTLY with a friendly greeting and offer to help
+- For menu-related requests → USE menuRecipeAgent (then return its response directly to the user)
+- For order-related requests → USE orderManagerAgent (then return its response directly to the user)
+- For status/delivery inquiries → USE waiterAgent (then return its response directly to the user)
+- If unsure about intent → RESPOND DIRECTLY asking how you can help
+
 TOOL USAGE RULES:
-- Use menuRecipeAgent for ANY menu-related requests (show menu, suggestions, dietary options, etc.)
-- Use orderManagerAgent for ANY order-related requests (ordering, quantities, spice levels, confirmations)
-- Use waiterAgent for ANY status/delivery inquiries (order status, where's my food, how long, etc.)
-- Do NOT summarize or paraphrase - use the appropriate specialist immediately
-- If the request involves ordering food → USE orderManagerAgent
-- If the request involves confirming an order → USE orderManagerAgent
-- If the request involves checking status → USE waiterAgent
-- If the request involves menu exploration → USE menuRecipeAgent
+- Use menuRecipeAgent for menu exploration, dish suggestions, dietary options, recipe questions
+- Use orderManagerAgent for placing orders, order confirmations, quantities, spice levels
+- Use waiterAgent for order status, delivery updates, timing questions
+- For general greetings and non-food related conversation → RESPOND DIRECTLY (do NOT use tools)
+- Do NOT use tools for simple greetings like "hello", "hi", "how are you?", "thanks"
+- CRITICAL: When you call a specialist agent tool, return its response directly to the user. Do NOT call additional tools or process the response further.
 
 CRITICAL SPECIALIST ROUTING PATTERNS:
 
@@ -74,13 +74,13 @@ Response style:
 - Always use the appropriate specialist when routing
 - For orders: Include userId context in the agent call
 
-CRITICAL: You are ONLY a router. Your ONLY output should be using specialist agents - NO direct text responses to customers!
-- If message contains ANY ordering words → USE orderManagerAgent
-- If message contains menu/food words without ordering → USE menuRecipeAgent
-- If message is "yes", "correct", "ok", "confirmed" → USE orderManagerAgent
-- If unsure → USE orderManagerAgent
-- Your ONLY output should be calling a specialist agent - NO other text!`,
-});
+RESPONSE GUIDELINES:
+- Greet customers warmly and be helpful
+- For greetings ("hello", "hi", "how are you?") → Respond directly with a friendly greeting
+- For general questions about the restaurant → Respond directly with helpful information
+- Only use specialist agents when the customer has a specific request (menu, order, or status)
+- If the message is unclear or just a greeting → Respond directly asking how you can help
+- Always be friendly and welcoming`;
 
 export const kitchenOrchestratorFlow = ai.defineFlow(
   {
@@ -107,75 +107,63 @@ export const kitchenOrchestratorFlow = ai.defineFlow(
     console.log(`[KITCHEN_ORCHESTRATOR] User message: "${message}"`);
 
     try {
-      // Get conversation history
-      const history = await getConversationHistory(userId, 10);
-
-      // Add user message to conversation history
-      await addConversationMessage(userId, "user", message, {
-        timestamp: new Date().toISOString(),
-        requestId,
-        step: "user_input",
-      });
-
-      // Use triage agent to handle routing and get response
-      console.log(`[TRIAGE_AGENT] Starting triage agent for user ${userId}, request ${requestId}`);
-      console.log("[TRIAGE_AGENT] Available specialists: menuRecipeAgent, orderManagerAgent, waiterAgent");
-      const chat = ai.chat(triageAgent);
-
-      // Create a structured context that includes both the current message and history
-      // History is already sorted newest-first, so we reverse it for chronological order
-      const chronologicalHistory = history.slice(-10).reverse();
-      console.log(`[HISTORY] Retrieved ${history.length} total messages, using ${chronologicalHistory.length} in chronological order (oldest to newest)`);
-      if (chronologicalHistory.length > 0) {
-        console.log(`[HISTORY] First message: "${chronologicalHistory[0].content.substring(0, 50)}..." (${chronologicalHistory[0].timestamp})`);
-        console.log(`[HISTORY] Last message: "${chronologicalHistory[chronologicalHistory.length - 1].content.substring(0, 50)}..." 
-          (${chronologicalHistory[chronologicalHistory.length - 1].timestamp})`);
+      // Load or create session using userId as sessionId
+      let session;
+      try {
+        session = await ai.loadSession(userId, {
+          store: firestoreSessionStore,
+        });
+        if (session) {
+          console.log(`[SESSION] Loaded existing session for user ${userId}`);
+        } else {
+          throw new Error("Session not found");
+        }
+      } catch (error) {
+        // Session doesn't exist, create a new one with userId as sessionId
+        session = ai.createSession({
+          store: firestoreSessionStore,
+          sessionId: userId,
+        });
+        console.log(`[SESSION] Created new session for user ${userId}`);
       }
 
-      const fullContext = history.length > 0 ?
-        `Current message: "${message}"
+      // Use session.chat() to create a chat instance bound to this session
+      console.log(`[TRIAGE_AGENT] Starting triage agent for user ${userId}, request ${requestId}`);
+      console.log("[TRIAGE_AGENT] Available specialists: menuRecipeAgent, orderManagerAgent, waiterAgent");
+      
+      const chat = session.chat({
+        system: triageSystemPrompt,
+        tools: [menuRecipeAgent, orderManagerAgent, waiterAgent],
+        maxTurns: 10, // Increase limit to handle tool calls, but prompt should prevent loops
+      });
 
-Conversation history (chronological order - oldest to newest):
-${chronologicalHistory.map((msg: any, index: number) =>
-    `${index + 1}. ${msg.role}: ${msg.content}${msg.metadata?.step ?
-      ` [${msg.metadata.step}]` : ""}${msg.metadata?.agent ? ` [Agent: ${msg.metadata.agent}]` : ""}`
-  ).join("\n")}
+      // Prepare context with userId for tool calls
+      const contextMessage = `User ID: ${userId}
 
-Please consider the full conversation context when routing and responding. Use this history to:
-- Determine if this is a menu exploration or order placement request
-- Remember previous menu suggestions or ongoing orders
-- Avoid asking for information already provided
-- Maintain continuity in the customer experience
+${message}
 
-IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${userId}\n\n${message}" so the agent can extract the userId for order creation.` :
-        `Current message: "${message}"
+IMPORTANT: When calling orderManagerAgent or waiterAgent, include the userId from above in the tool call input.`;
 
-This is the first message in the conversation. Welcome to our Indian restaurant! I can help you explore our menu or place an order.
-
-IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${userId}\n\n${message}" so the agent can extract the userId for order creation.`;
-
-      console.log(`[TRIAGE_AGENT] Sending context to triage agent (length: ${fullContext.length} chars)`);
-      console.log(`[TRIAGE_AGENT] Full context preview: ${fullContext.substring(0, 200)}${fullContext.length > 200 ? "..." : ""}`);
-      const result = await chat.send(fullContext);
-      const agentResponse = result.text;
-      console.log(`[TRIAGE_AGENT] Received response from triage agent (length: ${agentResponse.length} chars)`);
-      console.log(`[TRIAGE_AGENT] Response preview: ${agentResponse.substring(0, 100)}${agentResponse.length > 100 ? "..." : ""}`);
+      console.log(`[TRIAGE_AGENT] Sending message to chat with session (userId: ${userId})`);
+      const {text} = await chat.send(contextMessage);
+      console.log(`[TRIAGE_AGENT] Received response from triage agent (length: ${text.length} chars)`);
+      console.log(`[TRIAGE_AGENT] Response preview: ${text.substring(0, 100)}${text.length > 100 ? "..." : ""}`);
 
       // Debug: Check which agent was used
-      const usedOrderManager = agentResponse.toLowerCase().includes("ordermanageragent") ||
-                              agentResponse.toLowerCase().includes("order manager") ||
-                              agentResponse.toLowerCase().includes("how many") ||
-                              agentResponse.toLowerCase().includes("created an order");
-      const usedMenuAgent = agentResponse.toLowerCase().includes("menurecipeagent") ||
-                           agentResponse.toLowerCase().includes("menu agent") ||
-                           agentResponse.toLowerCase().includes("appetizers") ||
-                           agentResponse.toLowerCase().includes("vegetarian");
-      const usedWaiterAgent = agentResponse.toLowerCase().includes("waiteragent") ||
-                             agentResponse.toLowerCase().includes("waiter agent") ||
-                             agentResponse.toLowerCase().includes("order status") ||
-                             agentResponse.toLowerCase().includes("ready in") ||
-                             agentResponse.toLowerCase().includes("on its way") ||
-                             agentResponse.toLowerCase().includes("delivered");
+      const usedOrderManager = text.toLowerCase().includes("ordermanageragent") ||
+                              text.toLowerCase().includes("order manager") ||
+                              text.toLowerCase().includes("how many") ||
+                              text.toLowerCase().includes("created an order");
+      const usedMenuAgent = text.toLowerCase().includes("menurecipeagent") ||
+                           text.toLowerCase().includes("menu agent") ||
+                           text.toLowerCase().includes("appetizers") ||
+                           text.toLowerCase().includes("vegetarian");
+      const usedWaiterAgent = text.toLowerCase().includes("waiteragent") ||
+                             text.toLowerCase().includes("waiter agent") ||
+                             text.toLowerCase().includes("order status") ||
+                             text.toLowerCase().includes("ready in") ||
+                             text.toLowerCase().includes("on its way") ||
+                             text.toLowerCase().includes("delivered");
 
       if (usedOrderManager) {
         console.log("[TRIAGE_AGENT] Detected ORDER agent was used");
@@ -193,17 +181,12 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
       else if (usedMenuAgent) specialistAgent = "menuRecipeAgent";
       else if (usedWaiterAgent) specialistAgent = "waiterAgent";
 
-      // Add assistant response to conversation history
-      await addConversationMessage(userId, "assistant", agentResponse, {
-        timestamp: new Date().toISOString(),
-        requestId,
-        step: "agent_response",
-        agent: specialistAgent,
-      });
+      // Session automatically saves conversation history, no manual tracking needed
+      console.log(`[SESSION] Conversation saved automatically for user ${userId}`);
 
       return {
         success: true,
-        message: agentResponse,
+        message: text,
         userId,
         timestamp: new Date().toISOString(),
         requestId,
@@ -222,15 +205,19 @@ IMPORTANT: When calling orderManagerAgent, format the request as: "User ID: ${us
         }
       }
 
-      // Add error message to conversation history
-      await addConversationMessage(userId, "assistant", errorMessage, {
-        timestamp: new Date().toISOString(),
-        requestId,
-        step: "error_response",
-        agent: "kitchenOrchestratorFlow",
-        error: true,
-        errorDetails: error instanceof Error ? error.message : "Unknown error",
-      });
+      // Try to save error to session if session exists
+      try {
+        const session = await ai.loadSession(userId, {
+          store: firestoreSessionStore,
+        });
+        const chat = session.chat({
+          system: triageSystemPrompt,
+          tools: [menuRecipeAgent, orderManagerAgent, waiterAgent],
+        });
+        await chat.send(`Error occurred: ${errorMessage}`);
+      } catch (sessionError) {
+        console.warn("[SESSION] Could not save error to session:", sessionError);
+      }
 
       return {
         success: false,
