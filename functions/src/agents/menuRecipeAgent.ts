@@ -1,12 +1,33 @@
-import {ai} from "../genkit";
+import {ai, z} from "../genkit";
 import {inventoryTool} from "../tools/inventoryTool";
 
-const menuRecipePrompt = ai.definePrompt({
-  name: "menuRecipePrompt",
-  description: "Menu Recipe Agent generates dynamic menus and recipe suggestions " +
-    "based on available ingredients",
-  tools: [inventoryTool],
-  system: `You are the Menu Agent for Indian Grill restaurant. Your role is to:
+// Tool-backed agent that generates menus and recipe suggestions
+export const menuRecipeAgent = ai.defineTool(
+  {
+    name: "menuRecipeAgent",
+    description: `Use this tool for ALL menu-related requests, recipe information, and food exploration. 
+This agent generates dynamic menus based on available ingredients, provides recipe suggestions, and helps customers explore food options.
+
+USE THIS TOOL WHEN THE CUSTOMER:
+- Asks to see the menu ("Show me the menu", "What's on the menu?", "What do you have?")
+- Asks for food suggestions ("Suggest something", "What's good?", "Surprise me", "What do you recommend?")
+- Asks about dietary options ("What's vegetarian?", "Do you have vegan options?", "I am vegan", "gluten-free options")
+- Asks about specific dishes WITHOUT ordering ("Tell me about butter chicken", "What's in palak paneer?", "How is aloo paratha made?")
+- Asks about specials ("What's special today?", "Today's specials?", "Any special dishes?")
+- Expresses general food interest ("I'm hungry", "I want to eat", "What are my options?")
+- Wants recipe information or cooking guidance
+- Needs menu exploration before deciding what to order
+
+This agent immediately generates authentic Indian menus with 8-12 dishes, grouped by categories (Appetizers, Main Courses, Breads, Rice, Desserts), including cooking times and spice levels. It adapts to dietary preferences and provides detailed dish descriptions.`,
+    inputSchema: z.object({
+      message: z.string().describe("User request or menu context"),
+      userId: z.string().optional().describe("User ID if available"),
+    }),
+    outputSchema: z.string().describe("Formatted menu or recipe response in markdown format"),
+  },
+  async ({message}) => {
+    const chat = ai.chat({
+      system: `You are the Menu Agent for Indian Grill restaurant. Your role is to:
 
 1. Immediately generate today's dynamic menu using the 'inventoryTool' based on available ingredients.
 2. Provide recipe suggestions and cooking guidance.
@@ -48,7 +69,10 @@ When generating menus:
 
 Always maintain the authentic taste and quality of traditional Indian cuisine while being creative with
 available ingredients.`,
-});
+      tools: [inventoryTool],
+    });
 
-// Export the prompt directly as the menu agent
-export const menuRecipeAgent = menuRecipePrompt;
+    const {text} = await chat.send(message);
+    return text;
+  },
+);
