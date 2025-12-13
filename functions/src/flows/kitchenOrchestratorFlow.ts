@@ -77,37 +77,8 @@ IMPORTANT: When calling orderManagerAgent or waiterAgent, include the userId fro
       console.log(`[TRIAGE_AGENT] Received response from triage agent (length: ${text.length} chars)`);
       console.log(`[TRIAGE_AGENT] Response preview: ${text.substring(0, 100)}${text.length > 100 ? "..." : ""}`);
 
-      // Debug: Check which agent was used
-      const usedOrderManager = text.toLowerCase().includes("ordermanageragent") ||
-                              text.toLowerCase().includes("order manager") ||
-                              text.toLowerCase().includes("how many") ||
-                              text.toLowerCase().includes("created an order");
-      const usedMenuAgent = text.toLowerCase().includes("menurecipeagent") ||
-                           text.toLowerCase().includes("menu agent") ||
-                           text.toLowerCase().includes("appetizers") ||
-                           text.toLowerCase().includes("vegetarian");
-      const usedWaiterAgent = text.toLowerCase().includes("waiteragent") ||
-                             text.toLowerCase().includes("waiter agent") ||
-                             text.toLowerCase().includes("order status") ||
-                             text.toLowerCase().includes("ready in") ||
-                             text.toLowerCase().includes("on its way") ||
-                             text.toLowerCase().includes("delivered");
-
-      if (usedOrderManager) {
-        console.log("[TRIAGE_AGENT] Detected ORDER agent was used");
-      } else if (usedMenuAgent) {
-        console.log("[TRIAGE_AGENT] Detected MENU agent was used");
-      } else if (usedWaiterAgent) {
-        console.log("[TRIAGE_AGENT] Detected WAITER agent was used");
-      } else {
-        console.log("[TRIAGE_AGENT] Could not detect which agent was used");
-      }
-
-      // Determine which agent was used for metadata
+      // No need to detect agent, just set unknown or remove this section
       let specialistAgent = "unknown";
-      if (usedOrderManager) specialistAgent = "orderManagerAgent";
-      else if (usedMenuAgent) specialistAgent = "menuRecipeAgent";
-      else if (usedWaiterAgent) specialistAgent = "waiterAgent";
 
       // Session automatically saves conversation history, no manual tracking needed
       console.log(`[SESSION] Conversation saved automatically for user ${userId}`);
